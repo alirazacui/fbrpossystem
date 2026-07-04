@@ -3,7 +3,85 @@ companies/serializers.py
 """
 
 from rest_framework import serializers
-from .models import Company
+from .models import Company, AuditLog, Branch, Warehouse
+from .models import Company, AuditLog, Branch, Warehouse, Terminal
+
+
+class BranchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Branch
+        fields = ['id', 'company', 'name', 'code', 'city', 'province', 'address', 'is_active', 'is_default', 'created_at']
+        read_only_fields = ['id', 'company', 'created_at']
+
+
+class WarehouseSerializer(serializers.ModelSerializer):
+    branch_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Warehouse
+        fields = ['id', 'company', 'branch', 'branch_name', 'name', 'code', 'city', 'address', 'is_active', 'is_default', 'created_at']
+        read_only_fields = ['id', 'company', 'created_at']
+
+    def get_branch_name(self, obj):
+        return obj.branch.name if obj.branch else None
+
+
+class TerminalSerializer(serializers.ModelSerializer):
+    branch_name = serializers.CharField(source="branch.name", read_only=True)
+    company_name = serializers.CharField(source="company.business_name", read_only=True)
+
+    class Meta:
+        model = Terminal
+        fields = [
+            "id",
+            "company",
+            "company_name",
+            "branch",
+            "branch_name",
+            "name",
+            "device_fingerprint",
+            "terminal_index",
+            "pairing_code",
+            "pairing_code_expires_at",
+            "paired_at",
+            "os_version",
+            "app_version",
+            "printer_config",
+            "scanner_config",
+            "drawer_config",
+            "customer_display_enabled",
+            "is_active",
+            "last_seen_at",
+            "last_synced_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "company",
+            "company_name",
+            "branch_name",
+            "pairing_code",
+            "pairing_code_expires_at",
+            "paired_at",
+            "created_at",
+            "updated_at",
+            "last_seen_at",
+            "last_synced_at",
+        ]
+
+    def create(self, validated_data):
+        branch = validated_data["branch"]
+        validated_data["company"] = branch.company
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        branch = validated_data.get("branch", instance.branch)
+        if branch:
+            validated_data["company"] = branch.company
+        return super().update(instance, validated_data)
+
+
 
 
 class CompanyListSerializer(serializers.ModelSerializer):
@@ -43,6 +121,7 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     Includes all fields including modules and FBR sandbox state.
     """
     owner_email = serializers.SerializerMethodField()
+    owner_id    = serializers.SerializerMethodField()
     enabled_modules = serializers.ListField(
         source="get_enabled_modules", read_only=True
     )
@@ -80,24 +159,21 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             "next_billing_date",
 
             # ── Modules ────────────────────────────────────
-            "module_sales_invoicing",
+            "module_invoices",
             "module_fbr_di",
             "module_customer_db",
-            "module_fbr_registered_buyer",
+            "module_multi_branch",
+            "module_terminals_cash_sessions",
+            "module_user_management",
+            "module_inventory",
+            "module_warehousing",
             "module_returns",
+            "module_debit_credit_notes",
             "module_fbr_amendments",
             "module_cheque_bank_transfer",
             "module_customer_display",
             "module_hardware_integration",
-            "module_inventory",
-            "module_warehousing",
-            "module_multi_location",
             "module_restaurant_fnb",
-            "module_dine_in",
-            "module_takeaway",
-            "module_delivery",
-            "module_table_floor_map",
-            "module_kitchen_display",
             "module_basic_reports",
             "module_advanced_reports",
             "module_audit_logs",
@@ -106,13 +182,44 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             # ── FBR sandbox ────────────────────────────────
             "fbr_sandbox_token",
             "fbr_production_token",
-            "fbr_assigned_scenarios",
+            "fbr_sandbox_endpoint",
+            "fbr_production_endpoint",
             "fbr_test_buyer_ntn",
             "fbr_sandbox_complete",
             "fbr_ip_1",
             "fbr_ip_2",
             "fbr_ip_3",
             "fbr_crm_user_id",
+
+            # ── Sandbox scenarios ──────────────────────────
+            "fbr_scenario_sn001",
+            "fbr_scenario_sn002",
+            "fbr_scenario_sn003",
+            "fbr_scenario_sn004",
+            "fbr_scenario_sn005",
+            "fbr_scenario_sn006",
+            "fbr_scenario_sn007",
+            "fbr_scenario_sn008",
+            "fbr_scenario_sn009",
+            "fbr_scenario_sn010",
+            "fbr_scenario_sn011",
+            "fbr_scenario_sn012",
+            "fbr_scenario_sn013",
+            "fbr_scenario_sn014",
+            "fbr_scenario_sn015",
+            "fbr_scenario_sn016",
+            "fbr_scenario_sn017",
+            "fbr_scenario_sn018",
+            "fbr_scenario_sn019",
+            "fbr_scenario_sn020",
+            "fbr_scenario_sn021",
+            "fbr_scenario_sn022",
+            "fbr_scenario_sn023",
+            "fbr_scenario_sn024",
+            "fbr_scenario_sn025",
+            "fbr_scenario_sn026",
+            "fbr_scenario_sn027",
+            "fbr_scenario_sn028",
 
             # ── Internal admin ─────────────────────────────
             "account_manager",
@@ -126,12 +233,14 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
 
             # ── Computed ───────────────────────────────────
             "owner_email",
+            "owner_id",
         ]
         read_only_fields = [
             "id",
             "created_at",
             "updated_at",
             "owner_email",
+            "owner_id",
             "enabled_modules",
             "fbr_sandbox_complete",     # set by system, not manually
         ]
@@ -139,6 +248,10 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     def get_owner_email(self, obj):
         owner = obj.owner
         return owner.email if owner else None
+
+    def get_owner_id(self, obj):
+        owner = obj.owner
+        return owner.id if owner else None
 
     def validate_fbr_business_nature(self, value):
         """Ensure at least one business nature is selected."""
@@ -178,25 +291,92 @@ class CompanyModulesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = [
-            "module_sales_invoicing",
+            "module_invoices",
             "module_fbr_di",
             "module_customer_db",
-            "module_fbr_registered_buyer",
+            "module_multi_branch",
+            "module_terminals_cash_sessions",
+            "module_user_management",
+            "module_inventory",
+            "module_warehousing",
             "module_returns",
+            "module_debit_credit_notes",
             "module_fbr_amendments",
             "module_cheque_bank_transfer",
             "module_customer_display",
             "module_hardware_integration",
-            "module_inventory",
-            "module_warehousing",
-            "module_multi_location",
             "module_restaurant_fnb",
-            "module_dine_in",
-            "module_takeaway",
-            "module_delivery",
-            "module_table_floor_map",
-            "module_kitchen_display",
             "module_basic_reports",
             "module_advanced_reports",
             "module_audit_logs",
         ]
+
+
+from pos.models import CompanyPaymentMethodSettings
+
+class CompanyPaymentMethodSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyPaymentMethodSettings
+        fields = [
+            "id",
+            "is_cash_enabled",
+            "is_card_enabled",
+            "is_easypaisa_enabled",
+            "is_jazzcash_enabled",
+            "is_raast_enabled",
+            "is_bank_transfer_enabled",
+            "is_cheque_enabled",
+            "easypaisa_merchant_id",
+            "easypaisa_qr_image",
+            "jazzcash_merchant_id",
+            "jazzcash_qr_image",
+            "raast_iban",
+            "raast_qr_image",
+            "bank_name",
+            "bank_account_name",
+            "bank_iban",
+        ]
+
+    def validate(self, attrs):
+        # 1. EasyPaisa validation
+        is_ep_enabled = attrs.get("is_easypaisa_enabled", self.instance.is_easypaisa_enabled if self.instance else False)
+        if is_ep_enabled:
+            ep_merchant = attrs.get("easypaisa_merchant_id", self.instance.easypaisa_merchant_id if self.instance else "").strip()
+            ep_qr = attrs.get("easypaisa_qr_image", self.instance.easypaisa_qr_image if self.instance else None)
+            if not ep_merchant or not ep_qr:
+                raise serializers.ValidationError({
+                    "is_easypaisa_enabled": "You must provide both Merchant ID and QR Image before enabling EasyPaisa."
+                })
+
+        # 2. JazzCash validation
+        is_jc_enabled = attrs.get("is_jazzcash_enabled", self.instance.is_jazzcash_enabled if self.instance else False)
+        if is_jc_enabled:
+            jc_merchant = attrs.get("jazzcash_merchant_id", self.instance.jazzcash_merchant_id if self.instance else "").strip()
+            jc_qr = attrs.get("jazzcash_qr_image", self.instance.jazzcash_qr_image if self.instance else None)
+            if not jc_merchant or not jc_qr:
+                raise serializers.ValidationError({
+                    "is_jazzcash_enabled": "You must provide both Merchant ID and QR Image before enabling JazzCash."
+                })
+
+        # 3. Raast validation
+        is_raast_enabled = attrs.get("is_raast_enabled", self.instance.is_raast_enabled if self.instance else False)
+        if is_raast_enabled:
+            raast_iban = attrs.get("raast_iban", self.instance.raast_iban if self.instance else "").strip()
+            raast_qr = attrs.get("raast_qr_image", self.instance.raast_qr_image if self.instance else None)
+            if not raast_iban or not raast_qr:
+                raise serializers.ValidationError({
+                    "is_raast_enabled": "You must provide both IBAN (receiver) and QR Image before enabling Raast."
+                })
+
+        # 4. Bank Transfer validation
+        is_bank_enabled = attrs.get("is_bank_transfer_enabled", self.instance.is_bank_transfer_enabled if self.instance else False)
+        if is_bank_enabled:
+            bank_name = attrs.get("bank_name", self.instance.bank_name if self.instance else "").strip()
+            acc_name = attrs.get("bank_account_name", self.instance.bank_account_name if self.instance else "").strip()
+            iban = attrs.get("bank_iban", self.instance.bank_iban if self.instance else "").strip()
+            if not bank_name or not acc_name or not iban:
+                raise serializers.ValidationError({
+                    "is_bank_transfer_enabled": "You must provide Bank Name, Account Name, and IBAN before enabling Bank Transfer."
+                })
+
+        return attrs

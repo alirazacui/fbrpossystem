@@ -109,7 +109,7 @@ class PermissionModule(models.TextChoices):
     ADVANCED_REPORTS      = "advanced_reports",      _("Advanced Reports")
     AUDIT_LOGS            = "audit_logs",            _("Audit Logs")
 
-    # --- User Management (platform-level, always visible to Admin) ---
+    # --- User Management (company-side when enabled; Admin always has access) ---
     USER_MANAGEMENT       = "user_management",       _("User Management")
     COMPANY_MANAGEMENT    = "company_management",    _("Company Management")
 
@@ -118,10 +118,10 @@ class PermissionModule(models.TextChoices):
 # Used by the ceiling check — if company.module_field is False,
 # no permission in that module can be granted.
 MODULE_TO_COMPANY_FIELD: dict[str, str] = {
-    PermissionModule.SALES_INVOICING      : "module_sales_invoicing",
+    PermissionModule.SALES_INVOICING      : "module_invoices",
     PermissionModule.FBR_DI               : "module_fbr_di",
     PermissionModule.CUSTOMER_DB          : "module_customer_db",
-    PermissionModule.FBR_REGISTERED_BUYER : "module_fbr_registered_buyer",
+    PermissionModule.FBR_REGISTERED_BUYER : "module_customer_db",
     PermissionModule.RETURNS              : "module_returns",
     PermissionModule.FBR_AMENDMENTS       : "module_fbr_amendments",
     PermissionModule.CHEQUE_BANK_TRANSFER : "module_cheque_bank_transfer",
@@ -129,18 +129,18 @@ MODULE_TO_COMPANY_FIELD: dict[str, str] = {
     PermissionModule.HARDWARE_INTEGRATION : "module_hardware_integration",
     PermissionModule.INVENTORY            : "module_inventory",
     PermissionModule.WAREHOUSING          : "module_warehousing",
-    PermissionModule.MULTI_LOCATION       : "module_multi_location",
+    PermissionModule.MULTI_LOCATION       : "module_multi_branch",
     PermissionModule.RESTAURANT_FNB       : "module_restaurant_fnb",
-    PermissionModule.DINE_IN              : "module_dine_in",
-    PermissionModule.TAKEAWAY             : "module_takeaway",
-    PermissionModule.DELIVERY             : "module_delivery",
-    PermissionModule.TABLE_FLOOR_MAP      : "module_table_floor_map",
-    PermissionModule.KITCHEN_DISPLAY      : "module_kitchen_display",
+    PermissionModule.DINE_IN              : "module_restaurant_fnb",
+    PermissionModule.TAKEAWAY             : "module_restaurant_fnb",
+    PermissionModule.DELIVERY             : "module_restaurant_fnb",
+    PermissionModule.TABLE_FLOOR_MAP      : "module_restaurant_fnb",
+    PermissionModule.KITCHEN_DISPLAY      : "module_restaurant_fnb",
     PermissionModule.BASIC_REPORTS        : "module_basic_reports",
     PermissionModule.ADVANCED_REPORTS     : "module_advanced_reports",
     PermissionModule.AUDIT_LOGS           : "module_audit_logs",
     # Platform-only modules — no Company field; Admin always has these
-    PermissionModule.USER_MANAGEMENT      : None,
+    PermissionModule.USER_MANAGEMENT      : "module_user_management",
     PermissionModule.COMPANY_MANAGEMENT   : None,
 }
 

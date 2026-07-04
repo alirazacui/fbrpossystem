@@ -26,9 +26,34 @@ urlpatterns = [
     path("api/", include("companies.urls")),
     path("api/", include("users.urls")),
     path("api/", include("permission_app.urls")),
+    path("api/",include("pos.urls")),
+    path("api/", include("digital_invoicing.urls")),
+    path("api/", include("reports.urls")),
+    path("api/",include("subscriptions.urls")),
+    path("api/",include("receipt.urls")),
+    path("api/", include("common.urls")),
 ]
  
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
  
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+from celery.schedules import crontab
+ 
+CELERY_BEAT_SCHEDULE = {
+    # Retry failed FBR submissions every 15 minutes
+    "retry-failed-fbr-submissions": {
+        "task":     "digital_invoicing.retry_failed_submissions",
+        "schedule": crontab(minute="*/15"),
+    },
+
+    "check-expiring-subscriptions": {
+       "task":     "subscriptions.check_expiring_subscriptions",
+       "schedule": crontab(hour=9, minute=0),  # runs daily at 9am
+   },
+
+
+}

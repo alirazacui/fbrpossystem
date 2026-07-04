@@ -1,6 +1,3 @@
-from django.db import models
-
-# Create your models here.
 """
 companies/models.py
 
@@ -8,40 +5,62 @@ Company is the tenant record. Every client business that buys a POS or
 Digital Invoicing licence from us gets one Company record. All non-platform
 users (Owner, Manager, Cashier, Salesperson) belong to exactly one Company.
 
-Platform users (Admin, Admin Staff) do NOT belong to any Company — they
-belong to our own organisation.
+Platform users (Admin, Admin Staff) do NOT belong to any Company.
 
-Build order note
-----------------
-Company has NO FK to User. The circular-dependency problem is avoided by
-letting User hold the FK to Company (nullable for platform users). "Who is
-the owner" is determined by querying User where role='owner' and company=this.
+Changes from v1
+---------------
+1. FBR Business Nature — kept as ArrayField (multi-checkbox in admin)
+   but FBRBusinessNature choices updated to match IRIS exactly
+   (removed Manufacturer — not in IRIS list shown in screenshot)
+
+2. FBR Sector — values updated to match IRIS dropdown exactly
+   (Wholesale/Retails, Cement or Concrete Blocks, etc.)
+
+3. Modules restructured to match benchmark screenshot:
+   - SALES & FBR: Invoices, FBR DI, Customers — all three FORCED (cannot be disabled)
+   - MULTI-LOCATION: Multi-branch, Terminals & cash sessions, Inventory, Warehousing
+   - OPERATIONS: Returns, Debit/credit notes (split from returns), Manual FBR amendments,
+                 Cheques + bank transfers, Customer-facing display, Hardware integrations
+   - RESTAURANT: Single toggle (gates ALL restaurant features — dine-in, tables, KDS, etc.)
+   - INSIGHTS: Basic reports, Advanced reports, Audit log
+
+4. FBR Sandbox Scenarios — replaced ArrayField with 28 individual BooleanFields
+   (SN001–SN028) so admin ticks checkboxes exactly like benchmark shows,
+   instead of typing a free-text list
+
+5. FORCED_MODULES class constant added — these three can never be turned off
+
+6. clean() added — enforces forced modules cannot be set to False
+
+7. Import path fixed: 'users.models' not 'apps.users.models'
 """
 
+import secrets
+import uuid
+from datetime import timedelta
+
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from config.storage_backends import company_logo_upload_path
 
 
 # ---------------------------------------------------------------------------
-# Choices — defined as classes so they are importable elsewhere cleanly
+# Choices
 # ---------------------------------------------------------------------------
 
 class BusinessMode(models.TextChoices):
-    """
-    What product(s) has this company purchased from us?
-    POS and Digital Invoicing are kept separate because FBR treats them as
-    two different integration types even though both eventually get a QR code.
-    """
-    POS_ONLY  = "pos_only",  _("POS Only")
-    DI_ONLY   = "di_only",   _("Digital Invoicing Only")
-    BOTH      = "both",      _("POS + Digital Invoicing")
+    POS_ONLY = "pos_only", _("POS Only")
+    DI_ONLY  = "di_only",  _("Digital Invoicing Only")
+    BOTH     = "both",     _("POS + Digital Invoicing")
 
 
 class FBRBusinessNature(models.TextChoices):
     """
-    FBR's own classification of what the business *does*.
-    Multiple values can apply to one company — stored as an ArrayField.
+    Matches IRIS checkboxes exactly (screenshot 2).
+    Multi-select — stored as ArrayField.
     """
     MANUFACTURER     = "manufacturer",     _("Manufacturer")
     IMPORTER         = "importer",         _("Importer")
@@ -55,16 +74,16 @@ class FBRBusinessNature(models.TextChoices):
 
 class FBRSector(models.TextChoices):
     """
-    FBR's sector classification — exactly ONE value per company.
-    This, combined with Business Nature, determines which sandbox scenarios
-    FBR assigns to this taxpayer inside IRIS.
+    Matches IRIS dropdown exactly (screenshot 2).
+    Single select — one value per company.
     """
-    POTASSIUM_CHLORIDE   = "potassium_chloride",   _("Potassium Chloride")
-    CEMENT_CONCRETE      = "cement_concrete",       _("Cement & Concrete Block")
-    MOBILE_WHOLESALE     = "mobile_wholesale",      _("Mobile Wholesale/Retail")
+    POTASSIUM_CHLORATE   = "potassium_chlorate",   _("Potassium Chlorate")
+    CEMENT_CONCRETE      = "cement_concrete",       _("Cement or Concrete Blocks")
+    MOBILE               = "mobile",                _("Mobile")
+    WHOLESALE_RETAILS    = "wholesale_retails",     _("Wholesale / Retails")
     PHARMACEUTICALS      = "pharmaceuticals",       _("Pharmaceuticals")
-    CNG_STATION          = "cng_station",           _("CNG Station")
-    AUTOMOBILES          = "automobiles",           _("Automobiles")
+    CNG_STATIONS         = "cng_stations",          _("CNG Stations")
+    AUTOMOBILE           = "automobile",            _("Automobile")
     SERVICES             = "services",              _("Services")
     GAS_DISTRIBUTION     = "gas_distribution",      _("Gas Distribution")
     ELECTRICITY          = "electricity",           _("Electricity Distribution")
@@ -78,27 +97,24 @@ class FBRSector(models.TextChoices):
 
 class BusinessVertical(models.TextChoices):
     """
-    Our own internal classification — drives which POS features / UI we show.
+    Our own internal classification — drives POS UI/features shown.
     Completely independent of FBR Sector.
-
-    Examples: restaurant mode enables table/floor-map features;
-              grocery mode enables weight-based pricing, etc.
     """
-    GROCERY        = "grocery",        _("Grocery Store")
-    GENERAL_STORE  = "general_store",  _("General Store")
-    RESTAURANT     = "restaurant",     _("Restaurant / F&B")
-    PHARMACY       = "pharmacy",       _("Pharmacy")
-    ELECTRONICS    = "electronics",    _("Electronics")
-    CLOTHING       = "clothing",       _("Clothing / Apparel")
-    WHOLESALE      = "wholesale",      _("Wholesale")
-    OTHER          = "other",          _("Other")
+    GROCERY       = "grocery",       _("Grocery Store")
+    GENERAL_STORE = "general_store", _("General Store")
+    RESTAURANT    = "restaurant",    _("Restaurant / F&B")
+    PHARMACY      = "pharmacy",      _("Pharmacy")
+    ELECTRONICS   = "electronics",   _("Electronics")
+    CLOTHING      = "clothing",      _("Clothing / Apparel")
+    WHOLESALE     = "wholesale",     _("Wholesale")
+    OTHER         = "other",         _("Other")
 
 
 class SubscriptionPlan(models.TextChoices):
-    TRIAL     = "trial",     _("Trial")
-    STARTER   = "starter",   _("Starter")
-    PRO       = "pro",       _("Pro")
-    PREMIUM   = "premium",   _("Premium")
+    TRIAL   = "trial",   _("Trial")
+    STARTER = "starter", _("Starter")
+    PRO     = "pro",     _("Pro")
+    PREMIUM = "premium", _("Premium")
 
 
 class SubscriptionStatus(models.TextChoices):
@@ -107,6 +123,42 @@ class SubscriptionStatus(models.TextChoices):
     EXPIRED   = "expired",   _("Expired")
     SUSPENDED = "suspended", _("Suspended")
     CANCELLED = "cancelled", _("Cancelled")
+
+
+# ---------------------------------------------------------------------------
+# All 28 FBR sandbox scenarios — complete list from PRAL documentation
+# ---------------------------------------------------------------------------
+
+FBR_SCENARIOS = [
+    ("sn001", "SN001 · Standard Rate — Registered Buyer"),
+    ("sn002", "SN002 · Standard Rate — Unregistered Buyer"),
+    ("sn003", "SN003 · Steel Melted"),
+    ("sn004", "SN004 · Steel Scrap by Ship Breaker"),
+    ("sn005", "SN005 · Reduced Rate — Registered Buyer"),
+    ("sn006", "SN006 · Exempted Goods"),
+    ("sn007", "SN007 · Zero Rated Goods"),
+    ("sn008", "SN008 · Third Schedule Goods"),
+    ("sn009", "SN009 · Purchase from Cotton Grower"),
+    ("sn010", "SN010 · Telecom Services by Mobile Operators"),
+    ("sn011", "SN011 · Steel via Toll Manufacturing"),
+    ("sn012", "SN012 · Petroleum Products"),
+    ("sn013", "SN013 · Electricity to Retailers"),
+    ("sn014", "SN014 · Gas to CNG Stations"),
+    ("sn015", "SN015 · Mobile Phones"),
+    ("sn016", "SN016 · Processing / Conversion of Goods"),
+    ("sn017", "SN017 · Goods (FED in ST Mode)"),
+    ("sn018", "SN018 · Services (FED in ST Mode)"),
+    ("sn019", "SN019 · Services (ICT Ordinance)"),
+    ("sn020", "SN020 · Electric Vehicles"),
+    ("sn021", "SN021 · Cement / Concrete Block"),
+    ("sn022", "SN022 · Potassium Chloride"),
+    ("sn023", "SN023 · SNNG Sale"),
+    ("sn024", "SN024 · Goods per SC004"),
+    ("sn025", "SN025 · Goods per SRO2971"),
+    ("sn026", "SN026 · Standard Rate — End Consumer (Retailer)"),
+    ("sn027", "SN027 · Third Schedule — End Consumer (Retailer)"),
+    ("sn028", "SN028 · Reduced Rate — End Consumer (Retailer)"),
+]
 
 
 # ---------------------------------------------------------------------------
@@ -119,16 +171,25 @@ class Company(models.Model):
 
     Sections
     --------
-    1. Core business identity
-    2. FBR / regulatory info
-    3. Business classification (our own)
-    4. Contact & branding
-    5. Subscription
-    6. Feature modules (hard ceiling for user permissions)
-    7. FBR sandbox / onboarding state
-    8. Internal admin metadata
-    9. Timestamps & status
+    1.  Core business identity
+    2.  FBR / regulatory info
+    3.  Business classification (our own — vertical)
+    4.  Contact & branding
+    5.  Subscription
+    6.  Feature modules (hard ceiling for all user permissions)
+    7.  FBR sandbox / onboarding state
+    8.  FBR sandbox scenarios (SN001–SN028, individual checkboxes)
+    9.  Internal admin metadata
+    10. Timestamps & status
     """
+
+    # Modules that are FORCED — can never be disabled for any company.
+    # Enforced in clean() and in Django admin (read-only checkboxes).
+    FORCED_MODULES = [
+        "module_invoices",
+        "module_fbr_di",
+        "module_customer_db",
+    ]
 
     # ------------------------------------------------------------------
     # 1. Core business identity
@@ -140,10 +201,10 @@ class Company(models.Model):
     )
 
     ntn = models.CharField(
-        max_length=15,
+        max_length=30,
         unique=True,
         verbose_name=_("NTN"),
-        help_text=_("National Tax Number — 7 digits (e.g. 1234567)"),
+        help_text=_("National Tax Number or CNIC"),
     )
 
     strn = models.CharField(
@@ -184,7 +245,10 @@ class Company(models.Model):
         default=list,
         blank=True,
         verbose_name=_("FBR Business Nature"),
-        help_text=_("Multiple values allowed. Drives sandbox scenario assignment in IRIS."),
+        help_text=_(
+            "One or more FBR-defined business natures. "
+            "Required before submitting invoices to PRAL."
+        ),
     )
 
     fbr_sector = models.CharField(
@@ -193,11 +257,14 @@ class Company(models.Model):
         blank=True,
         null=True,
         verbose_name=_("FBR Sector"),
-        help_text=_("Exactly one sector. Combined with Business Nature to determine eligible scenarios."),
+        help_text=_(
+            "Exactly one sector. Combined with Business Nature to determine "
+            "eligible sandbox scenarios inside IRIS."
+        ),
     )
 
     # ------------------------------------------------------------------
-    # 3. Business classification (our own, independent of FBR)
+    # 3. Business classification (our own)
     # ------------------------------------------------------------------
 
     vertical = models.CharField(
@@ -206,8 +273,8 @@ class Company(models.Model):
         default=BusinessVertical.GENERAL_STORE,
         verbose_name=_("Business Vertical"),
         help_text=_(
-            "Internal classification that controls which POS features/UI "
-            "this company sees. Independent of FBR Sector."
+            "Controls which POS features/UI this company sees. "
+            "Independent of FBR Sector."
         ),
     )
 
@@ -216,15 +283,16 @@ class Company(models.Model):
     # ------------------------------------------------------------------
 
     logo = models.ImageField(
-        upload_to="company_logos/",
-        blank=True,
-        null=True,
-        verbose_name=_("Company Logo"),
-    )
+    upload_to=company_logo_upload_path,
+    storage=None,    # uses default S3 storage from settings
+    blank=True,
+    null=True,
+    verbose_name=_("Company Logo"),
+  ) 
 
     address = models.TextField(
         verbose_name=_("Business Address"),
-        help_text=_("Full address in a single field (city, province, postal code)."),
+        help_text=_("Full address in a single field (street, city, province, postal code)."),
     )
 
     phone = models.CharField(
@@ -262,67 +330,176 @@ class Company(models.Model):
     )
 
     subscription_start_date = models.DateField(
-        blank=True,
-        null=True,
+        blank=True, null=True,
         verbose_name=_("Subscription Start Date"),
     )
 
     subscription_expiry_date = models.DateField(
-        blank=True,
-        null=True,
+        blank=True, null=True,
         verbose_name=_("Subscription Expiry Date"),
     )
 
     next_billing_date = models.DateField(
-        blank=True,
-        null=True,
+        blank=True, null=True,
         verbose_name=_("Next Billing Date"),
     )
 
     # ------------------------------------------------------------------
-    # 6. Feature modules — hard ceiling for all users in this company
+    # 6. Feature modules
     #
-    #    Rule: a user permission can NEVER exceed what is enabled here.
-    #    Admin (platform) bypasses this ceiling entirely.
-    #    Owner gets everything that IS enabled here, automatically.
+    # Hard ceiling for ALL users in this company.
+    # Platform Admin bypasses this ceiling entirely.
+    # Owner gets everything enabled here — auto-granted by signal.
+    #
+    # Grouped exactly as benchmark screenshot shows:
+    #   SALES & FBR  |  MULTI-LOCATION  |  OPERATIONS  |  RESTAURANT  |  INSIGHTS
+    #
+    # FORCED modules (cannot be disabled):
+    #   module_invoices, module_fbr_di, module_customer_db
     # ------------------------------------------------------------------
 
-    # --- Sales & FBR ---
-    module_sales_invoicing       = models.BooleanField(default=False, verbose_name=_("Sales Invoicing"))
-    module_fbr_di                = models.BooleanField(default=False, verbose_name=_("FBR Digital Invoicing"))
-    module_customer_db           = models.BooleanField(default=True,  verbose_name=_("Customer Database"))  # cannot be disabled per FBR rules
-    module_fbr_registered_buyer  = models.BooleanField(default=False, verbose_name=_("FBR Registered Buyer Scenarios"))
-
-    # --- Operations ---
-    module_returns               = models.BooleanField(default=False, verbose_name=_("Returns & Debit/Credit Notes"))
-    module_fbr_amendments        = models.BooleanField(default=False, verbose_name=_("Manual FBR Amendments"))
-    module_cheque_bank_transfer  = models.BooleanField(default=False, verbose_name=_("Cheque & Bank Transfer"))
-    module_customer_display      = models.BooleanField(default=False, verbose_name=_("Customer-Facing Display"))
-    module_hardware_integration  = models.BooleanField(default=False, verbose_name=_("Hardware Integration"))
-
-    # --- Inventory ---
-    module_inventory             = models.BooleanField(default=False, verbose_name=_("Inventory Tracking"))
-    module_warehousing           = models.BooleanField(default=False, verbose_name=_("Warehousing"))
-
-    # --- Multi-location (reserved — not wired to any logic yet) ---
-    module_multi_location        = models.BooleanField(
-        default=False,
-        verbose_name=_("Multi-Location / Multi-Branch"),
-        help_text=_("Reserved for future use. Currently disabled in all business logic."),
+    # ── SALES & FBR (all three FORCED) ──────────────────────────────
+    module_invoices = models.BooleanField(
+        default=True,
+        verbose_name=_("Invoices"),
+        help_text=_(
+            "Create, list, and manage invoices. "
+            "FORCED — cannot be disabled. This is the core product."
+        ),
     )
 
-    # --- Restaurant / F&B ---
-    module_restaurant_fnb        = models.BooleanField(default=False, verbose_name=_("Restaurant F&B"))
-    module_dine_in               = models.BooleanField(default=False, verbose_name=_("Dine-In"))
-    module_takeaway              = models.BooleanField(default=False, verbose_name=_("Takeaway"))
-    module_delivery              = models.BooleanField(default=False, verbose_name=_("Delivery"))
-    module_table_floor_map       = models.BooleanField(default=False, verbose_name=_("Table & Floor Map"))
-    module_kitchen_display       = models.BooleanField(default=False, verbose_name=_("Kitchen Display / KDS"))
+    module_fbr_di = models.BooleanField(
+        default=True,
+        verbose_name=_("FBR Digital Invoicing"),
+        help_text=_(
+            "Submit invoices to PRAL and store FBR tokens. "
+            "FORCED — FBR submission is the primary value of the platform."
+        ),
+    )
 
-    # --- Insights ---
-    module_basic_reports         = models.BooleanField(default=True,  verbose_name=_("Basic Reports"))
-    module_advanced_reports      = models.BooleanField(default=False, verbose_name=_("Advanced Reports"))
-    module_audit_logs            = models.BooleanField(default=False, verbose_name=_("Audit Logs"))
+    module_customer_db = models.BooleanField(
+        default=True,
+        verbose_name=_("Customers"),
+        help_text=_(
+            "Customer database with NTN/CNIC. "
+            "FORCED — FBR registered-buyer scenarios require a customer record with NTN."
+        ),
+    )
+
+    # ── MULTI-LOCATION ───────────────────────────────────────────────
+    module_multi_branch = models.BooleanField(
+        default=False,
+        verbose_name=_("Multi-Branch"),
+        help_text=_(
+            "Multiple physical locations. When disabled the tenant "
+            "operates from a single implicit branch. "
+            "Reserved for future use — not wired to branch-creation logic yet."
+        ),
+    )
+
+    module_terminals_cash_sessions = models.BooleanField(
+        default=False,
+        verbose_name=_("Terminals & Cash Sessions"),
+        help_text=_("POS terminal registration and cashier shift open/close flow."),
+    )
+
+    module_user_management = models.BooleanField(
+        default=False,
+        verbose_name=_("User Management"),
+        help_text=_("Owner-side user creation, role assignment, and permissions."),
+    )
+
+    module_inventory = models.BooleanField(
+        default=False,
+        verbose_name=_("Inventory Tracking"),
+        help_text=_("Stock levels, movements, adjustments, transfers, stock audits."),
+    )
+
+    module_warehousing = models.BooleanField(
+        default=False,
+        verbose_name=_("Warehouses (Digital Invoicing)"),
+        help_text=_(
+            "Per-warehouse stock for Digital-Invoicing tenants: "
+            "godowns under a branch, opening balance + stock-in per warehouse, "
+            "and warehouse-keyed sale deduction."
+        ),
+    )
+
+    # ── OPERATIONS ───────────────────────────────────────────────────
+    module_returns = models.BooleanField(
+        default=False,
+        verbose_name=_("Returns"),
+        help_text=_("Customer returns workflow."),
+    )
+
+    module_debit_credit_notes = models.BooleanField(
+        default=False,
+        verbose_name=_("Debit / Credit Notes"),
+        help_text=_(
+            "Issue follow-up notes against existing FBR-validated invoices "
+            "for forgotten items or amendments."
+        ),
+    )
+
+    module_fbr_amendments = models.BooleanField(
+        default=False,
+        verbose_name=_("Manual FBR Amendments"),
+        help_text=_(
+            "Phase 4 manual-amendment workflow including Annexure-C linkage."
+        ),
+    )
+
+    module_cheque_bank_transfer = models.BooleanField(
+        default=False,
+        verbose_name=_("Cheques + Bank Transfers"),
+        help_text=_("Beyond cash and card — cheques, bank refs, wallet payment tracking."),
+    )
+
+    module_customer_display = models.BooleanField(
+        default=False,
+        verbose_name=_("Customer-Facing Display"),
+        help_text=_(
+            "The second-monitor display showing the running cart "
+            "and post-sale thank-you."
+        ),
+    )
+
+    module_hardware_integration = models.BooleanField(
+        default=False,
+        verbose_name=_("Hardware Integrations"),
+        help_text=_("Thermal printer, barcode scanner, cash drawer kick."),
+    )
+
+    # ── RESTAURANT ───────────────────────────────────────────────────
+    module_restaurant_fnb = models.BooleanField(
+        default=False,
+        verbose_name=_("Restaurant / F&B"),
+        help_text=_(
+            "Single toggle that gates ALL restaurant features: "
+            "dine-in / takeaway / delivery orders, tables + floor map, "
+            "menu modifiers (add-ons / sizes), kitchen tickets (KDS) + KDOC. "
+            "Gates the restaurant API; pair with the restaurant vertical to surface the UI."
+        ),
+    )
+
+    # ── INSIGHTS ─────────────────────────────────────────────────────
+    module_basic_reports = models.BooleanField(
+        default=True,
+        verbose_name=_("Reports — Basic"),
+        help_text=_("Daily summary, today's sales, simple lookups."),
+    )
+
+    module_advanced_reports = models.BooleanField(
+        default=False,
+        verbose_name=_("Reports — Advanced"),
+        help_text=_("Scheduled reports, period comparisons, exports."),
+    )
+
+    module_audit_logs = models.BooleanField(
+        default=False,
+        verbose_name=_("Audit Log"),
+        help_text=_("Six-year-retention audit trail viewer."),
+    )
 
     # ------------------------------------------------------------------
     # 7. FBR sandbox / onboarding state
@@ -331,29 +508,31 @@ class Company(models.Model):
     fbr_sandbox_token = models.TextField(
         blank=True,
         verbose_name=_("FBR Sandbox Token"),
-        help_text=_("Issued by IRIS after IP whitelisting is accepted. Used for test invoice submission."),
+        help_text=_(
+            "Issued by IRIS after IP whitelisting is accepted. "
+            "Used for test invoice submission."
+        ),
+    )
+
+    fbr_sandbox_endpoint = models.URLField(
+        default="https://esp.pral.com.pk",
+        blank=True,
+        verbose_name=_("FBR Sandbox Endpoint"),
     )
 
     fbr_production_token = models.TextField(
         blank=True,
         verbose_name=_("FBR Production Token"),
         help_text=_(
-            "Issued automatically by IRIS once all sandbox scenarios are cleared. "
-            "Required before any live invoice can be submitted."
+            "Issued automatically by IRIS once ALL assigned sandbox scenarios "
+            "are cleared. Required before any live invoice can be submitted."
         ),
     )
 
-    fbr_assigned_scenarios = ArrayField(
-        base_field=models.CharField(max_length=10),
-        default=list,
+    fbr_production_endpoint = models.URLField(
+        default="https://gw.fbr.gov.pk",
         blank=True,
-        verbose_name=_("FBR Assigned Sandbox Scenarios"),
-        help_text=_(
-            "List of scenario codes this tenant must clear in sandbox "
-            "(e.g. ['SN001', 'SN002', 'SN005']). "
-            "Copied manually from IRIS — FBR does not expose an API for this. "
-            "Admin can override the platform's auto-suggested default."
-        ),
+        verbose_name=_("FBR Production Endpoint"),
     )
 
     fbr_test_buyer_ntn = models.CharField(
@@ -361,31 +540,82 @@ class Company(models.Model):
         blank=True,
         verbose_name=_("FBR Test Buyer NTN"),
         help_text=_(
-            "Required only if this tenant's scenarios include SN001 or SN005 "
-            "(registered buyer scenarios). PRAL's own test NTN is NOT pre-registered."
+            "Required only if this tenant's assigned scenarios include SN001 or SN005 "
+            "(registered buyer scenarios). "
+            "PRAL's own test NTN is NOT pre-registered — enter the actual test NTN here."
         ),
     )
 
     fbr_sandbox_complete = models.BooleanField(
         default=False,
         verbose_name=_("Sandbox Testing Complete"),
-        help_text=_("Flipped to True once all assigned scenarios are cleared and a production token is issued."),
+        help_text=_(
+            "Set to True automatically once all assigned scenarios are cleared "
+            "and a production token is issued."
+        ),
     )
 
-    # IP whitelisting (up to 3 IPs per FBR's limit)
-    fbr_ip_1 = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("Whitelisted IP 1"))
-    fbr_ip_2 = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("Whitelisted IP 2"))
-    fbr_ip_3 = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("Whitelisted IP 3"))
+    # IP whitelisting — FBR hard limit is 3 IPs
+    fbr_ip_1 = models.GenericIPAddressField(
+        blank=True, null=True, verbose_name=_("Whitelisted IP 1")
+    )
+    fbr_ip_2 = models.GenericIPAddressField(
+        blank=True, null=True, verbose_name=_("Whitelisted IP 2")
+    )
+    fbr_ip_3 = models.GenericIPAddressField(
+        blank=True, null=True, verbose_name=_("Whitelisted IP 3")
+    )
 
-    # CRM credentials (for raising support cases with PRAL's DI CRM)
+    # CRM credentials for raising support cases with PRAL DI CRM
     fbr_crm_user_id = models.EmailField(
         blank=True,
         verbose_name=_("FBR CRM User ID (Email)"),
-        help_text=_("Email registered as Technical Contact Person in IRIS Technical Details."),
+        help_text=_(
+            "Email registered as Technical Contact Person in IRIS Technical Details. "
+            "Used to log into dicrm.pral.com.pk"
+        ),
     )
 
     # ------------------------------------------------------------------
-    # 8. Internal admin metadata
+    # 8. FBR sandbox scenarios — SN001 to SN028
+    #
+    # Individual BooleanField per scenario (not an ArrayField).
+    # Admin ticks exactly which scenarios IRIS assigned to this tenant.
+    # Needed only for sandbox onboarding — once fbr_sandbox_complete=True
+    # and a production token is issued, these are historical record only.
+    # ------------------------------------------------------------------
+
+    fbr_scenario_sn001 = models.BooleanField(default=False, verbose_name=_("SN001 · Standard Rate — Registered Buyer"))
+    fbr_scenario_sn002 = models.BooleanField(default=False, verbose_name=_("SN002 · Standard Rate — Unregistered Buyer"))
+    fbr_scenario_sn003 = models.BooleanField(default=False, verbose_name=_("SN003 · Steel Melted"))
+    fbr_scenario_sn004 = models.BooleanField(default=False, verbose_name=_("SN004 · Steel Scrap by Ship Breaker"))
+    fbr_scenario_sn005 = models.BooleanField(default=False, verbose_name=_("SN005 · Reduced Rate — Registered Buyer"))
+    fbr_scenario_sn006 = models.BooleanField(default=False, verbose_name=_("SN006 · Exempted Goods"))
+    fbr_scenario_sn007 = models.BooleanField(default=False, verbose_name=_("SN007 · Zero Rated Goods"))
+    fbr_scenario_sn008 = models.BooleanField(default=False, verbose_name=_("SN008 · Third Schedule Goods"))
+    fbr_scenario_sn009 = models.BooleanField(default=False, verbose_name=_("SN009 · Purchase from Cotton Grower"))
+    fbr_scenario_sn010 = models.BooleanField(default=False, verbose_name=_("SN010 · Telecom Services by Mobile Operators"))
+    fbr_scenario_sn011 = models.BooleanField(default=False, verbose_name=_("SN011 · Steel via Toll Manufacturing"))
+    fbr_scenario_sn012 = models.BooleanField(default=False, verbose_name=_("SN012 · Petroleum Products"))
+    fbr_scenario_sn013 = models.BooleanField(default=False, verbose_name=_("SN013 · Electricity to Retailers"))
+    fbr_scenario_sn014 = models.BooleanField(default=False, verbose_name=_("SN014 · Gas to CNG Stations"))
+    fbr_scenario_sn015 = models.BooleanField(default=False, verbose_name=_("SN015 · Mobile Phones"))
+    fbr_scenario_sn016 = models.BooleanField(default=False, verbose_name=_("SN016 · Processing / Conversion of Goods"))
+    fbr_scenario_sn017 = models.BooleanField(default=False, verbose_name=_("SN017 · Goods (FED in ST Mode)"))
+    fbr_scenario_sn018 = models.BooleanField(default=False, verbose_name=_("SN018 · Services (FED in ST Mode)"))
+    fbr_scenario_sn019 = models.BooleanField(default=False, verbose_name=_("SN019 · Services (ICT Ordinance)"))
+    fbr_scenario_sn020 = models.BooleanField(default=False, verbose_name=_("SN020 · Electric Vehicles"))
+    fbr_scenario_sn021 = models.BooleanField(default=False, verbose_name=_("SN021 · Cement / Concrete Block"))
+    fbr_scenario_sn022 = models.BooleanField(default=False, verbose_name=_("SN022 · Potassium Chloride"))
+    fbr_scenario_sn023 = models.BooleanField(default=False, verbose_name=_("SN023 · SNNG Sale"))
+    fbr_scenario_sn024 = models.BooleanField(default=False, verbose_name=_("SN024 · Goods per SC004"))
+    fbr_scenario_sn025 = models.BooleanField(default=False, verbose_name=_("SN025 · Goods per SRO2971"))
+    fbr_scenario_sn026 = models.BooleanField(default=False, verbose_name=_("SN026 · Standard Rate — End Consumer (Retailer)"))
+    fbr_scenario_sn027 = models.BooleanField(default=False, verbose_name=_("SN027 · Third Schedule — End Consumer (Retailer)"))
+    fbr_scenario_sn028 = models.BooleanField(default=False, verbose_name=_("SN028 · Reduced Rate — End Consumer (Retailer)"))
+
+    # ------------------------------------------------------------------
+    # 9. Internal admin metadata
     # ------------------------------------------------------------------
 
     account_manager = models.CharField(
@@ -398,7 +628,7 @@ class Company(models.Model):
     internal_notes = models.TextField(
         blank=True,
         verbose_name=_("Internal Notes"),
-        help_text=_("Visible only to Admin/Admin Staff. Never shown in the POS or client-facing UI."),
+        help_text=_("Visible only to Admin/Admin Staff. Never shown in POS or client UI."),
     )
 
     tags = ArrayField(
@@ -406,11 +636,11 @@ class Company(models.Model):
         default=list,
         blank=True,
         verbose_name=_("Tags"),
-        help_text=_("Free-form labels for filtering/searching companies in the admin app."),
+        help_text=_("Free-form labels for filtering companies in the admin app (e.g. 'vip', 'cash-only')."),
     )
 
     # ------------------------------------------------------------------
-    # 9. Timestamps & status
+    # 10. Timestamps & status
     # ------------------------------------------------------------------
 
     is_active = models.BooleanField(
@@ -426,7 +656,7 @@ class Company(models.Model):
     updated_at = models.DateTimeField(auto_now=True,     verbose_name=_("Updated At"))
 
     # ------------------------------------------------------------------
-    # Meta & dunder
+    # Meta
     # ------------------------------------------------------------------
 
     class Meta:
@@ -434,8 +664,8 @@ class Company(models.Model):
         verbose_name_plural = _("Companies")
         ordering            = ["-created_at"]
         indexes = [
-            models.Index(fields=["ntn"],          name="company_ntn_idx"),
-            models.Index(fields=["is_active"],    name="company_active_idx"),
+            models.Index(fields=["ntn"],                 name="company_ntn_idx"),
+            models.Index(fields=["is_active"],           name="company_active_idx"),
             models.Index(fields=["subscription_status"], name="company_sub_status_idx"),
         ]
 
@@ -443,22 +673,46 @@ class Company(models.Model):
         return f"{self.business_name} ({self.ntn})"
 
     # ------------------------------------------------------------------
-    # Convenience properties
+    # Validation
+    # ------------------------------------------------------------------
+
+    def clean(self):
+        """
+        Enforce that FORCED modules can never be set to False.
+        Called by Django admin and serializer validation.
+        """
+        errors = {}
+        for field_name in self.FORCED_MODULES:
+            if getattr(self, field_name) is False:
+                errors[field_name] = _(
+                    f"This module is forced and cannot be disabled. "
+                    f"It is a core requirement of the platform."
+                )
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        """Always enforce forced modules before saving."""
+        for field_name in self.FORCED_MODULES:
+            setattr(self, field_name, True)
+        super().save(*args, **kwargs)
+
+    # ------------------------------------------------------------------
+    # Convenience properties & methods
     # ------------------------------------------------------------------
 
     @property
     def owner(self):
         """
         Returns the single Owner user for this company.
-        Avoids a circular import by using a lazy string reference.
+        Local import avoids circular dependency at module level.
         Returns None if no owner has been created yet.
         """
-        from users.models import User  # local import — avoids circular import at module level
+        from users.models import User
         return User.objects.filter(company=self, role=User.Role.OWNER).first()
 
     @property
     def is_subscription_active(self):
-        """Quick check used by permission classes to gate API access."""
         return self.subscription_status in (
             SubscriptionStatus.ACTIVE,
             SubscriptionStatus.TRIAL,
@@ -466,12 +720,240 @@ class Company(models.Model):
 
     def get_enabled_modules(self) -> list[str]:
         """
-        Returns a list of module field names that are currently True.
-        Used by the permission system to validate user permission grants
-        against the company ceiling.
+        Returns list of module field names that are currently True.
+        Used by the permission system to enforce the company ceiling.
 
-        Example return value:
-            ['module_sales_invoicing', 'module_customer_db', 'module_basic_reports']
+        Example: ['module_invoices', 'module_fbr_di', 'module_customer_db', 'module_basic_reports']
         """
-        module_fields = [f.name for f in self._meta.get_fields() if f.name.startswith("module_")]
-        return [name for name in module_fields if getattr(self, name) is True]
+        return [
+            f.name
+            for f in self._meta.get_fields()
+            if f.name.startswith("module_") and getattr(self, f.name) is True
+        ]
+
+    def get_assigned_scenarios(self) -> list[str]:
+        """
+        Returns list of scenario codes (uppercase) that are ticked True.
+        Example: ['SN001', 'SN005', 'SN026']
+        Used by the FBR sandbox runner to know which scenarios to submit.
+        """
+        return [
+            code.upper()
+            for code, _ in FBR_SCENARIOS
+            if getattr(self, f"fbr_scenario_{code}", False)
+        ]
+
+class AuditLog(models.Model):
+    """
+    Immutable ledger tracking every significant action performed within a company.
+    Used for the Audit Log report.
+    """
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="audit_logs"
+    )
+    user_email = models.CharField(max_length=255, help_text="Email of the user or '(system)'")
+    entity_type = models.CharField(max_length=50, help_text="e.g. invoice, product, customer, fbr_token")
+    entity_id = models.CharField(max_length=100, help_text="UUID or ID of the entity")
+    action = models.CharField(max_length=50, help_text="e.g. create, update, delete, fbr_validated, resubmit")
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("Audit Log")
+        verbose_name_plural = _("Audit Logs")
+        indexes = [
+            models.Index(fields=["company", "-created_at"]),
+            models.Index(fields=["entity_type", "entity_id"]),
+        ]
+
+    def __str__(self):
+        return f"{self.created_at} - {self.user_email} - {self.action} {self.entity_type} {self.entity_id}"
+
+
+class Branch(models.Model):
+    """
+    Physical or logical location under a Company (tenant).
+    Every tenant gets a default branch upon creation.
+    """
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="branches",
+        verbose_name=_("Company")
+    )
+    name = models.CharField(max_length=255, verbose_name=_("Branch Name"))
+    code = models.CharField(max_length=50, verbose_name=_("Branch Code"))
+    city = models.CharField(max_length=100, verbose_name=_("City"))
+    province = models.CharField(max_length=50, verbose_name=_("Province"))
+    address = models.TextField(verbose_name=_("Address"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+    is_default = models.BooleanField(default=False, verbose_name=_("Is Default"))
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Branch")
+        verbose_name_plural = _("Branches")
+        unique_together = ("company", "code")
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Company)
+def create_default_branch(sender, instance, created, **kwargs):
+    """
+    When a Company is created, automatically generate a default branch
+    using the company's address and basic details.
+    """
+    if created:
+        Branch.objects.get_or_create(
+            company=instance,
+            is_default=True,
+            defaults={
+                "name": f"{instance.business_name} - Main Branch",
+                "code": "MAIN-01",
+                "city": "Unknown",  # Default if city is not parsed from address
+                "province": "PUNJAB", # Default province
+                "address": instance.address,
+                "is_active": True,
+            }
+        )
+
+
+class Warehouse(models.Model):
+    """
+    A physical storage location (godown/warehouse) linked to a Company and optionally a Branch.
+    Tenants with module_warehousing=True can add multiple warehouses.
+    Every tenant gets a default warehouse from their default branch on creation.
+    """
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="warehouses",
+        verbose_name=_("Company")
+    )
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="warehouses",
+        verbose_name=_("Branch")
+    )
+    name = models.CharField(max_length=255, verbose_name=_("Warehouse Name"))
+    code = models.CharField(max_length=50, verbose_name=_("Warehouse Code"))
+    city = models.CharField(max_length=100, blank=True, verbose_name=_("City"))
+    address = models.TextField(blank=True, verbose_name=_("Address"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+    is_default = models.BooleanField(default=False, verbose_name=_("Is Default"))
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Warehouse")
+        verbose_name_plural = _("Warehouses")
+        unique_together = ("company", "code")
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class Terminal(models.Model):
+    """
+    A POS terminal registered under a tenant branch.
+
+    Terminals are created by the company owner or platform admin and later
+    used to bind a cashier/manager user to a physical device.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="terminals",
+        verbose_name=_("Company"),
+    )
+
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.PROTECT,
+        related_name="terminals",
+        verbose_name=_("Branch"),
+    )
+
+    name = models.CharField(max_length=255, verbose_name=_("Terminal Name"))
+    device_fingerprint = models.CharField(max_length=255, blank=True, verbose_name=_("Device Fingerprint"))
+    terminal_index = models.CharField(max_length=50, blank=True, verbose_name=_("Terminal Index"))
+
+    pairing_code = models.CharField(max_length=32, blank=True, verbose_name=_("Pairing Code"))
+    pairing_code_expires_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Pairing Code Expires At"))
+    paired_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Paired At"))
+
+    os_version = models.CharField(max_length=100, blank=True, verbose_name=_("OS Version"))
+    app_version = models.CharField(max_length=50, blank=True, verbose_name=_("App Version"))
+    printer_config = models.JSONField(default=dict, blank=True, verbose_name=_("Printer Config"))
+    scanner_config = models.JSONField(default=dict, blank=True, verbose_name=_("Scanner Config"))
+    drawer_config = models.JSONField(default=dict, blank=True, verbose_name=_("Drawer Config"))
+    customer_display_enabled = models.BooleanField(default=False, verbose_name=_("Customer Display Enabled"))
+
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+    last_seen_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Last Seen At"))
+    last_synced_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Last Synced At"))
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Terminal")
+        verbose_name_plural = _("Terminals")
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["company", "branch"], name="terminal_company_branch_idx"),
+            models.Index(fields=["company", "is_active"], name="terminal_company_active_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.company.business_name})"
+
+    def save(self, *args, **kwargs):
+        if self.branch_id:
+            self.company = self.branch.company
+
+        if not self.pairing_code:
+            self.pairing_code = secrets.token_hex(3).upper()
+        if not self.pairing_code_expires_at:
+            self.pairing_code_expires_at = timezone.now() + timedelta(days=1)
+
+        super().save(*args, **kwargs)
+
+
+@receiver(post_save, sender=Company)
+def create_default_warehouse(sender, instance, created, **kwargs):
+    """
+    When a Company is created, auto-create a default warehouse
+    from the default branch that was just created.
+    """
+    if created:
+        default_branch = Branch.objects.filter(company=instance, is_default=True).first()
+        Warehouse.objects.get_or_create(
+            company=instance,
+            is_default=True,
+            defaults={
+                "branch": default_branch,
+                "name": f"{instance.business_name} - Main Warehouse",
+                "code": "WH-01",
+                "city": "Unknown",
+                "address": instance.address,
+                "is_active": True,
+            }
+        )

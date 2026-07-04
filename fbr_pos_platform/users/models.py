@@ -28,8 +28,10 @@ Key rules encoded here
 """
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from config.storage_backends import user_profile_upload_path
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +69,7 @@ class CustomUserManager(BaseUserManager):
     def _create_user(self, email: str, password: str, **extra_fields):
         if not email:
             raise ValueError(_("An email address is required."))
-        email = self.normalize_email(email)
+        email = self.normalize_email(email).strip().lower()
         # Keep username in sync with email so AbstractUser internals stay happy
         extra_fields.setdefault("username", email)
         user = self.model(email=email, **extra_fields)
@@ -186,6 +188,16 @@ class User(AbstractUser):
         ),
     )
 
+    terminal = models.ForeignKey(
+        "companies.Terminal",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_users",
+        verbose_name=_("Terminal"),
+        help_text=_("Optional terminal assigned to this user.")
+    )
+
     # ------------------------------------------------------------------
     # 3. Personal details
     # ------------------------------------------------------------------
@@ -202,6 +214,12 @@ class User(AbstractUser):
         blank=True,
         verbose_name=_("Phone Number"),
     )
+    profile_image = models.ImageField(
+    upload_to=user_profile_upload_path,
+    blank=True,
+    null=True,
+    verbose_name=_("Profile Image"),
+     )
 
     # username is inherited from AbstractUser.
     # We keep it but auto-fill it from email so it's never a user-facing field.
@@ -387,3 +405,23 @@ class User(AbstractUser):
         if not self.company_id:
             return False
         return getattr(self.company, module_field, False)
+
+
+class PasswordResetOTP(models.Model):
+    """OTP used for password reset on the company login flow."""
+
+    email = models.EmailField()
+    user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="password_reset_otps")
+    otp_hash = models.CharField(max_length=128)
+    verified = models.BooleanField(default=False)
+    used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"OTP for {self.email}"

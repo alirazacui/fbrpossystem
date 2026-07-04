@@ -49,6 +49,7 @@ class UserAdmin(BaseUserAdmin):
             "fields": (
                 "role",
                 "company",
+                "terminal",
                 "company_link",
             )
         }),
@@ -79,6 +80,7 @@ class UserAdmin(BaseUserAdmin):
                 "phone",
                 "role",
                 "company",
+                "terminal",
                 "status",
                 "password1",
                 "password2",

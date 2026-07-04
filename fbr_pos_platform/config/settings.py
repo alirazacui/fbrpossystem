@@ -43,23 +43,44 @@ INSTALLED_APPS = [
 
     # Third-party
     "rest_framework",
+    "corsheaders",
 
     # Local apps
     "common",
     "companies",
     "users",
     "permission_app",
+    "pos",
+    "digital_invoicing",
+    "django_celery_beat",
+    "reports",
+    "subscriptions",
+    "receipt",
+
+    
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Must be first
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "subscriptions.middleware.SubscriptionMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# ── CORS ─────────────────────────────────────────────────────
+# Allow the Vue dev server to call the Django API
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'config.urls'
 
@@ -163,5 +184,61 @@ SIMPLE_JWT = {
 }
 
 
-MEDIA_URL  = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+
+
+# ── Celery ──────────────────────────────────────────────────
+CELERY_BROKER_URL         = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND     = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT     = ["json"]
+CELERY_TASK_SERIALIZER    = "json"
+CELERY_RESULT_SERIALIZER  = "json"
+CELERY_TIMEZONE           = "Asia/Karachi"
+CELERY_TASK_TRACK_STARTED = True
+
+# ── django-celery-results ────────────────────────────────────
+INSTALLED_APPS += ["django_celery_results"]
+CELERY_RESULT_BACKEND = "django-db"  # store results in PostgreSQL
+
+
+from decouple import config
+ 
+# ── AWS S3 ───────────────────────────────────────────────────
+AWS_ACCESS_KEY_ID        = config("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY    = config("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME  = config("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME       = config("AWS_S3_REGION_NAME", default="eu-north-1")
+AWS_S3_CUSTOM_DOMAIN     = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+AWS_DEFAULT_ACL          = None
+AWS_S3_FILE_OVERWRITE    = False
+AWS_QUERYSTRING_AUTH     = False
+AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+ 
+# ── Storage backends ─────────────────────────────────────────
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "bucket_name":    AWS_STORAGE_BUCKET_NAME,
+            "region_name":    AWS_S3_REGION_NAME,
+            "location":       "media",
+            "default_acl":    None,
+            "file_overwrite": False,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+ 
+MEDIA_URL  = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+MEDIA_ROOT = ""    # not needed when using S3
+
+
+EMAIL_BACKEND      = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST         = config("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT         = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS      = True
+EMAIL_HOST_USER    = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@posplatform.pk")
+

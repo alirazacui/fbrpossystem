@@ -1,0 +1,12 @@
+fbr_pos_platform/venv/
+fbr_pos_platform/media/
+fbr_pos_platform/staticfiles/
+fbr_pos_platform/*.pyc
+fbr_pos_platform/__pycache__/
+fbr_pos_frontend/node_modules/
+fbr_pos_frontend/dist/
+*.env
+deploy/env/*.env
+fbr_pos_platform.zip
+fbr_pos_frontend.zip
+fbr_pos_platform/celerybeat-schedule

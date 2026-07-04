@@ -1,0 +1,212 @@
+Sr,HS Code,Description
+1,98010000,"Services provided or rendered by hotels, restaurants, marriage halls, lawns, clubs and caterers"
+2,98011000,Services provided or rendered by hotels
+3,98012000,Services provided or rendered by restaurants
+4,98013000,Services provided or rendered by marriage halls and lawns
+5,98014000,Services provided or rendered by clubs
+6,98015000,"Services provided or rendered by caterers, suppliers of food and drinks"
+7,98016000,"Ancillary services provided or rendered by hotels, restaurants, marriage halls, lawns, caterers"
+8,98017000,Services provided or rendered by messes and hostels
+9,98019000,Other
+10,98020000,Advertisements
+11,98021000,Advertisement on T.V.
+12,98022000,Advertisement on radio
+13,98023000,Advertisement on closed circuit T.V.
+14,98024000,Advertisement in newspapers and periodicals
+15,98025000,Advertisement on cable T.V network
+16,98029000,Other
+17,98030000,Facilities for travel
+18,98031000,Travel by air of passengers within the territorial jurisdiction of Pakistan.
+19,98031100,Travel by air of passengers embarking on international journey from Pakistan
+20,98032000,Domestic travel by train
+21,98032100,International travel by train
+22,98039000,Other
+23,98040000,Services provided or rendered for inland carriage of goods
+24,98041000,Carriage of goods by air
+25,98042000,Carriage of goods by train
+26,98049000,Other
+27,98050000,Services provided or rendered by persons authorized to transact business on behalf of others.
+28,98051000,Shipping agents
+29,98052000,Stevedores
+30,98052100,Ship management service
+31,98053000,Freight forwarding agents
+32,98054000,Customs agents
+33,98055000,Travel agents
+34,98055100,Tour operators
+35,98056000,Recruiting agents
+36,98057000,Advertising agents
+37,98058000,Ship chandlers
+38,98059000,Share transfer agent
+39,98059100,Sponsorship services
+40,98059200,Business support services
+41,98059090,Other
+42,98070000,Services provided or rendered by property developers and promoters.
+43,98080000,Courier services.
+44,98090000,Services provided or rendered by persons engaged in contractual execution of work or furnishing supplies.
+45,98100000,Services provided or rendered for personal care by beauty parlours/clinics and slimming clinics and others.
+46,98110000,Services provided or rendered by laundries and dry cleaners.
+47,98120000,Telecommunication services
+48,98121000,Telephone services
+49,98121100,Fixed line voice telephone service
+50,98121200,Wireless telephone
+51,98121210,Cellular telephone
+52,98121220,Wireless Local Loop telephone
+53,98121300,Video telephone
+54,98121400,Payphone cards
+55,98121500,Pre-paid calling cards
+56,98121600,Voice mail service
+57,98121700,Messaging service
+58,98121710,Short Message service (SMS)
+59,98121720,Multimedia message service (MMS)
+60,98121910,Shifting of telephone connection
+61,98121920,Installation of telephone extension
+62,98121930,Provision of telephone extension
+63,98121940,Changing of telephone connection
+64,98121950,Conversion of NWD connection to non NWD or vice versa
+65,98121960,Cost of telephone set
+66,98121970,Restoration of telephone connection
+67,98121990,Others
+68,98122000,Bandwidth services
+69,98122100,Copper line based
+70,98122200,Fibre-optic based
+71,98122300,Co-axial cable based
+72,98122400,Microwave based
+73,98122500,Satellite based
+74,98122900,Others
+75,98123000,Telegraph
+76,98124000,Telex
+77,98125000,Telefax
+78,98125010,Store and forward fax services
+79,98125090,Others
+80,98126000,Internet services
+81,98126100,Internet services including e-mail services
+82,98126110,Dial-up internet services
+83,98126120,Broadband services for DSL connection
+84,98126121,Copper line based
+85,98126122,Fibre-optic based
+86,98126123,Co-axial cable based
+87,98126124,Wireless based
+88,98126125,Satellite based
+89,98126129,Others
+90,98126130,Internet/e-mail/Data/SMS/MMS services on WLL networks
+91,98126140,Internet/e-mail/Data/SMS/MMS services on cellular mobile networks
+92,98126190,Others
+93,98126200,Data Communication Network services (DCNS)
+94,98126210,Copper Line based
+95,98126220,Co-axial cable based
+96,98126230,Fibre-optic based
+97,98126240,Wireless/Radio based
+98,98126250,Satellite based
+99,98126290,Others
+100,98126300,Value added data services
+101,98126310,Virtual private Network service (VPN)
+102,98126320,Digital Signature service
+103,98126390,Others
+104,98129000,Audiotext services
+105,98129100,Teletext services
+106,98129200,Trunk radio services
+107,98129300,Paging services
+108,98129400,Voice paging services
+109,98129410,Radio paging services
+110,98129490,Vehicle tracking services.
+111,98129500,Burglar alarm services.
+112,98129090,Others
+113,98130000,"Services provided or rendered by banking companies, insurance companies, cooperative financing societies, modarabas, musharikas, leasing companies, foreign exchange dealers, non-banking financial institutions and other persons dealing in any such services"
+114,98131000,"Services provided or rendered in respect of insurance to a policy holder by an insurer, including a reinsurer."
+115,98131100,Goods insurance
+116,98131200,Fire insurance
+117,98131300,Theft insurance
+118,98131400,Marine insurance
+119,98131500,Life insurance
+120,98131600,Other insurance
+121,98132000,Services provided or rendered in respect of advances and loans
+122,98133000,Services provided or rendered in respect of leasing.
+123,98133010,Financial leasing
+124,98133020,Commodity or equipment leasing
+125,98133030,Hire-purchase leasing
+126,98133090,Other
+127,98133900,Services provided or rendered in respect of musharika financing
+128,98134000,Services provided or rendered by banking companies in relation to:
+129,98134100,Guarantee
+130,98134200,Brokerage
+131,98134300,Letter of credit
+132,98134400,Issuance of pay order and demand draft
+133,98134500,Bill of exchange
+134,98134600,"Transfer of money including telegraphic transfer, mail transfer and electronic transfer"
+135,98134700,Bank guarantee
+136,98134800,Bill discounting commission
+137,98134900,Safe deposit lockers
+138,98134910,Safe vaults
+139,98135000,Issuance and processing and operation of credit and debit cards
+140,98136000,Commission and brokerage of foreign exchange dealings.
+141,98137000,Automated Teller Machine operations and maintenance and management.
+142,98138000,Service provided as banker to an issue
+143,98138100,Other
+144,98139000,Service provided or rendered by a foreign exchange dealer or exchange company or money changer
+145,98140000,"Services provided or rendered by architects, town planners, contractors, property developers or promoters, interior decorators."
+146,98141000,Architects or town planners
+147,98142000,"Contractors of building (including water supply, gas supply and sanitary works), roads and bridges, electrical and mechanical works (including air conditioning), horticultural works, multi-discipline works (including turnkey projects) and similar other works"
+148,98143000,Property developers or promoters
+149,98144000,Landscape designers
+150,98149000,Other
+151,98150000,Services provided or rendered by professionals and consultants etc.
+152,98151000,Medical practitioners and consultants
+153,98152000,Legal practitioners and consultants
+154,98153000,Accountants and auditors
+155,98154000,Management consultants
+156,98155000,"Technical, scientific, engineering consultants"
+157,98156000,Software or IT based system development consultants
+158,98159000,Other consultants
+159,98160000,Services provided or rendered by pathological laboratories.
+160,98170000,"Services provided or rendered by medical diagnostic laboratories including X-Rays, CT Scan, M.R. Imaging etc."
+161,98171000,Scientific laboratories
+162,98172000,Mechanical laboratories
+163,98173000,Chemical laboratories
+164,98174000,Electrical or electronic laboratories
+165,98179000,Other such laboratories
+166,98180000,Services provided or rendered by specialized agencies.
+167,98181000,Security agency
+168,98182000,Credit rating agency
+169,98183000,Market research agency
+170,98189000,Other such agencies
+171,98190000,Services provided or rendered by specified persons or businesses.
+172,98191000,Stockbrokers
+173,98191100,Under writers
+174,98191200,Indenters
+175,98191300,Commission agents
+176,98191400,Packers
+177,98192000,Money exchanger
+178,98193000,Rent a car
+179,98194000,Prize bond dealers
+180,98195000,Surveyors
+181,98196000,Designers
+182,98197000,Outdoor photographer
+183,98198000,Art painter
+184,98199000,Cable TV operators
+185,98199100,Auctioneers
+186,98199200,Public relations services
+187,98199300,Management consultants
+188,98199400,Technical testing and analysis service
+189,98199500,Service provided by a registrar to an issue
+190,98199090,Others
+191,98200000,Services provided or rendered by specialized workshops or undertakings.
+192,98201000,Auto-workshops
+193,98202000,Workshops for industrial machinery construction and earth-moving machinery or other special purpose machinery etc.
+194,98203000,Workshops for electric or electronic equipments or appliances etc. including computer hardware
+195,98204000,Car washing or similar service stations.
+196,98209000,Other workshops
+197,98210000,Services provided or rendered in specified fields.
+198,98211000,Healthcare centres and gyms or physical fitness centres etc.
+199,98212000,Indoor sports and games centres
+200,98213000,Baby care centres
+201,98214000,Body massage centres
+202,98215000,Pedicure centres
+203,98219000,Similar other centers
+204,98220000,Services provided or rendered for specified purposes.
+205,98221000,Fumigation services
+206,98222000,Maintenance or cleaning services
+207,98223000,Janitorial services
+208,98224000,Dredging or desilting services
+209,98229000,Other similar services
+210,98230000,Franchise services
+211,98240000,Construction services

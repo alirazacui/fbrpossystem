@@ -3,10 +3,13 @@ users/serializers.py
 """
 
 from django.contrib.auth.password_validation import validate_password
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from common.email_service import send_platform_email
 from .models import User, UserStatus
+from companies.models import Terminal
 
 
 # ---------------------------------------------------------------------------
@@ -36,6 +39,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["role"]       = user.role
         token["company_id"] = user.company_id   # None for platform users
         token["status"]     = user.status
+        terminal_id = getattr(user, "terminal_id", None)
+        token["terminal_id"] = str(terminal_id) if terminal_id is not None else None
         return token
 
     def validate(self, attrs):
@@ -43,6 +48,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         Block login for inactive or suspended users BEFORE issuing a token.
         Django's default only checks is_active; we also check our status field.
         """
+        email_field = self.username_field
+        if email_field in attrs and isinstance(attrs[email_field], str):
+            attrs[email_field] = attrs[email_field].strip().lower()
+
         data = super().validate(attrs)
 
         user = self.user
@@ -62,6 +71,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "full_name":  user.get_full_name(),
             "role":       user.role,
             "company_id": user.company_id,
+            "terminal_id": str(getattr(user, "terminal_id", None)) if getattr(user, "terminal_id", None) is not None else None,
             "status":     user.status,
         }
         return data
@@ -79,6 +89,8 @@ class UserListSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(
         source="company.business_name", read_only=True, default=None
     )
+    terminal_id = serializers.CharField(read_only=True, default=None)
+    terminal_name = serializers.CharField(source="terminal.name", read_only=True, default=None)
 
     class Meta:
         model  = User
@@ -90,6 +102,8 @@ class UserListSerializer(serializers.ModelSerializer):
             "status",
             "company_id",
             "company_name",
+            "terminal_id",
+            "terminal_name",
             "date_joined",
         ]
         read_only_fields = fields
@@ -98,11 +112,17 @@ class UserListSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     """
     Full detail — for retrieve and update (no password here).
+    Email and role are read-only to prevent accidental changes.
     """
     full_name    = serializers.CharField(source="get_full_name", read_only=True)
     company_name = serializers.CharField(
         source="company.business_name", read_only=True, default=None
     )
+    company_id = serializers.IntegerField(
+        source="company.id", read_only=True, default=None
+    )
+    terminal_id = serializers.CharField(read_only=True, default=None)
+    terminal_name = serializers.CharField(source="terminal.name", read_only=True, default=None)
     created_by_email = serializers.EmailField(
         source="created_by.email", read_only=True, default=None
     )
@@ -119,7 +139,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "role",
             "status",
             "company",
+            "company_id",
             "company_name",
+            "terminal_id",
+            "terminal_name",
             "created_by",
             "created_by_email",
             "date_joined",
@@ -127,7 +150,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "email",
+            "role",
             "full_name",
+            "company_id",
             "company_name",
             "created_by",
             "created_by_email",
@@ -166,6 +192,9 @@ class CreateAdminStaffSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        if isinstance(attrs.get("email"), str):
+            attrs["email"] = attrs["email"].strip().lower()
+
         if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         return attrs
@@ -216,6 +245,9 @@ class CreateOwnerSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        if isinstance(attrs.get("email"), str):
+            attrs["email"] = attrs["email"].strip().lower()
+
         if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         return attrs
@@ -250,6 +282,17 @@ class CreateOwnerSerializer(serializers.ModelSerializer):
             status     = UserStatus.ACTIVE,
             created_by = request.user if request else None,
         )
+        company_login_url = getattr(settings, "FRONTEND_COMPANY_LOGIN_URL", "http://localhost:5173/login/company")
+        email_subject = f"Welcome to {user.company.business_name}"
+        email_body = (
+            f"Hello {user.get_full_name() or user.email},\n\n"
+            f"Your company owner account has been created for {user.company.business_name}.\n"
+            f"Login link: {company_login_url}\n\n"
+            f"Email: {user.email}\n"
+            f"Password: {validated_data['password']}\n\n"
+            "Please change your password after the first login."
+        )
+        send_platform_email(email_subject, email_body, [user.email])
         # Signal auto_grant_owner_permissions fires here automatically
         return user
 
@@ -277,6 +320,11 @@ class CreateClientUserSerializer(serializers.ModelSerializer):
             User.Role.SALESPERSON,
         ]
     )
+    terminal = serializers.PrimaryKeyRelatedField(
+        queryset=Terminal.objects.select_related("company", "branch").all(),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model  = User
@@ -286,18 +334,40 @@ class CreateClientUserSerializer(serializers.ModelSerializer):
             "last_name",
             "phone",
             "role",
+            "terminal",
             "password",
             "confirm_password",
         ]
 
     def validate(self, attrs):
+        if isinstance(attrs.get("email"), str):
+            attrs["email"] = attrs["email"].strip().lower()
+
         if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+
+        request = self.context.get("request")
+        if not request or not request.user or not request.user.company_id:
+            raise serializers.ValidationError({"company": "Owner company is required to create company users."})
+
+        role = attrs.get("role")
+        terminal = attrs.get("terminal")
+
+        if role in (User.Role.MANAGER, User.Role.CASHIER) and terminal is None:
+            raise serializers.ValidationError({"terminal": "Terminal is required for managers and cashiers."})
+
+        if terminal is not None and request and request.user.company_id and terminal.company_id != request.user.company_id:
+            raise serializers.ValidationError({"terminal": "Terminal must belong to your company."})
+
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("confirm_password")
         request = self.context.get("request")
+        owner_company = getattr(request.user, "company", None) if request else None
+        if owner_company is None:
+            raise serializers.ValidationError({"company": "Owner company is required to create company users."})
+
         # Company comes from the requesting owner — not from the payload
         user = User.objects.create_user(
             email      = validated_data["email"],
@@ -306,7 +376,8 @@ class CreateClientUserSerializer(serializers.ModelSerializer):
             last_name  = validated_data.get("last_name", ""),
             phone      = validated_data.get("phone", ""),
             role       = validated_data["role"],
-            company    = request.user.company,
+            company    = owner_company,
+            terminal   = validated_data.get("terminal"),
             status     = UserStatus.ACTIVE,
             created_by = request.user,
         )
