@@ -39,6 +39,12 @@ celerybeat-schedule
 !.env.example
 .env.local
 .env.*.local
+fbr_pos_platform/.env
+fbr_pos_platform/.env.*
+fbr_pos_platform/venv/
+fbr_pos_platform/.venv/
+fbr_pos_platform/env/
+fbr_pos_platform/ENV/
 
 # OS / editor files
 .DS_Store
