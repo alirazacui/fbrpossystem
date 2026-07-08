@@ -2,9 +2,16 @@
 companies/serializers.py
 """
 
+import base64
+
+from django.conf import settings
+from django.db import IntegrityError
+from django.db import transaction
 from rest_framework import serializers
 from .models import Company, AuditLog, Branch, Warehouse
 from .models import Company, AuditLog, Branch, Warehouse, Terminal
+from common.email_service import build_welcome_email_html, send_platform_email
+from common.tasks import send_platform_email_task
 
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -70,6 +77,7 @@ class TerminalSerializer(serializers.ModelSerializer):
             "last_synced_at",
         ]
 
+    @transaction.atomic
     def create(self, validated_data):
         branch = validated_data["branch"]
         validated_data["company"] = branch.company
@@ -120,6 +128,12 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     Full detail — used for create, retrieve, update.
     Includes all fields including modules and FBR sandbox state.
     """
+    tenant_owner_email = serializers.EmailField(write_only=True, required=False, allow_blank=False)
+    tenant_owner_first_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    tenant_owner_last_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    tenant_owner_phone = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    tenant_owner_password = serializers.CharField(write_only=True, required=False, allow_blank=False)
+    tenant_owner_confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=False)
     owner_email = serializers.SerializerMethodField()
     owner_id    = serializers.SerializerMethodField()
     enabled_modules = serializers.ListField(
@@ -135,6 +149,12 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             "ntn",
             "strn",
             "owner_cnic",
+            "tenant_owner_email",
+            "tenant_owner_first_name",
+            "tenant_owner_last_name",
+            "tenant_owner_phone",
+            "tenant_owner_password",
+            "tenant_owner_confirm_password",
 
             # ── FBR / regulatory ───────────────────────────
             "business_mode",
@@ -239,6 +259,7 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             "id",
             "created_at",
             "updated_at",
+            "is_active",
             "owner_email",
             "owner_id",
             "enabled_modules",
@@ -278,6 +299,154 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
                 "CNIC must be exactly 13 digits (format: 00000-0000000-0)."
             )
         return value  # keep original formatted value
+
+    def validate_strn(self, value):
+        """STRN is optional; blank values should be stored as NULL."""
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned or None
+
+    def validate_tenant_owner_email(self, value):
+        from users.models import User
+
+        cleaned = value.strip().lower()
+        if User.objects.filter(email__iexact=cleaned).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return cleaned
+
+    def validate_tenant_owner_password(self, value):
+        return value
+
+    def _queue_logo_upload(self, company: Company, logo_file):
+        if not logo_file:
+            return
+
+        if hasattr(logo_file, "read"):
+            logo_file.seek(0)
+            file_bytes = logo_file.read()
+        else:
+            file_bytes = logo_file
+
+        encoded_logo = base64.b64encode(file_bytes).decode("utf-8")
+        original_name = getattr(logo_file, "name", "logo.png")
+        content_type = getattr(logo_file, "content_type", None)
+
+        from .tasks import upload_company_logo_to_s3
+
+        transaction.on_commit(
+            lambda: upload_company_logo_to_s3.delay(
+                company_id=company.id,
+                logo_base64=encoded_logo,
+                filename=original_name,
+                content_type=content_type,
+            )
+        )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        owner_fields = [
+            "tenant_owner_email",
+            "tenant_owner_first_name",
+            "tenant_owner_last_name",
+            "tenant_owner_phone",
+            "tenant_owner_password",
+            "tenant_owner_confirm_password",
+        ]
+        provided_owner_fields = [field for field in owner_fields if attrs.get(field)]
+
+        if provided_owner_fields and len(provided_owner_fields) != len(owner_fields):
+            missing_fields = [field for field in owner_fields if not attrs.get(field)]
+            raise serializers.ValidationError({
+                field: ["This field is required when creating a tenant owner."]
+                for field in missing_fields
+            })
+
+        if attrs.get("tenant_owner_email"):
+            attrs["tenant_owner_email"] = attrs["tenant_owner_email"].strip().lower()
+
+        if attrs.get("tenant_owner_password") and attrs.get("tenant_owner_confirm_password"):
+            if attrs["tenant_owner_password"] != attrs["tenant_owner_confirm_password"]:
+                raise serializers.ValidationError({"tenant_owner_confirm_password": "Passwords do not match."})
+
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        logo_file = validated_data.pop("logo", None)
+
+        owner_email = validated_data.pop("tenant_owner_email", None)
+        owner_first_name = validated_data.pop("tenant_owner_first_name", "")
+        owner_last_name = validated_data.pop("tenant_owner_last_name", "")
+        owner_phone = validated_data.pop("tenant_owner_phone", "")
+        owner_password = validated_data.pop("tenant_owner_password", None)
+        validated_data.pop("tenant_owner_confirm_password", None)
+
+        company = super().create(validated_data)
+        self._queue_logo_upload(company, logo_file)
+
+        if owner_email:
+            from users.models import User, UserStatus
+
+            request = self.context.get("request")
+            try:
+                user = User.objects.create_user(
+                    email=owner_email,
+                    password=owner_password,
+                    first_name=owner_first_name,
+                    last_name=owner_last_name,
+                    phone=owner_phone,
+                    role=User.Role.OWNER,
+                    company=company,
+                    status=UserStatus.ACTIVE,
+                    created_by=request.user if request else None,
+                )
+            except IntegrityError:
+                raise serializers.ValidationError({"tenant_owner_email": "A user with this email already exists."})
+
+            company_login_url = getattr(settings, "FRONTEND_COMPANY_LOGIN_URL", "https://myfbrpos.com/login/company")
+            html_body = build_welcome_email_html(
+                brand_name=getattr(settings, "PLATFORM_BRAND_NAME", "FBR POS"),
+                logo_path=getattr(settings, "PLATFORM_BRAND_LOGO_PATH", "") or None,
+                logo_url=getattr(settings, "PLATFORM_BRAND_LOGO_URL", "") or None,
+                logo_cid="brand-logo",
+                recipient_name=user.get_full_name() or user.email,
+                login_url=company_login_url,
+                username=user.email,
+                password=owner_password,
+                welcome_note=(
+                    f"Welcome to {getattr(settings, 'PLATFORM_BRAND_NAME', 'FBR POS')}. "
+                    "Your tenant is ready and all invoices, sales, and digital invoicing tools are available from your dashboard."
+                ),
+            )
+            email_subject = f"Welcome to {company.business_name}"
+            email_body = (
+                f"Hello {user.get_full_name() or user.email},\n\n"
+                f"Your company owner account has been created for {company.business_name}.\n"
+                f"Login link: {company_login_url}\n\n"
+                f"Username: {user.email}\n"
+                f"Password: {owner_password}\n\n"
+                "Please change your password after the first login."
+            )
+            transaction.on_commit(
+                lambda: send_platform_email_task.delay(
+                    email_subject,
+                    email_body,
+                    [user.email],
+                    html_body=html_body,
+                    inline_image_path=getattr(settings, "PLATFORM_BRAND_LOGO_PATH", "") or None,
+                )
+            )
+
+        return company
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        logo_file = validated_data.pop("logo", None)
+        company = super().update(instance, validated_data)
+        self._queue_logo_upload(company, logo_file)
+        return company
 
 
 class CompanyModulesSerializer(serializers.ModelSerializer):

@@ -1,5 +1,19 @@
 <template>
-  <div class="space-y-6 pb-12" v-if="company">
+  <div v-if="loading" class="flex justify-center items-center h-64">
+    <div class="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <div v-else-if="loadError" class="space-y-4 rounded-lg border border-red-200 bg-red-50 p-6 text-red-700">
+    <p class="font-medium">{{ loadError }}</p>
+    <button
+      @click="fetchCompany"
+      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+    >
+      Retry
+    </button>
+  </div>
+
+  <div v-else-if="company" class="space-y-6 pb-12">
 
     <!-- ── Confirm Modal ───────────────────────────────── -->
     <ConfirmModal
@@ -180,10 +194,6 @@
       </div>
     </div>
   
-  <!-- Loading State -->
-  <div v-else class="flex justify-center items-center h-64">
-    <div class="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -201,6 +211,8 @@ const companyId = Number(route.params.id)
 const authStore = useAuthStore()
 
 const company = ref<Company | null>(null)
+const loading = ref(true)
+const loadError = ref('')
 
 // Modal state
 const modal = reactive<{
@@ -227,18 +239,17 @@ const openModal = (opts: Partial<typeof modal> & { onConfirm: () => void }) => {
 
 
 const fetchCompany = async () => {
+  loading.value = true
+  loadError.value = ''
   try {
     company.value = await companyAPI.getCompanyDetail(companyId)
   } catch (error) {
     console.error('Error fetching company:', error)
-    openModal({
-      show: true,
-      title: 'Load Error',
-      message: 'Failed to load company details. Please try again.',
-      type: 'warning',
-      confirmLabel: 'Retry',
-      onConfirm: () => { modal.show = false; fetchCompany() },
-    })
+    company.value = null
+    loadError.value = 'Failed to load company details. Please try again.'
+  }
+  finally {
+    loading.value = false
   }
 }
 
@@ -323,6 +334,9 @@ const submitOwnerPasswordChange = async () => {
 onMounted(() => {
   if (!isNaN(companyId)) {
     fetchCompany()
+  } else {
+    loading.value = false
+    loadError.value = 'Invalid company id.'
   }
 })
 

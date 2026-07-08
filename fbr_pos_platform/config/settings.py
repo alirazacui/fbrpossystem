@@ -241,4 +241,11 @@ EMAIL_USE_TLS      = True
 EMAIL_HOST_USER    = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@posplatform.pk")
+PLATFORM_BRAND_NAME = config("PLATFORM_BRAND_NAME", default="myfbrpos")
+PLATFORM_BRAND_LOGO_PATH = config(
+    "PLATFORM_BRAND_LOGO_PATH",
+    default=str(BASE_DIR / "emailstaticsimage"),
+)
+PLATFORM_BRAND_LOGO_URL = config("PLATFORM_BRAND_LOGO_URL", default="")
+FRONTEND_COMPANY_LOGIN_URL = config("FRONTEND_COMPANY_LOGIN_URL", default="https://myfbrpos.com/login/company")
 

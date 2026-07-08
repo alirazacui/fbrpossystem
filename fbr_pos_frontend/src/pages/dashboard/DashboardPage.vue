@@ -5,6 +5,7 @@
       <div>
         <h1 class="text-2xl font-bold text-gray-900 mb-1">Welcome, {{ userFullName }}.</h1>
         <p class="text-sm text-gray-500">Signed in to <span class="font-medium text-gray-700">{{ companyName }}</span>.</p>
+        <p class="text-xs text-gray-400 mt-1">NTN: <span class="font-medium text-gray-600">{{ companyNtn }}</span></p>
       </div>
       <p class="text-xs text-gray-400 font-medium tracking-wide">Updated {{ timeAgo }}</p>
     </div>
@@ -256,6 +257,7 @@ const timeAgo = computed(() => {
 
 // User text
 const companyName = computed(() => authStore.user?.company_name || 'My Company')
+const companyNtn = computed(() => authStore.user?.company_ntn || 'N/A')
 const userFullName = computed(() => {
   if (authStore.user?.first_name || authStore.user?.last_name) {
     return `${authStore.user.first_name} ${authStore.user.last_name}`.trim().toUpperCase()

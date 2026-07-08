@@ -76,7 +76,90 @@
         </div>
       </div>
 
-      <!-- Section 2: FBR & Regulatory Information -->
+      <!-- Section 2: Tenant Owner -->
+      <div class="bg-white rounded-lg shadow p-8">
+        <div class="flex items-start justify-between gap-4 mb-6 pb-4 border-b border-gray-200">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">Tenant Owner</h2>
+            <p class="text-sm text-gray-600 mt-1">Create the company owner account together with the tenant.</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold uppercase tracking-wide">Required</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email *</label>
+            <input
+              v-model="form.tenant_owner_email"
+              type="email"
+              placeholder="owner@business.com"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+            <p v-if="errors.tenant_owner_email" class="text-red-600 text-sm mt-1">{{ errors.tenant_owner_email }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Owner Phone</label>
+            <input
+              v-model="form.tenant_owner_phone"
+              type="tel"
+              placeholder="+92 300 1234567"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Owner First Name *</label>
+            <input
+              v-model="form.tenant_owner_first_name"
+              type="text"
+              placeholder="John"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+            <p v-if="errors.tenant_owner_first_name" class="text-red-600 text-sm mt-1">{{ errors.tenant_owner_first_name }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Owner Last Name *</label>
+            <input
+              v-model="form.tenant_owner_last_name"
+              type="text"
+              placeholder="Doe"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+            <p v-if="errors.tenant_owner_last_name" class="text-red-600 text-sm mt-1">{{ errors.tenant_owner_last_name }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Owner Password *</label>
+            <input
+              v-model="form.tenant_owner_password"
+              type="password"
+              placeholder="Create a strong password"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+            <p v-if="errors.tenant_owner_password" class="text-red-600 text-sm mt-1">{{ errors.tenant_owner_password }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Owner Password *</label>
+            <input
+              v-model="form.tenant_owner_confirm_password"
+              type="password"
+              placeholder="Re-enter password"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+            <p v-if="errors.tenant_owner_confirm_password" class="text-red-600 text-sm mt-1">{{ errors.tenant_owner_confirm_password }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: FBR & Regulatory Information -->
       <div class="bg-white rounded-lg shadow p-8">
         <h2 class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">FBR & Regulatory</h2>
         
@@ -144,7 +227,7 @@
         </div>
       </div>
 
-      <!-- Section 3: Business Classification -->
+      <!-- Section 4: Business Classification -->
       <div class="bg-white rounded-lg shadow p-8">
         <h2 class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Business Classification</h2>
         
@@ -185,7 +268,7 @@
         </div>
       </div>
 
-      <!-- Section 4: Contact & Branding -->
+      <!-- Section 5: Contact & Branding -->
       <div class="bg-white rounded-lg shadow p-8">
         <h2 class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Contact & Branding</h2>
         
@@ -253,7 +336,7 @@
         </div>
       </div>
 
-      <!-- Section 5: Feature Modules -->
+      <!-- Section 6: Feature Modules -->
       <div class="bg-white rounded-lg shadow p-8">
         <h2 class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Feature Modules</h2>
         
@@ -460,7 +543,7 @@
         </div>
       </div>
 
-      <!-- Section 6: FBR Sandbox Scenarios -->
+      <!-- Section 7: FBR Sandbox Scenarios -->
       <div class="bg-white rounded-lg shadow p-8">
         <h2 class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">FBR Sandbox Scenarios</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -527,6 +610,12 @@ const form = ref<any>({
   ntn: '',
   strn: '',
   owner_cnic: '',
+  tenant_owner_email: '',
+  tenant_owner_first_name: '',
+  tenant_owner_last_name: '',
+  tenant_owner_phone: '',
+  tenant_owner_password: '',
+  tenant_owner_confirm_password: '',
   business_mode: 'pos_only',
   fbr_business_nature: [],
   fbr_sector: '',
@@ -666,10 +755,16 @@ const submitForm = async () => {
     }
 
     await companyAPI.createCompany(payload)
-    // Success - redirect to tenants list
-    router.push('/admin/tenants')
+    sessionStorage.setItem(
+      'tenantCreateSuccess',
+      JSON.stringify({ name: form.value.business_name })
+    )
+    router.push({
+      path: '/admin/tenants',
+      query: { created: '1', name: form.value.business_name },
+    })
   } catch (err: any) {
-    error.value = err.response?.data?.detail || 'Failed to create company'
+    error.value = formatApiError(err.response?.data)
     
     // Parse field errors
     if (err.response?.data && typeof err.response.data === 'object') {
@@ -697,5 +792,36 @@ const onLogoChange = (event: Event) => {
   const file = target.files?.[0] || null
   logoFile.value = file
   logoPreview.value = file ? URL.createObjectURL(file) : ''
+}
+
+const formatApiError = (data: any) => {
+  if (!data) {
+    return 'Failed to create company'
+  }
+
+  if (typeof data.detail === 'string') {
+    return data.detail
+  }
+
+  if (typeof data === 'string') {
+    return data
+  }
+
+  if (typeof data === 'object') {
+    const messages: string[] = []
+    Object.entries(data).forEach(([key, value]) => {
+      const label = key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          messages.push(`${label}: ${item}`)
+        })
+      } else if (typeof value === 'string') {
+        messages.push(`${label}: ${value}`)
+      }
+    })
+    return messages.length > 0 ? messages.join(' | ') : 'Failed to create company'
+  }
+
+  return 'Failed to create company'
 }
 </script>

@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold text-gray-900">Users Management</h1>
-        <p class="text-gray-600 mt-1">Manage platform admins and company owners only</p>
+        <p class="text-gray-600 mt-1">Manage platform admins and view company owners</p>
       </div>
       <button
         @click="openAddUserModal"
@@ -147,7 +147,6 @@
   <!-- Add User Modal -->
   <AddUserModal
     :is-open="showAddUserModal"
-    :companies="companies"
     @close="showAddUserModal = false"
     @user-created="loadUsers"
   />
@@ -158,13 +157,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AddUserModal from '@/components/admin/AddUserModal.vue'
 import userAPI, { type User } from '@/apis/admin/userAPI'
-import companyAPI from '@/apis/admin/companyAPI'
-import type { Company } from '@/types'
 
 const router = useRouter()
 
 const users = ref<User[]>([])
-const companies = ref<Company[]>([])
 const loading = ref(false)
 const error = ref('')
 const showAddUserModal = ref(false)
@@ -198,14 +194,6 @@ const loadUsers = async () => {
     console.error(err)
   } finally {
     loading.value = false
-  }
-}
-
-const loadCompanies = async () => {
-  try {
-    companies.value = await companyAPI.getCompanies()
-  } catch (err) {
-    console.error('Failed to load companies:', err)
   }
 }
 
@@ -254,7 +242,6 @@ const getStatusBadgeClass = (status: string) => {
 
 onMounted(() => {
   loadUsers()
-  loadCompanies()
 })
 </script>
 

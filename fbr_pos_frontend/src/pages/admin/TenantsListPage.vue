@@ -1,5 +1,9 @@
 <template>
   <div class="space-y-6">
+    <div v-if="createdNotice" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+      Tenant {{ createdNotice }} created successfully.
+    </div>
+
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
@@ -200,9 +204,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import companyAPI, { type Company } from '@/apis/admin/companyAPI'
 
+const route = useRoute()
 const router = useRouter()
 
 const companies = ref<Company[]>([])
@@ -211,6 +216,7 @@ const error = ref('')
 const searchQuery = ref('')
 const filterStatus = ref('')
 const filterPlan = ref('')
+const createdNotice = ref('')
 
 const activeCount = computed(() => companies.value.filter(c => c.is_active).length)
 const inactiveCount = computed(() => companies.value.filter(c => !c.is_active).length)
@@ -289,7 +295,28 @@ const formatDate = (date: string) => {
   })
 }
 
+const consumeTenantCreateFlash = () => {
+  const flash = sessionStorage.getItem('tenantCreateSuccess')
+  if (!flash) {
+    return ''
+  }
+
+  sessionStorage.removeItem('tenantCreateSuccess')
+  try {
+    const parsed = JSON.parse(flash)
+    return typeof parsed?.name === 'string' && parsed.name.trim() ? parsed.name.trim() : 'New tenant'
+  } catch {
+    return 'New tenant'
+  }
+}
+
 onMounted(() => {
   loadCompanies()
+  const routeCreated = route.query.created === '1' ? (typeof route.query.name === 'string' && route.query.name.trim() ? route.query.name.trim() : 'New tenant') : ''
+  const flashCreated = consumeTenantCreateFlash()
+  createdNotice.value = routeCreated || flashCreated
+  if (routeCreated) {
+    router.replace({ path: '/admin/tenants', query: {} })
+  }
 })
 </script>

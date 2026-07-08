@@ -3,7 +3,7 @@
     <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
       <!-- Header -->
       <div class="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
-        <h2 class="text-2xl font-bold text-gray-900">Add New User</h2>
+        <h2 class="text-2xl font-bold text-gray-900">Add Admin Staff</h2>
         <button
           @click="closeModal"
           class="text-gray-400 hover:text-gray-600 transition"
@@ -16,36 +16,6 @@
 
       <!-- Body -->
       <div class="px-8 py-6">
-        <!-- User Type Toggle -->
-        <div class="mb-8">
-          <label class="block text-sm font-semibold text-gray-700 mb-4">User Type</label>
-          <div class="flex items-center space-x-4 bg-gray-50 p-4 rounded-lg">
-            <button
-              @click="userType = 'admin_staff'"
-              :class="[
-                'flex-1 py-3 px-4 rounded-lg font-medium transition',
-                userType === 'admin_staff'
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              ]"
-            >
-              Admin Staff
-            </button>
-            <div class="text-gray-400">|</div>
-            <button
-              @click="userType = 'owner'"
-              :class="[
-                'flex-1 py-3 px-4 rounded-lg font-medium transition',
-                userType === 'owner'
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              ]"
-            >
-              Company Owner
-            </button>
-          </div>
-        </div>
-
         <!-- Form -->
         <form @submit.prevent="handleSubmit" class="space-y-5">
           <!-- Email -->
@@ -91,21 +61,6 @@
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="+92 300 1234567"
             />
-          </div>
-
-          <!-- Company (Only for Owner) -->
-          <div v-if="userType === 'owner'">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Company *</label>
-            <select
-              v-model.number="formData.company"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="">Select a company</option>
-              <option v-for="company in companies" :key="company.id" :value="company.id">
-                {{ company.business_name }}
-              </option>
-            </select>
           </div>
 
           <!-- Password -->
@@ -200,11 +155,9 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import userAPI from '@/apis/admin/userAPI'
-import type { Company } from '@/types'
 
 const props = defineProps<{
   isOpen: boolean
-  companies: Company[]
 }>()
 
 const emit = defineEmits<{
@@ -212,7 +165,6 @@ const emit = defineEmits<{
   userCreated: []
 }>()
 
-const userType = ref<'admin_staff' | 'owner'>('admin_staff')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const loading = ref(false)
@@ -223,7 +175,6 @@ const formData = reactive({
   first_name: '',
   last_name: '',
   phone: '',
-  company: null as number | null,
   password: '',
   confirm_password: '',
 })
@@ -233,7 +184,6 @@ const resetForm = () => {
   formData.first_name = ''
   formData.last_name = ''
   formData.phone = ''
-  formData.company = null
   formData.password = ''
   formData.confirm_password = ''
   error.value = ''
@@ -260,34 +210,17 @@ const handleSubmit = async () => {
     error.value = 'Passwords do not match'
     return
   }
-  if (userType.value === 'owner' && !formData.company) {
-    error.value = 'Company is required for owner'
-    return
-  }
-
   loading.value = true
 
   try {
-    if (userType.value === 'admin_staff') {
-      await userAPI.createAdminStaff({
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
-        password: formData.password,
-        confirm_password: formData.confirm_password,
-      })
-    } else {
-      await userAPI.createOwner({
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
-        company: formData.company!,
-        password: formData.password,
-        confirm_password: formData.confirm_password,
-      })
-    }
+    await userAPI.createAdminStaff({
+      email: formData.email,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone: formData.phone,
+      password: formData.password,
+      confirm_password: formData.confirm_password,
+    })
 
     closeModal()
     emit('userCreated')

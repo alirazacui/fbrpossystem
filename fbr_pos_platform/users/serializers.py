@@ -4,10 +4,12 @@ users/serializers.py
 
 from django.contrib.auth.password_validation import validate_password
 from django.conf import settings
+from django.db import IntegrityError, transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from common.email_service import send_platform_email
+from common.email_service import build_welcome_email_html, send_platform_email
+from common.tasks import send_platform_email_task
 from .models import User, UserStatus
 from companies.models import Terminal
 
@@ -121,6 +123,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
     company_id = serializers.IntegerField(
         source="company.id", read_only=True, default=None
     )
+    company_ntn = serializers.CharField(
+        source="company.ntn", read_only=True, default=None
+    )
     terminal_id = serializers.CharField(read_only=True, default=None)
     terminal_name = serializers.CharField(source="terminal.name", read_only=True, default=None)
     created_by_email = serializers.EmailField(
@@ -141,6 +146,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "company",
             "company_id",
             "company_name",
+            "company_ntn",
             "terminal_id",
             "terminal_name",
             "created_by",
@@ -155,6 +161,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "full_name",
             "company_id",
             "company_name",
+            "company_ntn",
             "created_by",
             "created_by_email",
             "date_joined",
@@ -199,19 +206,27 @@ class CreateAdminStaffSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         return attrs
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value.strip().lower()).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value.strip().lower()
+
     def create(self, validated_data):
         validated_data.pop("confirm_password")
         request = self.context.get("request")
-        user = User.objects.create_user(
-            email      = validated_data["email"],
-            password   = validated_data["password"],
-            first_name = validated_data.get("first_name", ""),
-            last_name  = validated_data.get("last_name", ""),
-            phone      = validated_data.get("phone", ""),
-            role       = User.Role.ADMIN_STAFF,
-            status     = UserStatus.ACTIVE,
-            created_by = request.user if request else None,
-        )
+        try:
+            user = User.objects.create_user(
+                email      = validated_data["email"],
+                password   = validated_data["password"],
+                first_name = validated_data.get("first_name", ""),
+                last_name  = validated_data.get("last_name", ""),
+                phone      = validated_data.get("phone", ""),
+                role       = User.Role.ADMIN_STAFF,
+                status     = UserStatus.ACTIVE,
+                created_by = request.user if request else None,
+            )
+        except IntegrityError:
+            raise serializers.ValidationError({"email": "A user with this email already exists."})
         return user
 
 
@@ -252,6 +267,12 @@ class CreateOwnerSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         return attrs
 
+    def validate_email(self, value):
+        cleaned = value.strip().lower()
+        if User.objects.filter(email__iexact=cleaned).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return cleaned
+
     def validate_company(self, company):
         """
         Reject if the company already has an owner
@@ -268,6 +289,7 @@ class CreateOwnerSerializer(serializers.ModelSerializer):
             )
         return company
 
+    @transaction.atomic
     def create(self, validated_data):
         validated_data.pop("confirm_password")
         request = self.context.get("request")
@@ -282,17 +304,39 @@ class CreateOwnerSerializer(serializers.ModelSerializer):
             status     = UserStatus.ACTIVE,
             created_by = request.user if request else None,
         )
-        company_login_url = getattr(settings, "FRONTEND_COMPANY_LOGIN_URL", "http://localhost:5173/login/company")
+        company_login_url = getattr(settings, "FRONTEND_COMPANY_LOGIN_URL", "https://myfbrpos.com/login/company")
+        html_body = build_welcome_email_html(
+            brand_name=getattr(settings, "PLATFORM_BRAND_NAME", "FBR POS"),
+            logo_path=getattr(settings, "PLATFORM_BRAND_LOGO_PATH", "") or None,
+            logo_url=getattr(settings, "PLATFORM_BRAND_LOGO_URL", "") or None,
+            logo_cid="brand-logo",
+            recipient_name=user.get_full_name() or user.email,
+            login_url=company_login_url,
+            username=user.email,
+            password=validated_data["password"],
+            welcome_note=(
+                f"Welcome to {getattr(settings, 'PLATFORM_BRAND_NAME', 'FBR POS')}. "
+                "Your tenant is now active and your invoices, sales, and digital invoicing workspaces are ready."
+            ),
+        )
         email_subject = f"Welcome to {user.company.business_name}"
         email_body = (
             f"Hello {user.get_full_name() or user.email},\n\n"
             f"Your company owner account has been created for {user.company.business_name}.\n"
             f"Login link: {company_login_url}\n\n"
-            f"Email: {user.email}\n"
+            f"Username: {user.email}\n"
             f"Password: {validated_data['password']}\n\n"
             "Please change your password after the first login."
         )
-        send_platform_email(email_subject, email_body, [user.email])
+        transaction.on_commit(
+            lambda: send_platform_email_task.delay(
+                email_subject,
+                email_body,
+                [user.email],
+                html_body=html_body,
+                inline_image_path=getattr(settings, "PLATFORM_BRAND_LOGO_PATH", "") or None,
+            )
+        )
         # Signal auto_grant_owner_permissions fires here automatically
         return user
 

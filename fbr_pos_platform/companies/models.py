@@ -44,7 +44,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from config.storage_backends import company_logo_upload_path
+from config.storage_backends import CompanyLogoStorage, company_logo_upload_path
 
 
 # ---------------------------------------------------------------------------
@@ -283,12 +283,12 @@ class Company(models.Model):
     # ------------------------------------------------------------------
 
     logo = models.ImageField(
-    upload_to=company_logo_upload_path,
-    storage=None,    # uses default S3 storage from settings
-    blank=True,
-    null=True,
-    verbose_name=_("Company Logo"),
-  ) 
+                upload_to=company_logo_upload_path,
+                storage=CompanyLogoStorage(),
+                blank=True,
+                null=True,
+                verbose_name=_("Company Logo"),
+        )
 
     address = models.TextField(
         verbose_name=_("Business Address"),
