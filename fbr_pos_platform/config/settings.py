@@ -27,6 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://myfbrpos.com",
+    "https://www.myfbrpos.com",
+    "https://api.myfbrpos.com",
+]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "https://myfbrpos.com",
@@ -85,7 +91,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+
     'https://myfbrpos.com',
+
+     'https://myfbrpos.com',
+
     'https://www.myfbrpos.com',
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -160,9 +170,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
-
+import os
 STATIC_URL = 'static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 AUTH_USER_MODEL = "users.User"
 from datetime import timedelta
@@ -258,4 +268,3 @@ PLATFORM_BRAND_LOGO_PATH = config(
 )
 PLATFORM_BRAND_LOGO_URL = config("PLATFORM_BRAND_LOGO_URL", default="")
 FRONTEND_COMPANY_LOGIN_URL = config("FRONTEND_COMPANY_LOGIN_URL", default="https://myfbrpos.com/login/company")
-
