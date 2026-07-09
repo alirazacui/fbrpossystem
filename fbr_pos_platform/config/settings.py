@@ -25,8 +25,14 @@ SECRET_KEY = 'django-insecure-so*&so==_p7cv0)0p_%n&ogr&i%svij2+8!0x7(l130rc8h%6h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://myfbrpos.com",
+    "https://www.myfbrpos.com",
+    "https://api.myfbrpos.com",
+]
 
 # Application definition
 
@@ -79,8 +85,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://myfbrpos.com',
+    'https://www.myfbrpos.com',
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+
 
 ROOT_URLCONF = 'config.urls'
 
