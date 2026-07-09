@@ -155,7 +155,7 @@
                     <select v-model="form.tax_rate_percent" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
                       <option value="">— None —</option>
                       <option value="18%">Standard 18%</option>
-                      <option value="8%">Reduced 8%</option>
+                      <option value="5%">Reduced 5%</option>
                       <option value="0%">Zero Rated</option>
                       <option value="0%">Exempt</option>
                     </select>
@@ -365,6 +365,10 @@ const selectHS = (code: string) => {
   dropdownOpen.value = false
 }
 
+const normalizeTaxRatePercent = (value: string) => {
+  return value === '8%' ? '5%' : value
+}
+
 const handleSave = async () => {
   if (!form.name || !form.sku || !form.price || !form.hs_code) {
     alert('Please fill all required fields (Name, SKU, Sale Price, HS Code)')
@@ -384,7 +388,7 @@ const handleSave = async () => {
       current_stock: Number(form.current_stock) || 0, 
       hs_code: form.hs_code,
       fbr_sale_type: form.fbr_sale_type,
-      tax_rate_percent: form.tax_rate_percent || "0%",
+      tax_rate_percent: normalizeTaxRatePercent(form.tax_rate_percent) || "0%",
       unit_of_measure: form.uom,
       fbr_sro_schedule_no: form.sro_schedule,
       fbr_sro_item_serial_no: form.sro_serial,

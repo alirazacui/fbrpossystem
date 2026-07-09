@@ -68,7 +68,7 @@
                   <select v-model="form.tax_rate_percent" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
                     <option value="">— None —</option>
                     <option value="18%">Standard 18%</option>
-                    <option value="8%">Reduced 8%</option>
+                      <option value="5%">Reduced 5%</option>
                     <option value="0%">Zero Rated / Exempt</option>
                   </select>
                 </div>
@@ -189,7 +189,7 @@ onMounted(async () => {
     form.current_stock = Number(product.current_stock) || 0
     form.hs_code = product.hs_code || ''
     form.fbr_sale_type = product.fbr_sale_type || ''
-    form.tax_rate_percent = product.tax_rate_percent + '%'
+    form.tax_rate_percent = normalizeTaxRatePercent(product.tax_rate_percent)
   } catch (error) {
     console.error('Failed to load product details', error)
     alert('Failed to load product details.')
@@ -224,6 +224,17 @@ const handleUpdate = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const normalizeTaxRatePercent = (value: string | number) => {
+  const normalized = String(value || '').trim()
+  if (!normalized) {
+    return ''
+  }
+  if (normalized === '8%' || normalized === '8') {
+    return '5%'
+  }
+  return normalized.endsWith('%') ? normalized : `${normalized}%`
 }
 
 const deleteProduct = async () => {

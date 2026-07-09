@@ -215,6 +215,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
                 )
             })
         return attrs
+
+    def validate_tax_rate_percent(self, value):
+        if value == "8%":
+            return "5%"
+        return value
  
     def validate_barcode(self, value):
         """Barcode must be unique per company if provided."""
@@ -1196,6 +1201,11 @@ class DebitNoteLineInputSerializer(serializers.Serializer):
                 "Provide product_id, original_line_id, or description."
             )
         return attrs
+
+    def validate_tax_rate_percent(self, value):
+        if value == "8%":
+            return "5%"
+        return value
  
  
 class CreateDebitNoteSerializer(serializers.Serializer):

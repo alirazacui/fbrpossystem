@@ -5,13 +5,17 @@ export interface Product {
   name: string
   sku: string
   barcode: string
-  category_id: number
+  category_id: number | null
   price: number
+  selling_price?: number
+  cost_price?: number
+  fbr_fixed_retail_price?: number
+  min_sale_price?: number
   current_stock: number
   image_url?: string
   hs_code?: string
   fbr_sale_type: string
-  tax_rate_percent: number
+  tax_rate_percent: string | number
   created_at: string
   updated_at: string
 }

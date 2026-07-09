@@ -461,7 +461,7 @@ const addProduct = (prod: Product) => {
       product: prod,
       quantity: 1,
       unit_price: Number(prod.selling_price ?? prod.price) || 0,
-      tax_rate_percent: parseFloat(String(prod.tax_rate_percent).replace('%', '')) || 0,
+      tax_rate_percent: normalizeTaxRatePercent(prod.tax_rate_percent),
       line_discount: 0
     })
   }
@@ -485,6 +485,12 @@ const calculateLineTotal = (line: LocalSaleLine) => {
   const lineSubtotal = (line.unit_price * line.quantity) - line.line_discount
   const proportionalDiscount = (lineSubtotal / subtotal.value) * totalDiscountValue.value || 0
   return (lineSubtotal - proportionalDiscount) + calculateLineTax(line)
+}
+
+const normalizeTaxRatePercent = (value: string | number) => {
+  const normalized = String(value)
+  if (normalized === '8%' || normalized === '8') return 5
+  return parseFloat(normalized.replace('%', '')) || 0
 }
 
 const formatMoney = (val: number) => {

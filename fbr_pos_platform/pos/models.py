@@ -144,8 +144,7 @@ class TaxRatePercent(models.TextChoices):
     ONE         = "1%",   _("1%")
     TWO         = "2%",   _("2%")
     THREE       = "3%",   _("3%")
-    FIVE        = "5%",   _("5%")
-    EIGHT       = "8%",   _("8%")
+    FIVE        = "5%",   _("5% — Reduced Rate")
     TEN         = "10%",  _("10%")
     TWELVE      = "12%",  _("12%")
     THIRTEEN    = "13%",  _("13%")
@@ -154,6 +153,13 @@ class TaxRatePercent(models.TextChoices):
     EIGHTEEN    = "18%",  _("18% — Standard Rate")
     TWENTY      = "20%",  _("20%")
     TWENTY_FIVE = "25%",  _("25%")
+
+
+def normalize_tax_rate_percent(value: str) -> str:
+    """Normalize legacy reduced-rate values to the current 5% rate."""
+    if value == "8%":
+        return "5%"
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -566,7 +572,8 @@ class Product(models.Model):
         """
         unit_price    = float(self.selling_price)
         value_excl_st = round(unit_price * quantity, 2)
-        tax_rate_val  = float(self.tax_rate_percent.replace("%", "")) / 100
+        tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
+        tax_rate_val  = float(tax_rate_percent.replace("%", "")) / 100
         sales_tax     = round(value_excl_st * tax_rate_val, 2)
         total_value   = round(value_excl_st + sales_tax, 2)
         discount      = float(override_discount if override_discount is not None else self.fbr_default_discount)
@@ -574,7 +581,7 @@ class Product(models.Model):
         return {
             "hsCode":                          self.hs_code or "",
             "productDescription":              self.name,
-            "rate":                            self.tax_rate_percent,
+            "rate":                            tax_rate_percent,
             "uoM":                             self.unit_of_measure,
             "quantity":                        quantity,
             "valueSalesExcludingST":           value_excl_st,
@@ -1897,6 +1904,7 @@ class SaleLine(models.Model):
         qty        = float(self.quantity)
         price      = float(self.unit_price)
         discount   = float(self.discount_amount)
+        self.tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
         tax_rate   = float(self.tax_rate_percent.replace("%", "")) / 100
 
         self.value_excl_tax       = round(price * qty, 2)
@@ -1931,7 +1939,7 @@ class SaleLine(models.Model):
             hs_code            = product.hs_code,
             unit_of_measure    = product.unit_of_measure,
             fbr_sale_type      = product.fbr_sale_type,
-            tax_rate_percent   = product.tax_rate_percent,
+            tax_rate_percent   = normalize_tax_rate_percent(product.tax_rate_percent),
             quantity           = quantity,
             unit_price         = actual_price,
             discount_amount    = discount_amount,
@@ -1949,10 +1957,11 @@ class SaleLine(models.Model):
         Returns FBR DI API item JSON for this sale line.
         Called by the invoice generator in Phase 3.
         """
+        tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
         return {
             "hsCode":                          self.hs_code or "",
             "productDescription":              self.product_name,
-            "rate":                            self.tax_rate_percent,
+            "rate":                            tax_rate_percent,
             "uoM":                             self.unit_of_measure,
             "quantity":                        float(self.quantity),
             "valueSalesExcludingST":           float(self.value_excl_tax),
@@ -2401,6 +2410,7 @@ class SaleReturnLine(models.Model):
     def _compute_totals(self):
         qty      = float(self.quantity_returned)
         price    = float(self.unit_price)
+        self.tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
         tax_rate = float(self.tax_rate_percent.replace("%", "")) / 100
  
         self.return_value_excl_tax = round(price * qty, 2)
@@ -2801,6 +2811,7 @@ class DebitNoteLine(models.Model):
     def _compute_totals(self):
         qty      = float(self.quantity)
         price    = float(self.unit_price)
+        self.tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
         tax_rate = float(
             self.tax_rate_percent.replace("%", "")
         ) / 100
@@ -2813,10 +2824,11 @@ class DebitNoteLine(models.Model):
  
     def get_fbr_item_payload(self) -> dict:
         """Returns FBR JSON item dict for this debit note line."""
+        tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
         return {
             "hsCode":                          self.hs_code or "",
             "productDescription":              self.description,
-            "rate":                            self.tax_rate_percent,
+            "rate":                            tax_rate_percent,
             "uoM":                             self.unit_of_measure,
             "quantity":                        float(self.quantity),
             "valueSalesExcludingST":           float(self.value_excl_tax),
