@@ -143,6 +143,7 @@
                       <option value="Roll">Roll</option>
                       <option value="Set">Set</option>
                       <option value="Sheet">Sheet</option>
+                      <option value="Service">Service</option>
                       <option value="Square Foot">Square Foot</option>
                       <option value="Square Metre">Square Metre</option>
                       <option value="Ton">Ton</option>
@@ -155,9 +156,13 @@
                     <select v-model="form.tax_rate_percent" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
                       <option value="">— None —</option>
                       <option value="18%">Standard 18%</option>
+                      <option value="17%">17%</option>
+                      <option value="15%">15%</option>
+                      <option value="16%">16%</option>
                       <option value="5%">Reduced 5%</option>
                       <option value="0%">Zero Rated</option>
-                      <option value="0%">Exempt</option>
+                      <option value="Exempt">Exempt</option>
+
                     </select>
                   </div>
                 </div>
