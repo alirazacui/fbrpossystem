@@ -3,6 +3,11 @@ from django.contrib import admin
 # Register your models here.
 from django.contrib import admin
 from .models import *
+import django.core.validators
+import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

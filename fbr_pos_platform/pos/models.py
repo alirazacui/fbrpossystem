@@ -102,6 +102,7 @@ class UnitOfMeasure(models.TextChoices):
     TON            = "Ton",                   _("Ton")
     TUBE           = "Tube",                  _("Tube")
     YARD           = "Yard",                  _("Yard")
+    SERVICE        = "Service",               _("Service")
 
 class FBRSaleType(models.TextChoices):
     """
@@ -140,7 +141,8 @@ class TaxRatePercent(models.TextChoices):
     Common FBR tax rates.
     Stored as string to match FBR API format exactly (e.g. "18%").
     """
-    ZERO        = "0%",   _("0% — Zero Rated / Exempt")
+    ZERO        = "0%",   _("0% — Zero Rated")
+    EXEMPT      = "Exempt", _("Exempt (Statutory)")
     ONE         = "1%",   _("1%")
     TWO         = "2%",   _("2%")
     THREE       = "3%",   _("3%")
@@ -149,10 +151,12 @@ class TaxRatePercent(models.TextChoices):
     TWELVE      = "12%",  _("12%")
     THIRTEEN    = "13%",  _("13%")
     FIFTEEN     = "15%",  _("15%")
+    SIXTEEN      = "16%",  _("16%")
     SEVENTEEN   = "17%",  _("17%")
     EIGHTEEN    = "18%",  _("18% — Standard Rate")
     TWENTY      = "20%",  _("20%")
     TWENTY_FIVE = "25%",  _("25%")
+    
 
 
 def normalize_tax_rate_percent(value: str) -> str:
@@ -573,16 +577,19 @@ class Product(models.Model):
         unit_price    = float(self.selling_price)
         value_excl_st = round(unit_price * quantity, 2)
         tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
-        tax_rate_val  = float(tax_rate_percent.replace("%", "")) / 100
+        if tax_rate_percent == "Exempt":
+            tax_rate_val = 0.0
+        else:
+            tax_rate_val = float(tax_rate_percent.replace("%", "")) / 100
         sales_tax     = round(value_excl_st * tax_rate_val, 2)
         total_value   = round(value_excl_st + sales_tax, 2)
         discount      = float(override_discount if override_discount is not None else self.fbr_default_discount)
-
+        fbr_uom = "" if self.unit_of_measure == "Service" else self.unit_of_measure
         return {
             "hsCode":                          self.hs_code or "",
             "productDescription":              self.name,
             "rate":                            tax_rate_percent,
-            "uoM":                             self.unit_of_measure,
+            "uoM":                             fbr_uom,
             "quantity":                        quantity,
             "valueSalesExcludingST":           value_excl_st,
             "fixedNotifiedValueOrRetailPrice": float(self.fbr_fixed_retail_price),
@@ -1905,7 +1912,10 @@ class SaleLine(models.Model):
         price      = float(self.unit_price)
         discount   = float(self.discount_amount)
         self.tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
-        tax_rate   = float(self.tax_rate_percent.replace("%", "")) / 100
+        if self.tax_rate_percent == "Exempt":
+            tax_rate = 0.0
+        else:
+            tax_rate = float(self.tax_rate_percent.replace("%", "")) / 100
 
         self.value_excl_tax       = round(price * qty, 2)
         self.sales_tax_applicable = round(self.value_excl_tax * tax_rate, 2)
@@ -1958,11 +1968,12 @@ class SaleLine(models.Model):
         Called by the invoice generator in Phase 3.
         """
         tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
+        fbr_uom = "" if self.unit_of_measure == "Service" else self.unit_of_measure
         return {
             "hsCode":                          self.hs_code or "",
             "productDescription":              self.product_name,
             "rate":                            tax_rate_percent,
-            "uoM":                             self.unit_of_measure,
+            "uoM":                             fbr_uom,
             "quantity":                        float(self.quantity),
             "valueSalesExcludingST":           float(self.value_excl_tax),
             "fixedNotifiedValueOrRetailPrice": float(self.fixed_retail_price),
@@ -2396,57 +2407,8 @@ class SaleReturnLine(models.Model):
         verbose_name=_("Stock Restored"),
     )
  
-    class Meta:
-        verbose_name        = _("Sale Return Line")
-        verbose_name_plural = _("Sale Return Lines")
- 
-    def __str__(self):
-        return f"{self.product_name} × {self.quantity_returned}"
- 
-    def save(self, *args, **kwargs):
-        self._compute_totals()
-        super().save(*args, **kwargs)
- 
-    def _compute_totals(self):
-        qty      = float(self.quantity_returned)
-        price    = float(self.unit_price)
-        self.tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
-        tax_rate = float(self.tax_rate_percent.replace("%", "")) / 100
- 
-        self.return_value_excl_tax = round(price * qty, 2)
-        self.return_tax            = round(self.return_value_excl_tax * tax_rate, 2)
-        self.return_line_total     = round(
-            float(self.return_value_excl_tax) + float(self.return_tax), 2
-        )
 
 
-
-"""
-========================================================
-pos/debit_note_models.py
-Add to pos/models.py
- 
-Debit Note flow:
-1. Cashier selects original completed sale
-2. Selects reason (forgotten items / price correction / service charge)
-3. Adds items or charges to the debit note
-4. Collects payment from customer immediately
-5. System creates a Debit Note Sale linked to original
-6. Debit Note submitted to FBR as 'Debit Note' invoice type
- 
-FBR rules for Debit Notes (from PRAL manual):
-- Must reference original FBR invoice number (invoiceRefNo)
-- Must be within 72 hours of original invoice
-- invoiceType must be exactly "Debit Note"
-- Each item can only be edited ONCE
-- 10% limit of last month's sales applies
- 
-Key difference from Credit Note:
-- Credit Note → money back to customer (return)
-- Debit Note  → customer pays MORE (additional charge)
-========================================================
-"""
- 
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -2454,10 +2416,10 @@ from django.utils.translation import gettext_lazy as _
  
  
 class DebitNoteReason(models.TextChoices):
-    FORGOTTEN_ITEMS    = "forgotten_items",    _("Forgotten Items — items missed on original invoice")
-    PRICE_CORRECTION   = "price_correction",   _("Price Correction — item was undercharged")
-    SERVICE_CHARGE     = "service_charge",     _("Additional Service Charge")
-    OTHER              = "other",              _("Other")
+    FORGOTTEN_ITEMS  = "forgotten_items",  _("Forgotten Items — items missed on original invoice")
+    PRICE_CORRECTION = "price_correction", _("Price Correction — item was undercharged")
+    SERVICE_CHARGE   = "service_charge",   _("Additional Service Charge")
+    OTHER            = "other",            _("Other")
  
  
 class DebitNoteStatus(models.TextChoices):
@@ -2466,15 +2428,21 @@ class DebitNoteStatus(models.TextChoices):
     CANCELLED = "cancelled", _("Cancelled")
  
  
+class DebitNotePaymentMethod(models.TextChoices):
+    CASH          = "cash",          _("Cash")
+    CARD          = "card",          _("Card")
+    BANK_TRANSFER = "bank_transfer", _("Bank Transfer")
+ 
+ 
 class DebitNote(models.Model):
     """
     One row = one debit note transaction.
  
-    Links back to original Sale via original_sale FK.
-    Customer pays the debit note amount immediately at POS.
-    Creates a Debit Note Sale that gets submitted to FBR.
+    Raised against an original completed Sale when the customer owes
+    MORE than what was originally invoiced (opposite of SaleReturn).
  
-    FBR 72-hour rule is checked at creation time.
+    Creates a linked Debit Note Sale that gets submitted to FBR.
+    Same 72-hour eligibility rule as SaleReturn.
     """
  
     # ── Ownership ─────────────────────────────────────────────────────
@@ -2496,7 +2464,6 @@ class DebitNote(models.Model):
         ),
     )
  
-    # Debit Note Sale created automatically when debit note is completed
     debit_note_sale = models.OneToOneField(
         "pos.Sale",
         on_delete=models.SET_NULL,
@@ -2505,8 +2472,7 @@ class DebitNote(models.Model):
         related_name="debit_note_record",
         verbose_name=_("Debit Note Sale"),
         help_text=_(
-            "Auto-created Debit Note Sale. "
-            "Submitted to FBR as a Debit Note invoice."
+            "Auto-created Debit Note Sale. Submitted to FBR as a Debit Note invoice."
         ),
     )
  
@@ -2517,7 +2483,7 @@ class DebitNote(models.Model):
         verbose_name=_("Processed By"),
     )
  
-    # ── Debit note details ────────────────────────────────────────────
+    # ── Debit note details ─────────────────────────────────────────────
     debit_note_number = models.CharField(
         max_length=50,
         unique=True,
@@ -2545,7 +2511,7 @@ class DebitNote(models.Model):
         verbose_name=_("Status"),
     )
  
-    # ── Financial totals ──────────────────────────────────────────────
+    # ── Financial totals ───────────────────────────────────────────────
     total_amount = models.DecimalField(
         max_digits=14,
         decimal_places=2,
@@ -2561,15 +2527,11 @@ class DebitNote(models.Model):
         verbose_name=_("Total Tax"),
     )
  
-    # ── Payment ───────────────────────────────────────────────────────
+    # ── Payment collection ──────────────────────────────────────────────
     payment_method = models.CharField(
         max_length=20,
-        choices=[
-            ("cash",          _("Cash")),
-            ("card",          _("Card")),
-            ("bank_transfer", _("Bank Transfer")),
-        ],
-        default="cash",
+        choices=DebitNotePaymentMethod.choices,
+        default=DebitNotePaymentMethod.CASH,
         verbose_name=_("Payment Method"),
         help_text=_("How customer paid the debit note amount."),
     )
@@ -2600,7 +2562,7 @@ class DebitNote(models.Model):
         verbose_name=_("Payment Collected At"),
     )
  
-    # ── FBR eligibility ───────────────────────────────────────────────
+    # ── FBR 72-hour eligibility check ────────────────────────────────
     fbr_eligible = models.BooleanField(
         default=True,
         verbose_name=_("FBR Debit Note Eligible"),
@@ -2626,14 +2588,8 @@ class DebitNote(models.Model):
         verbose_name_plural = _("Debit Notes")
         ordering            = ["-created_at"]
         indexes = [
-            models.Index(
-                fields=["company", "status"],
-                name="debitnote_company_status_idx"
-            ),
-            models.Index(
-                fields=["original_sale"],
-                name="debitnote_original_sale_idx"
-            ),
+            models.Index(fields=["company", "status"],  name="debitnote_company_status_idx"),
+            models.Index(fields=["original_sale"],       name="debitnote_original_sale_idx"),
         ]
  
     def __str__(self):
@@ -2641,20 +2597,23 @@ class DebitNote(models.Model):
  
     def save(self, *args, **kwargs):
         if not self.debit_note_number:
-            self.debit_note_number = self._generate_number()
+            self.debit_note_number = self._generate_debit_note_number()
         super().save(*args, **kwargs)
  
-    def _generate_number(self) -> str:
+    def _generate_debit_note_number(self) -> str:
         year  = timezone.now().year
         count = DebitNote.objects.filter(company=self.company).count() + 1
         return f"DN-{year}-{count:06d}"
  
     def check_fbr_eligibility(self):
-        """Checks FBR 72-hour rule."""
+        """
+        Checks FBR 72-hour rule. Sets fbr_eligible and fbr_eligibility_reason.
+        Mirrors SaleReturn.check_fbr_eligibility().
+        """
         original = self.original_sale
  
         if not original.fbr_invoice_number:
-            self.fbr_eligible           = False
+            self.fbr_eligible = False
             self.fbr_eligibility_reason = (
                 "Original invoice was not submitted to FBR. "
                 "Debit note cannot be issued."
@@ -2667,33 +2626,24 @@ class DebitNote(models.Model):
             ).total_seconds() / 3600
  
             if hours_elapsed > 72:
-                self.fbr_eligible           = False
+                self.fbr_eligible = False
                 self.fbr_eligibility_reason = (
                     f"Original invoice is {hours_elapsed:.0f} hours old. "
-                    f"FBR only allows debit notes within 72 hours."
+                    f"FBR only allows corrections within 72 hours of invoice date."
                 )
                 return
  
-        self.fbr_eligible           = True
+        self.fbr_eligible = True
         self.fbr_eligibility_reason = ""
- 
-    def compute_totals(self):
-        """Recompute totals from lines."""
-        lines            = self.lines.all()
-        self.total_amount = sum(l.line_total for l in lines)
-        self.total_tax    = sum(l.tax_amount  for l in lines)
-        self.save(update_fields=[
-            "total_amount", "total_tax", "updated_at"
-        ])
  
  
 class DebitNoteLine(models.Model):
     """
-    One row = one item or charge on the debit note.
+    One row = one line item on a debit note.
  
-    For FORGOTTEN_ITEMS  → links to a Product
-    For PRICE_CORRECTION → links to original SaleLine
-    For SERVICE_CHARGE   → free-text description, no product
+    - forgotten_items  → product FK set, snapshot fields copied from Product
+    - price_correction → original_line FK set (points to the underpriced SaleLine)
+    - service_charge   → neither product nor original_line required, just description
     """
  
     debit_note = models.ForeignKey(
@@ -2703,7 +2653,6 @@ class DebitNoteLine(models.Model):
         verbose_name=_("Debit Note"),
     )
  
-    # Optional — for forgotten items and price corrections
     product = models.ForeignKey(
         "pos.Product",
         on_delete=models.PROTECT,
@@ -2713,7 +2662,6 @@ class DebitNoteLine(models.Model):
         verbose_name=_("Product"),
     )
  
-    # Optional — for price corrections against original line
     original_line = models.ForeignKey(
         "pos.SaleLine",
         on_delete=models.PROTECT,
@@ -2724,14 +2672,12 @@ class DebitNoteLine(models.Model):
         help_text=_("For price corrections only."),
     )
  
-    # ── Snapshot fields ───────────────────────────────────────────────
     description = models.CharField(
         max_length=255,
         verbose_name=_("Description"),
         help_text=_(
-            "Product name for forgotten items, "
-            "correction detail for price corrections, "
-            "charge description for service charges."
+            "Product name for forgotten items, correction detail for "
+            "price corrections, charge description for service charges."
         ),
     )
  
@@ -2759,7 +2705,6 @@ class DebitNoteLine(models.Model):
         verbose_name=_("Tax Rate"),
     )
  
-    # ── Pricing ───────────────────────────────────────────────────────
     quantity = models.DecimalField(
         max_digits=12,
         decimal_places=3,
@@ -2805,66 +2750,18 @@ class DebitNoteLine(models.Model):
         return f"{self.description} × {self.quantity} @ {self.unit_price}"
  
     def save(self, *args, **kwargs):
-        self._compute_totals()
+        self._compute_fields()
         super().save(*args, **kwargs)
  
-    def _compute_totals(self):
+    def _compute_fields(self):
         qty      = float(self.quantity)
         price    = float(self.unit_price)
-        self.tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
-        tax_rate = float(
-            self.tax_rate_percent.replace("%", "")
-        ) / 100
+        if self.tax_rate_percent == "Exempt":
+            tax_rate = 0.0
+        else:
+            tax_rate = float(self.tax_rate_percent.replace("%", "")) / 100
  
         self.value_excl_tax = round(price * qty, 2)
         self.tax_amount     = round(self.value_excl_tax * tax_rate, 2)
-        self.line_total     = round(
-            float(self.value_excl_tax) + float(self.tax_amount), 2
-        )
+        self.line_total      = round(float(self.value_excl_tax) + float(self.tax_amount), 2)
  
-    def get_fbr_item_payload(self) -> dict:
-        """Returns FBR JSON item dict for this debit note line."""
-        tax_rate_percent = normalize_tax_rate_percent(self.tax_rate_percent)
-        return {
-            "hsCode":                          self.hs_code or "",
-            "productDescription":              self.description,
-            "rate":                            tax_rate_percent,
-            "uoM":                             self.unit_of_measure,
-            "quantity":                        float(self.quantity),
-            "valueSalesExcludingST":           float(self.value_excl_tax),
-            "fixedNotifiedValueOrRetailPrice": 0,
-            "salesTaxApplicable":              float(self.tax_amount),
-            "salesTaxWithheldAtSource":        0,
-            "extraTax":                        "",
-            "furtherTax":                      0,
-            "sroScheduleNo":                   "",
-            "sroItemSerialNo":                 "",
-            "fedPayable":                      0,
-            "discount":                        0,
-            "totalValues":                     float(self.line_total),
-            "saleType":                        self.fbr_sale_type,
-        }
-
-from companies.models import Warehouse
-
-@receiver(post_save, sender=Product)
-def create_stock_for_new_product(sender, instance, created, **kwargs):
-    if created:
-        warehouses = Warehouse.objects.filter(company=instance.company)
-        for wh in warehouses:
-            WarehouseStock.objects.get_or_create(
-                warehouse=wh,
-                product=instance,
-                defaults={"quantity": instance.current_stock}
-            )
-
-@receiver(post_save, sender=Warehouse)
-def create_stock_for_new_warehouse(sender, instance, created, **kwargs):
-    if created:
-        products = Product.objects.filter(company=instance.company)
-        for prod in products:
-            WarehouseStock.objects.get_or_create(
-                warehouse=instance,
-                product=prod,
-                defaults={"quantity": prod.current_stock if instance.is_default else 0}
-            )

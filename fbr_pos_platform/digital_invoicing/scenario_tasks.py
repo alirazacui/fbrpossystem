@@ -345,7 +345,7 @@ def _fetch_production_token(company, client: "FBRClient") -> str:
         response = requests.get(
             url,
             headers=client._headers(),
-            timeout=30,
+            timeout=90,
         )
         data = response.json()
         error_code = str(data.get("errorCode", ""))
