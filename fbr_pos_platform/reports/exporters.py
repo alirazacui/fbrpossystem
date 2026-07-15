@@ -1085,7 +1085,7 @@ class FBRStatusExporter:
         for i, sale in enumerate(self.data):
             r = next_row
             ws.cell(r, 1, sale.sale_number)
-            ws.cell(r, 2, sale.completed_at.strftime("%d-%b-%Y %H:%M")
+            ws.cell(r, 2, timezone.localtime(sale.completed_at).strftime("%d-%b-%Y %H:%M")
                     if sale.completed_at else "")
             ws.cell(r, 3, sale.customer.name[:25])
             ws.cell(r, 4, float(sale.total_amount))
@@ -1215,7 +1215,7 @@ class FBRStatusExporter:
             ))
             table_data.append([
                 Paragraph(sale.sale_number,      cc),
-                Paragraph(sale.completed_at.strftime("%d-%b-%Y")
+                Paragraph(timezone.localtime(sale.completed_at).strftime("%d-%b-%Y")
                           if sale.completed_at else "", cc),
                 Paragraph(sale.customer.name[:18], cl),
                 Paragraph(f"Rs. {sale.total_amount:,.2f}", cr),

@@ -55,3 +55,26 @@ Thumbs.db
 *.swo
 *~
 *.log
+
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+staticfiles/
+media/
+*.log
+db.sqlite3
+
+# Env
+.env
+venv/
+env/
+
+# Celery
+celerybeat-schedule
+
+# Node
+node_modules/

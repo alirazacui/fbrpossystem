@@ -197,7 +197,7 @@ class ThermalReceiptGenerator:
         draw_text(f"Invoice #: {self.sale.sale_number}", THERMAL_MARGIN, y, size=7)
         y = next_line(y)
  
-        completed = self.sale.completed_at or timezone.now()
+        completed = timezone.localtime(self.sale.completed_at) if self.sale.completed_at else timezone.localtime(timezone.now())
         draw_text(
             f"Date: {completed.strftime('%d-%b-%Y %I:%M %p')}",
             THERMAL_MARGIN, y, size=7
@@ -471,7 +471,7 @@ class A4InvoiceGenerator:
         ))
 
         # ── HEADER ROW: Company info + FBR Info ───────────────────
-        completed = self.sale.completed_at or timezone.now()
+        completed = timezone.localtime(self.sale.completed_at) if self.sale.completed_at else timezone.localtime(timezone.now())
  
         # Top Left Info
         company_info = [

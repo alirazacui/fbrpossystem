@@ -80,7 +80,7 @@ class AdminDashboardStatsView(APIView):
                 "sale_id": log.sale_id,
                 "endpoint": log.endpoint,
                 "status_code": log.status_code,
-                "attempted_at": log.created_at.strftime("%Y-%m-%d %H:%M")
+                "attempted_at": timezone.localtime(log.created_at).strftime("%Y-%m-%d %H:%M")
             }
             for log in failed_fbr_qs
         ]
@@ -90,7 +90,7 @@ class AdminDashboardStatsView(APIView):
         recent_activity = [
             {
                 "message": f"New tenant '{comp.business_name}' registered.",
-                "date": comp.created_at.strftime("%Y-%m-%d %H:%M")
+                "date": timezone.localtime(comp.created_at).strftime("%Y-%m-%d %H:%M")
             }
             for comp in recent_companies
         ]

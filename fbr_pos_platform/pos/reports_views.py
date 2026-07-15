@@ -5,6 +5,7 @@ from django.db.models import Sum, Count, F
 from django.db.models.functions import TruncDate
 from pos.models import Sale, SaleStatus
 from digital_invoicing.models import FBRSubmissionLog
+from django.utils.timezone import localtime
 import decimal
 
 class ReportsViewSet(viewsets.ViewSet):
@@ -71,7 +72,7 @@ class ReportsViewSet(viewsets.ViewSet):
             
         return Response([
             {
-                "Submitted": r.created_at.strftime("%Y-%m-%d %H:%M"),
+                "Submitted": localtime(r.created_at).strftime("%Y-%m-%d %H:%M"),
                 "Env": r.environment,
                 "Endpoint": r.endpoint,
                 "Local invoice": r.local_invoice_id or "",

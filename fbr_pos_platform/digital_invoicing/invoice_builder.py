@@ -96,12 +96,11 @@ class FBRInvoiceBuilder:
         return payload
  
     def _format_date(self, dt) -> str:
-        """Format datetime to FBR expected format: YYYY-MM-DD"""
-        if dt is None:
-            from django.utils import timezone
-            dt = timezone.now()
-        return dt.strftime("%Y-%m-%d")
- 
+     """Format datetime to FBR expected format: YYYY-MM-DD (Pakistan local date)."""
+     from django.utils import timezone
+     if dt is None:
+        dt = timezone.now()
+     return timezone.localtime(dt).strftime("%Y-%m-%d")
     def _extract_province(self, address: str) -> str:
         """
         Try to extract province from address string.

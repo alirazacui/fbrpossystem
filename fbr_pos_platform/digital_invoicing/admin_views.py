@@ -1,3 +1,7 @@
+import boto3
+from urllib.parse import urlparse
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +10,32 @@ from django.db import models
 from .models import FBRSubmissionLog
 from common.permissions import IsAdmin
 from receipt.generators import A4InvoiceGenerator
+
+
+def _extract_s3_key(url_or_path: str) -> str:
+    if not url_or_path:
+        return ""
+    parsed = urlparse(url_or_path)
+    if parsed.scheme and parsed.netloc:
+        return parsed.path.lstrip("/")
+    return url_or_path.lstrip("/")
+
+
+def _presigned_url(key: str, as_attachment: bool = False) -> str:
+    client = boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
+    )
+    params = {
+        "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+        "Key": key,
+    }
+    if as_attachment:
+        filename = key.split("/")[-1] or "invoice.pdf"
+        params["ResponseContentDisposition"] = f'attachment; filename="{filename}"'
+    return client.generate_presigned_url("get_object", Params=params, ExpiresIn=300)
 
 class FBRSubmissionAdminViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsAdmin]
@@ -32,7 +62,7 @@ class FBRSubmissionAdminViewSet(viewsets.ViewSet):
         for log in qs:
             results.append({
                 "id": log.id,
-                "created_at": log.created_at.strftime("%B %d, %Y, %I:%M %p"),
+                "created_at": timezone.localtime(log.created_at).strftime("%B %d, %Y, %I:%M %p"),
                 "company_name": log.company.business_name,
                 "local_invoice_id": log.local_invoice_id or "-",
                 "fbr_invoice_id": log.fbr_invoice_id or "-",
@@ -55,7 +85,7 @@ class FBRSubmissionAdminViewSet(viewsets.ViewSet):
 
         return Response({
             "id": log.id,
-            "created_at": log.created_at.strftime("%B %d, %Y, %I:%M %p"),
+            "created_at": timezone.localtime(log.created_at).strftime("%B %d, %Y, %I:%M %p"),
             "company_name": log.company.business_name,
             "local_invoice_id": log.local_invoice_id or "-",
             "fbr_invoice_id": log.fbr_invoice_id or "-",
@@ -91,4 +121,16 @@ class FBRSubmissionAdminViewSet(viewsets.ViewSet):
             sale.receipt_generated_at = timezone.now()
             sale.save(update_fields=["receipt_a4_url", "receipt_generated_at", "updated_at"])
 
-        return Response({"url": invoice_url, "sale_id": sale.id, "sale_number": sale.sale_number})
+        key = _extract_s3_key(invoice_url)
+        if not key:
+            return Response({"error": "Invoice file key not found"}, status=400)
+
+        as_attachment = request.query_params.get("download") == "1"
+        presigned = _presigned_url(key, as_attachment=as_attachment)
+
+        return Response({
+            "url": presigned,
+            "sale_id": sale.id,
+            "sale_number": sale.sale_number,
+            "download": as_attachment,
+        })
