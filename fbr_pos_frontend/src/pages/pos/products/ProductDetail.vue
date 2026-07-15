@@ -58,27 +58,93 @@
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Tax & FBR</h2>
               <div class="space-y-6">
-                <div>
+
+                <!-- HS code — searchable dropdown (same as Create page) -->
+                <div class="relative" ref="dropdownRef">
                   <label class="block text-sm font-medium text-gray-700 mb-1">HS code <span class="text-red-500">*</span></label>
-                  <input v-model="form.hs_code" type="text" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm uppercase" />
+
+                  <div
+                    class="block w-full border rounded-md py-2 px-3 bg-white cursor-pointer flex justify-between items-center sm:text-sm"
+                    :class="dropdownOpen ? 'border-teal-500 ring-1 ring-teal-500' : 'border-gray-300 text-gray-500'"
+                    @click="dropdownOpen = !dropdownOpen"
+                  >
+                    <span :class="{'text-gray-900': form.hs_code}">{{ form.hs_code || '— pick HS code —' }}</span>
+                    <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                  </div>
+
+                  <div v-if="dropdownOpen" class="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <div class="sticky top-0 bg-white p-2 border-b border-gray-200">
+                      <div class="relative rounded-md shadow-sm border border-green-500">
+                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                          <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input type="text" v-model="hsSearch" @input="searchHSCodes" class="block w-full pl-8 pr-3 py-1.5 focus:outline-none sm:text-sm" placeholder="Search HS code or description..." />
+                      </div>
+                    </div>
+                    <ul class="py-1">
+                      <li v-if="searchingHS" class="px-3 py-4 text-center text-sm text-gray-500 animate-pulse">
+                        Searching FBR catalog...
+                      </li>
+                      <template v-else>
+                        <li v-for="item in hsCodesList" :key="item.code" @click="selectHS(item.code)" class="cursor-pointer hover:bg-gray-100 px-3 py-2">
+                          <div class="font-bold text-sm text-gray-900">{{ item.code }}</div>
+                          <div class="text-xs text-gray-500 uppercase truncate">{{ item.description }}</div>
+                        </li>
+                        <li v-if="hsCodesList.length === 0" class="px-3 py-4 text-center text-sm text-gray-500">
+                          No HS codes found matching "{{ hsSearch }}"
+                        </li>
+                      </template>
+                    </ul>
+                  </div>
                 </div>
-                
+
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Tax rate</label>
                   <select v-model="form.tax_rate_percent" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
-                  <option value="">— None —</option>
-                  <option value="18%">Standard 18%</option>
-                      <option value="17%">17%</option>
-                      <option value="15%">15%</option>
-                      <option value="16%">16%</option>
-                      <option value="5%">Reduced 5%</option>
-                      <option value="0%">Zero Rated</option>
-                      <option value="Exempt">Exempt</option>
-                </select>
+                    <option value="">— None —</option>
+                    <option value="18%">Standard 18%</option>
+                    <option value="17%">17%</option>
+                    <option value="15%">15%</option>
+                    <option value="16%">16%</option>
+                    <option value="5%">Reduced 5%</option>
+                    <option value="0%">Zero Rated</option>
+                    <option value="Exempt">Exempt</option>
+                  </select>
                 </div>
+
+                <!-- FBR sale type — grouped select (same as Create page) -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">FBR sale type</label>
-                  <input v-model="form.fbr_sale_type" type="text" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
+                  <select v-model="form.fbr_sale_type" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
+                    <optgroup label="Common">
+                      <option value="Goods at standard rate (default)">Standard rate (general goods)</option>
+                      <option value="3rd Schedule Goods">3rd Schedule (taxed on retail price)</option>
+                      <option value="Goods at Reduced Rate">Reduced rate (8th Schedule)</option>
+                      <option value="Goods at zero-rate">Zero-rated (5th Schedule)</option>
+                      <option value="Exempt Goods">Exempt (6th Schedule)</option>
+                      <option value="Electric Vehicle">Electric Vehicle</option>
+                      <option value="Mobile Phones">Mobile Phones (9th Schedule)</option>
+                    </optgroup>
+                    <optgroup label="Specialised / sector-specific">
+                      <option value="CNG Sales">CNG Sales</option>
+                      <option value="Cement /Concrete Block">Cement /Concrete Block</option>
+                      <option value="Cotton Ginners">Cotton ginners</option>
+                      <option value="Electricity Supply to Retailers">Electricity Supply to Retailers</option>
+                      <option value="Gas to CNG stations">Gas to CNG stations</option>
+                      <option value="Goods as per SRO.297(|)/2023">Goods per SRO.297(|)/2023</option>
+                      <option value="Goods (FED in ST Mode)">Goods — FED in ST mode</option>
+                      <option value="Non-Adjustable Supplies">Non-Adjustable Supplies</option>
+                      <option value="Petroleum Products">Petroleum Products</option>
+                      <option value="Potassium Chlorate">Potassium Chlorate</option>
+                      <option value="Processing/ Conversion of Goods">Processing/Conversion of Goods</option>
+                      <option value="Services">Services</option>
+                      <option value="Services (FED in ST Mode)">Services — FED in ST mode</option>
+                      <option value="Ship breaking">Ship breaking</option>
+                      <option value="Steel Melting and re-rolling">Steel melting and re-rolling</option>
+                      <option value="Telecommunication services">Telecommunication services</option>
+                      <option value="Toll Manufacturing">Toll Manufacturing</option>
+                    </optgroup>
+                  </select>
                 </div>
               </div>
             </section>
@@ -144,16 +210,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { productsAPI } from '@/apis/pos/products/productsAPI'
 import { categoriesAPI } from '@/apis/pos/categories/categoriesAPI'
+import { hsCodesAPI, type HSCode } from '@/apis/pos/hscodes/hsCodesAPI'
 
 const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 const loadingInit = ref(true)
 const categories = ref<any[]>([])
+
+// HS code dropdown state (same pattern as Create page)
+const dropdownOpen = ref(false)
+const dropdownRef = ref<HTMLElement | null>(null)
+const hsSearch = ref('')
+const hsCodesList = ref<HSCode[]>([])
+const searchingHS = ref(false)
 
 const productId = Number(route.params.id)
 
@@ -172,7 +246,17 @@ const form = reactive({
   fbr_sale_type: 'Goods at standard rate (default)',
 })
 
+// Close HS code dropdown when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+    dropdownOpen.value = false
+  }
+}
+
 onMounted(async () => {
+  document.addEventListener('mousedown', handleClickOutside)
+  searchHSCodes() // initial fetch, same as Create page
+
   try {
     const [catRes, prodRes] = await Promise.all([
       categoriesAPI.fetchCategories(),
@@ -202,6 +286,32 @@ onMounted(async () => {
     loadingInit.value = false
   }
 })
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
+
+// HS code search — identical logic to Create page
+let searchTimeout: any = null
+const searchHSCodes = () => {
+  searchingHS.value = true
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(async () => {
+    try {
+      const data = await hsCodesAPI.fetchHSCodes(1, hsSearch.value)
+      hsCodesList.value = data.results
+    } catch (e) {
+      console.error(e)
+    } finally {
+      searchingHS.value = false
+    }
+  }, 400)
+}
+
+const selectHS = (code: string) => {
+  form.hs_code = code
+  dropdownOpen.value = false
+}
 
 const handleUpdate = async () => {
   loading.value = true
