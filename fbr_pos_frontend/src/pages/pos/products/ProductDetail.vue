@@ -1,6 +1,5 @@
 <template>
   <div class="h-full flex flex-col bg-gray-50 pb-12">
-    <!-- Header -->
     <div class="px-8 py-6 border-b border-gray-200 bg-white sticky top-0 z-10 flex justify-between items-center">
       <h1 class="text-2xl font-bold text-gray-900">Product Details</h1>
       <div class="flex gap-3">
@@ -15,18 +14,15 @@
         </button>
       </div>
     </div>
-
     <div v-if="loadingInit" class="p-12 text-center text-gray-500">
       Loading product details...
     </div>
     <div v-else class="flex-1 overflow-auto px-8 py-8">
       <div class="w-full">
-        <!-- Flex/Grid Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
+
           <!-- LEFT COLUMN -->
           <div class="space-y-8 flex flex-col">
-            <!-- Basic Section -->
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Basic</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -34,7 +30,6 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-500">*</span></label>
                   <input v-model="form.name" type="text" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
                 </div>
-                
                 <div class="col-span-2 md:col-span-1">
                   <label class="block text-sm font-medium text-gray-700 mb-1">SKU <span class="text-red-500">*</span></label>
                   <input v-model="form.sku" type="text" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm uppercase" />
@@ -43,7 +38,6 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
                   <input v-model="form.barcode" type="text" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
                 </div>
-
                 <div class="col-span-2 md:col-span-1">
                   <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <select v-model="form.category_id" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
@@ -54,15 +48,11 @@
               </div>
             </section>
 
-            <!-- Tax & FBR Section -->
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Tax & FBR</h2>
               <div class="space-y-6">
-
-                <!-- HS code — searchable dropdown (same as Create page) -->
                 <div class="relative" ref="dropdownRef">
                   <label class="block text-sm font-medium text-gray-700 mb-1">HS code <span class="text-red-500">*</span></label>
-
                   <div
                     class="block w-full border rounded-md py-2 px-3 bg-white cursor-pointer flex justify-between items-center sm:text-sm"
                     :class="dropdownOpen ? 'border-teal-500 ring-1 ring-teal-500' : 'border-gray-300 text-gray-500'"
@@ -71,7 +61,6 @@
                     <span :class="{'text-gray-900': form.hs_code}">{{ form.hs_code || '— pick HS code —' }}</span>
                     <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                   </div>
-
                   <div v-if="dropdownOpen" class="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                     <div class="sticky top-0 bg-white p-2 border-b border-gray-200">
                       <div class="relative rounded-md shadow-sm border border-green-500">
@@ -97,7 +86,16 @@
                     </ul>
                   </div>
                 </div>
-
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SRO schedule (optional)</label>
+                    <input v-model="form.sro_schedule" type="text" placeholder="e.g. EIGHTH SCHEDULE Table 1" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SRO item serial no (optional)</label>
+                    <input v-model="form.sro_serial" type="text" placeholder="e.g. 70" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
+                  </div>
+                </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Tax rate</label>
                   <select v-model="form.tax_rate_percent" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
@@ -111,48 +109,91 @@
                     <option value="Exempt">Exempt</option>
                   </select>
                 </div>
-
-                <!-- FBR sale type — grouped select (same as Create page) -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">FBR sale type</label>
-                  <select v-model="form.fbr_sale_type" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
-                    <optgroup label="Common">
-                      <option value="Goods at standard rate (default)">Standard rate (general goods)</option>
-                      <option value="3rd Schedule Goods">3rd Schedule (taxed on retail price)</option>
-                      <option value="Goods at Reduced Rate">Reduced rate (8th Schedule)</option>
-                      <option value="Goods at zero-rate">Zero-rated (5th Schedule)</option>
-                      <option value="Exempt Goods">Exempt (6th Schedule)</option>
-                      <option value="Electric Vehicle">Electric Vehicle</option>
-                      <option value="Mobile Phones">Mobile Phones (9th Schedule)</option>
-                    </optgroup>
-                    <optgroup label="Specialised / sector-specific">
-                      <option value="CNG Sales">CNG Sales</option>
-                      <option value="Cement /Concrete Block">Cement /Concrete Block</option>
-                      <option value="Cotton Ginners">Cotton ginners</option>
-                      <option value="Electricity Supply to Retailers">Electricity Supply to Retailers</option>
-                      <option value="Gas to CNG stations">Gas to CNG stations</option>
-                      <option value="Goods as per SRO.297(|)/2023">Goods per SRO.297(|)/2023</option>
-                      <option value="Goods (FED in ST Mode)">Goods — FED in ST mode</option>
-                      <option value="Non-Adjustable Supplies">Non-Adjustable Supplies</option>
-                      <option value="Petroleum Products">Petroleum Products</option>
-                      <option value="Potassium Chlorate">Potassium Chlorate</option>
-                      <option value="Processing/ Conversion of Goods">Processing/Conversion of Goods</option>
-                      <option value="Services">Services</option>
-                      <option value="Services (FED in ST Mode)">Services — FED in ST mode</option>
-                      <option value="Ship breaking">Ship breaking</option>
-                      <option value="Steel Melting and re-rolling">Steel melting and re-rolling</option>
-                      <option value="Telecommunication services">Telecommunication services</option>
-                      <option value="Toll Manufacturing">Toll Manufacturing</option>
-                    </optgroup>
-                  </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Unit of measure <span class="text-red-500">*</span></label>
+                    <select v-model="form.uom" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
+                      <option value="Numbers, pieces, units">Numbers, pieces, units</option>
+                      <option value="1000 kWh">1000 kWh</option>
+                      <option value="40 KG">40 KG</option>
+                      <option value="Bag">Bag</option>
+                      <option value="Barrels">Barrels</option>
+                      <option value="Bill of Lading">Bill of Lading</option>
+                      <option value="Bottle">Bottle</option>
+                      <option value="Box">Box</option>
+                      <option value="Bundle">Bundle</option>
+                      <option value="Carat">Carat</option>
+                      <option value="Carton">Carton</option>
+                      <option value="Case">Case</option>
+                      <option value="Cubic Metre">Cubic Metre</option>
+                      <option value="Dozen">Dozen</option>
+                      <option value="Drum">Drum</option>
+                      <option value="Foot">Foot</option>
+                      <option value="Gallon">Gallon</option>
+                      <option value="Gram">Gram</option>
+                      <option value="Inch">Inch</option>
+                      <option value="KG">Kilogram</option>
+                      <option value="KWH">Kilowatt Hour (KWH)</option>
+                      <option value="Litre">Litre</option>
+                      <option value="Mega Watt (MW)">Mega Watt (MW)</option>
+                      <option value="Metre">Metre</option>
+                      <option value="Metric Ton">Metric Ton</option>
+                      <option value="Million BTU (MMBTU)">Million BTU (MMBTU)</option>
+                      <option value="Pack">Pack / Packet</option>
+                      <option value="Pair">Pair</option>
+                      <option value="Pallet">Pallet</option>
+                      <option value="Piece">Piece</option>
+                      <option value="Roll">Roll</option>
+                      <option value="Set">Set</option>
+                      <option value="Sheet">Sheet</option>
+                      <option value="Service">Service</option>
+                      <option value="Square Foot">Square Foot</option>
+                      <option value="Square Metre">Square Metre</option>
+                      <option value="Ton">Ton</option>
+                      <option value="Tube">Tube</option>
+                      <option value="Yard">Yard</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">FBR sale type</label>
+                    <select v-model="form.fbr_sale_type" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
+                      <optgroup label="Common">
+                        <option value="Goods at standard rate (default)">Standard rate (general goods)</option>
+                        <option value="3rd Schedule Goods">3rd Schedule (taxed on retail price)</option>
+                        <option value="Goods at Reduced Rate">Reduced rate (8th Schedule)</option>
+                        <option value="Goods at zero-rate">Zero-rated (5th Schedule)</option>
+                        <option value="Exempt Goods">Exempt (6th Schedule)</option>
+                        <option value="Electric Vehicle">Electric Vehicle</option>
+                        <option value="Mobile Phones">Mobile Phones (9th Schedule)</option>
+                      </optgroup>
+                      <optgroup label="Specialised / sector-specific">
+                        <option value="CNG Sales">CNG Sales</option>
+                        <option value="Cement /Concrete Block">Cement /Concrete Block</option>
+                        <option value="Cotton Ginners">Cotton ginners</option>
+                        <option value="Electricity Supply to Retailers">Electricity Supply to Retailers</option>
+                        <option value="Gas to CNG stations">Gas to CNG stations</option>
+                        <option value="Goods as per SRO.297(|)/2023">Goods per SRO.297(|)/2023</option>
+                        <option value="Goods (FED in ST Mode)">Goods — FED in ST mode</option>
+                        <option value="Non-Adjustable Supplies">Non-Adjustable Supplies</option>
+                        <option value="Petroleum Products">Petroleum Products</option>
+                        <option value="Potassium Chlorate">Potassium Chlorate</option>
+                        <option value="Processing/ Conversion of Goods">Processing/Conversion of Goods</option>
+                        <option value="Services">Services</option>
+                        <option value="Services (FED in ST Mode)">Services — FED in ST mode</option>
+                        <option value="Ship breaking">Ship breaking</option>
+                        <option value="Steel Melting and re-rolling">Steel melting and re-rolling</option>
+                        <option value="Telecommunication services">Telecommunication services</option>
+                        <option value="Toll Manufacturing">Toll Manufacturing</option>
+                      </optgroup>
+                    </select>
+                  </div>
                 </div>
               </div>
             </section>
           </div>
-          
+
           <!-- RIGHT COLUMN -->
           <div class="space-y-8 flex flex-col">
-            <!-- Pricing Section -->
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Pricing & Inventory</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,7 +215,6 @@
                     <input v-model="form.price" type="number" step="0.01" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
                   </div>
                 </div>
-                
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Retail price</label>
                   <div class="relative rounded-md shadow-sm">
@@ -199,11 +239,14 @@
                     <input v-model="form.current_stock" type="number" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-gray-50 font-bold" />
                   </div>
                 </div>
+                <div class="col-span-2 flex items-center pt-2">
+                  <input id="active" v-model="form.active" type="checkbox" class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded" />
+                  <label for="active" class="ml-2 block text-sm font-medium text-gray-900">Active</label>
+                </div>
               </div>
             </section>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -222,13 +265,11 @@ const loading = ref(false)
 const loadingInit = ref(true)
 const categories = ref<any[]>([])
 
-// HS code dropdown state (same pattern as Create page)
 const dropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 const hsSearch = ref('')
 const hsCodesList = ref<HSCode[]>([])
 const searchingHS = ref(false)
-
 const productId = Number(route.params.id)
 
 const form = reactive({
@@ -242,11 +283,14 @@ const form = reactive({
   min_sale_price: 0,
   current_stock: 0,
   hs_code: '',
+  uom: 'Numbers, pieces, units',
   tax_rate_percent: '18%',
   fbr_sale_type: 'Goods at standard rate (default)',
+  sro_schedule: '',
+  sro_serial: '',
+  active: true,
 })
 
-// Close HS code dropdown when clicking outside
 const handleClickOutside = (event: MouseEvent) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     dropdownOpen.value = false
@@ -255,21 +299,20 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(async () => {
   document.addEventListener('mousedown', handleClickOutside)
-  searchHSCodes() // initial fetch, same as Create page
-
+  searchHSCodes()
   try {
     const [catRes, prodRes] = await Promise.all([
       categoriesAPI.fetchCategories(),
       productsAPI.retrieve(productId)
     ])
-    
+
     categories.value = catRes
     const product = prodRes.data
-    
+
     form.name = product.name || ''
     form.sku = product.sku || ''
     form.barcode = product.barcode || ''
-    form.category_id = product.category_id ? String(product.category_id) : ''
+    form.category_id = product.category ? String(product.category) : ''
     form.price = Number(product.selling_price || product.price) || 0
     form.cost_price = Number(product.cost_price) || 0
     form.retail_price = Number(product.fbr_fixed_retail_price) || 0
@@ -278,6 +321,10 @@ onMounted(async () => {
     form.hs_code = product.hs_code || ''
     form.fbr_sale_type = product.fbr_sale_type || ''
     form.tax_rate_percent = normalizeTaxRatePercent(product.tax_rate_percent)
+    form.uom = product.unit_of_measure || 'Numbers, pieces, units'
+    form.sro_schedule = product.fbr_sro_schedule_no || ''
+    form.sro_serial = product.fbr_sro_item_serial_no || ''
+    form.active = product.is_active !== undefined ? product.is_active : true
   } catch (error) {
     console.error('Failed to load product details', error)
     alert('Failed to load product details.')
@@ -291,7 +338,6 @@ onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
 })
 
-// HS code search — identical logic to Create page
 let searchTimeout: any = null
 const searchHSCodes = () => {
   searchingHS.value = true
@@ -320,7 +366,7 @@ const handleUpdate = async () => {
     if (form.name) payload.name = form.name
     if (form.sku) payload.sku = form.sku
     if (form.barcode) payload.barcode = form.barcode
-    if (form.category_id) payload.category_id = Number(form.category_id)
+    payload.category = form.category_id ? Number(form.category_id) : null
     if (form.price !== null) payload.selling_price = Number(form.price)
     if (form.cost_price !== null) payload.cost_price = Number(form.cost_price)
     if (form.retail_price !== null) payload.fbr_fixed_retail_price = Number(form.retail_price)
@@ -329,7 +375,11 @@ const handleUpdate = async () => {
     if (form.hs_code) payload.hs_code = form.hs_code
     if (form.fbr_sale_type) payload.fbr_sale_type = form.fbr_sale_type
     if (form.tax_rate_percent) payload.tax_rate_percent = form.tax_rate_percent
-    
+    payload.unit_of_measure = form.uom
+    payload.fbr_sro_schedule_no = form.sro_schedule
+    payload.fbr_sro_item_serial_no = form.sro_serial
+    payload.is_active = form.active
+
     await productsAPI.update(productId, payload)
     alert('Product updated successfully!')
   } catch (error) {
@@ -342,22 +392,16 @@ const handleUpdate = async () => {
 
 const normalizeTaxRatePercent = (value: string | number) => {
   const normalized = String(value || '').trim()
-  if (!normalized) {
-    return ''
-  }
-  if (normalized === '8%' || normalized === '8') {
-    return '5%'
-  }
-  if (normalized === 'Exempt') {
-    return 'Exempt'
-  }
+  if (!normalized) return ''
+  if (normalized === '8%' || normalized === '8') return '5%'
+  if (normalized === 'Exempt') return 'Exempt'
   return normalized.endsWith('%') ? normalized : `${normalized}%`
 }
 
 const deleteProduct = async () => {
   const confirmed = await (window as any).$confirm('Are you sure you want to delete this product? This action cannot be undone.')
   if (!confirmed) return
-  
+
   try {
     await productsAPI.delete(productId)
     router.push('/pos/products')

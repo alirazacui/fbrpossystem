@@ -5,7 +5,8 @@ export interface Product {
   name: string
   sku: string
   barcode: string
-  category_id: number | null
+  category: number | null
+  category_name?: string
   price: number
   selling_price?: number
   cost_price?: number
@@ -16,6 +17,10 @@ export interface Product {
   hs_code?: string
   fbr_sale_type: string
   tax_rate_percent: string | number
+  unit_of_measure?: string
+  fbr_sro_schedule_no?: string
+  fbr_sro_item_serial_no?: string
+  is_active?: boolean
   created_at: string
   updated_at: string
 }
@@ -24,44 +29,36 @@ export interface ProductCreatePayload {
   name: string
   sku: string
   barcode: string
-  category_id?: number
+  category?: number
   selling_price: number
+  cost_price?: number
+  fbr_fixed_retail_price?: number
+  min_sale_price?: number
   current_stock: number
   hs_code?: string
   fbr_sale_type: string
   tax_rate_percent: string
+  unit_of_measure?: string
+  fbr_sro_schedule_no?: string
+  fbr_sro_item_serial_no?: string
+  is_active?: boolean
 }
 
 export const productsAPI = {
-  // List products
   list: (params?: Record<string, any>) =>
     axiosInstance.get<{ count: number; results: Product[] }>('/products/', { params }),
-
-  // Get single product
   retrieve: (id: number) =>
     axiosInstance.get<Product>(`/products/${id}/`),
-
-  // Create product
   create: (payload: ProductCreatePayload) =>
     axiosInstance.post<Product>('/products/', payload),
-
-  // Update product
   update: (id: number, payload: Partial<ProductCreatePayload>) =>
     axiosInstance.patch<Product>(`/products/${id}/`, payload),
-
-  // Delete product
   delete: (id: number) =>
     axiosInstance.delete(`/products/${id}/`),
-
-  // Search products by name/barcode
   search: (query: string) =>
     axiosInstance.get<Product[]>('/products/search/', { params: { q: query } }),
-
-  // Get by barcode
   getByBarcode: (barcode: string) =>
     axiosInstance.get<Product>('/products/by_barcode/', { params: { barcode } }),
-
-  // Adjust stock
   adjustStock: (id: number, quantity: number) =>
     axiosInstance.post(`/products/${id}/adjust_stock/`, { quantity }),
 }

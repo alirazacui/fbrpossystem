@@ -12,15 +12,12 @@
         </button>
       </div>
     </div>
-
     <div class="flex-1 overflow-auto px-8 py-8">
       <div class="w-full">
-        <!-- Flex/Grid Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
+
           <!-- LEFT COLUMN -->
           <div class="space-y-8 flex flex-col">
-            <!-- Basic Section -->
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Basic</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -32,7 +29,6 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1">Name (Urdu)</label>
                   <input v-model="form.nameUrdu" type="text" dir="rtl" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm font-urdu" />
                 </div>
-                
                 <div class="col-span-2 md:col-span-1">
                   <label class="block text-sm font-medium text-gray-700 mb-1">SKU <span class="text-red-500">*</span></label>
                   <input v-model="form.sku" type="text" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm uppercase" />
@@ -41,7 +37,6 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
                   <input v-model="form.barcode" type="text" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
                 </div>
-
                 <div class="col-span-2 md:col-span-1">
                   <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <select v-model="form.category_id" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
@@ -52,15 +47,12 @@
               </div>
             </section>
 
-            <!-- Tax & FBR Section -->
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Tax & FBR</h2>
               <div class="space-y-6">
-                
                 <div class="relative" ref="dropdownRef">
                   <label class="block text-sm font-medium text-gray-700 mb-1">HS code <span class="text-red-500">*</span></label>
-                  
-                  <div 
+                  <div
                     class="block w-full border rounded-md py-2 px-3 bg-white cursor-pointer flex justify-between items-center sm:text-sm"
                     :class="dropdownOpen ? 'border-teal-500 ring-1 ring-teal-500' : 'border-gray-300 text-gray-500'"
                     @click="dropdownOpen = !dropdownOpen"
@@ -68,7 +60,6 @@
                     <span :class="{'text-gray-900': form.hs_code}">{{ form.hs_code || '— pick HS code —' }}</span>
                     <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                   </div>
-                  
                   <div v-if="dropdownOpen" class="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                     <div class="sticky top-0 bg-white p-2 border-b border-gray-200">
                       <div class="relative rounded-md shadow-sm border border-green-500">
@@ -94,7 +85,6 @@
                     </ul>
                   </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">SRO schedule (optional)</label>
@@ -105,7 +95,6 @@
                     <input v-model="form.sro_serial" type="text" placeholder="e.g. 70" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
                   </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Unit of measure <span class="text-red-500">*</span></label>
@@ -162,11 +151,9 @@
                       <option value="5%">Reduced 5%</option>
                       <option value="0%">Zero Rated</option>
                       <option value="Exempt">Exempt</option>
-
                     </select>
                   </div>
                 </div>
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">FBR sale type</label>
                   <select v-model="form.fbr_sale_type" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
@@ -200,7 +187,6 @@
                     </optgroup>
                   </select>
                 </div>
-
                 <div class="flex items-center pt-2">
                   <input id="taxable" v-model="form.taxable" type="checkbox" class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded" />
                   <label for="taxable" class="ml-2 block text-sm font-medium text-gray-900">Taxable</label>
@@ -208,10 +194,9 @@
               </div>
             </section>
           </div>
-          
+
           <!-- RIGHT COLUMN -->
           <div class="space-y-8 flex flex-col">
-            <!-- Pricing Section -->
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Pricing</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -233,7 +218,6 @@
                     <input v-model="form.price" type="number" step="0.01" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm" placeholder="0.00" />
                   </div>
                 </div>
-                
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Retail price</label>
                   <div class="relative rounded-md shadow-sm">
@@ -254,8 +238,7 @@
                 </div>
               </div>
             </section>
-            
-            <!-- Inventory Section -->
+
             <section class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
               <h2 class="text-lg font-bold text-gray-900 mb-6">Inventory</h2>
               <div class="space-y-6">
@@ -269,7 +252,6 @@
                     <input v-model="form.reorder_level" type="number" class="block w-full border border-gray-300 rounded-md py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" placeholder="0" />
                   </div>
                 </div>
-                
                 <div class="flex items-center pt-2">
                   <input id="active" v-model="form.active" type="checkbox" class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded" />
                   <label for="active" class="ml-2 block text-sm font-medium text-gray-900">Active</label>
@@ -278,14 +260,13 @@
             </section>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductsStore } from '@/stores/pos/productsStore'
 import { hsCodesAPI, type HSCode } from '@/apis/pos/hscodes/hsCodesAPI'
@@ -323,7 +304,6 @@ const form = reactive({
   active: true,
 })
 
-// Close dropdown when clicking outside
 const handleClickOutside = (event: MouseEvent) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     dropdownOpen.value = false
@@ -332,7 +312,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(() => {
   document.addEventListener('mousedown', handleClickOutside)
-  searchHSCodes() // Initial fetch
+  searchHSCodes()
   loadCategories()
 })
 
@@ -379,26 +359,27 @@ const handleSave = async () => {
     alert('Please fill all required fields (Name, SKU, Sale Price, HS Code)')
     return
   }
-
   loading.value = true
   try {
     const payload = {
       name: form.name,
       sku: form.sku,
       barcode: form.barcode,
-      category_id: form.category_id ? Number(form.category_id) : undefined,
+      category: form.category_id ? Number(form.category_id) : undefined,
       selling_price: Number(form.price),
       cost_price: form.cost_price ? Number(form.cost_price) : 0,
       fbr_fixed_retail_price: form.retail_price ? Number(form.retail_price) : 0,
-      current_stock: Number(form.current_stock) || 0, 
+      min_sale_price: form.min_sale_price ? Number(form.min_sale_price) : 0,
+      current_stock: Number(form.current_stock) || 0,
       hs_code: form.hs_code,
       fbr_sale_type: form.fbr_sale_type,
       tax_rate_percent: normalizeTaxRatePercent(form.tax_rate_percent) || "0%",
       unit_of_measure: form.uom,
       fbr_sro_schedule_no: form.sro_schedule,
       fbr_sro_item_serial_no: form.sro_serial,
+      is_active: form.active,
     }
-    
+
     await productsStore.createProduct(payload as any)
     router.push('/pos/products')
   } catch (error) {
@@ -412,7 +393,6 @@ const handleSave = async () => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Jameel+Noori+Nastaleeq&display=swap');
-
 .font-urdu {
   font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif;
 }
