@@ -520,10 +520,12 @@ class A4InvoiceGenerator:
             
             # Use the actual FBR logo image from the project folder
             try:
-                fbr_logo = Image("/home/ali-raza/fbr_pos_project/fbr_digital_invoice.png", width=34 * mm, height=26 * mm)
+              from django.conf import settings
+              logo_path = str(settings.BASE_DIR / "static_assets" / "fbr_digital_invoice.png")
+              fbr_logo = Image(logo_path, width=34 * mm, height=26 * mm)
             except Exception:
-                # Fallback if image isn't found
-                fbr_logo = Paragraph("<b>FBR LOGO MISSING</b>", ParagraphStyle("F1", fontSize=10, textColor=colors.red))
+    # Fallback if image isn't found
+               fbr_logo = Paragraph("<b>FBR LOGO MISSING</b>", ParagraphStyle("F1", fontSize=10, textColor=colors.red))
             
             qr_table_data = [
                 [fbr_logo, qr_img],
