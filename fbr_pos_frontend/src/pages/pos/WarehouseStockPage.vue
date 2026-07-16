@@ -3,9 +3,14 @@
     <!-- Header -->
     <div class="mb-6 flex justify-between items-center">
       <h1 class="text-2xl font-bold text-gray-900">Warehouse Stock Levels</h1>
-      <router-link to="/pos/warehouses" class="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded shadow-sm text-sm hover:bg-gray-200 transition">
-        &larr; Back to Warehouses
-      </router-link>
+      <div class="flex gap-2">
+        <button @click="openAssignModal" class="px-4 py-2 bg-teal-600 text-white rounded shadow-sm text-sm hover:bg-teal-700 transition">
+          + Assign Product
+        </button>
+        <router-link to="/pos/warehouses" class="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded shadow-sm text-sm hover:bg-gray-200 transition">
+          &larr; Back to Warehouses
+        </router-link>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -101,6 +106,54 @@
       </div>
     </div>
 
+    <!-- Assign Product Modal -->
+    <div v-if="isAssignModalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeAssignModal"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Assign Product to Warehouse</h3>
+                <div class="mt-4 space-y-4">
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
+                    <select v-model="assignForm.warehouse" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
+                      <option disabled value="">Select a warehouse</option>
+                      <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                    <select v-model="assignForm.product" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
+                      <option disabled value="">Select a product</option>
+                      <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.name }} ({{ p.barcode || p.sku }})</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Initial Quantity</label>
+                    <input type="number" step="0.001" v-model="assignForm.quantity" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button type="button" @click="saveAssignment" :disabled="assigning" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+              {{ assigning ? 'Saving...' : 'Assign Product' }}
+            </button>
+            <button type="button" @click="closeAssignModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -108,6 +161,7 @@
 import { ref, onMounted } from 'vue'
 import { warehouseStockAPI, type WarehouseStock } from '@/apis/tenant/warehouseStockAPI'
 import { warehousesAPI, type Warehouse } from '@/apis/tenant/warehousesAPI'
+import { productsAPI, type Product } from '@/apis/pos/products/productsAPI'
 
 const loading = ref(true)
 const saving = ref(false)
@@ -119,6 +173,15 @@ const selectedWarehouse = ref('')
 const isModalOpen = ref(false)
 const activeStock = ref<WarehouseStock | null>(null)
 const adjustQuantity = ref<number | string>(0)
+
+const allProducts = ref<Product[]>([])
+const isAssignModalOpen = ref(false)
+const assigning = ref(false)
+const assignForm = ref({
+  warehouse: '' as number | string,
+  product: '' as number | string,
+  quantity: 0
+})
 
 const fetchStock = async () => {
   loading.value = true
@@ -146,6 +209,15 @@ const fetchWarehouses = async () => {
     warehouses.value = res.data.results || res.data
   } catch (err) {
     console.error("Failed to fetch warehouses", err)
+  }
+}
+
+const fetchProducts = async () => {
+  try {
+    const res = await productsAPI.list()
+    allProducts.value = res.data.results || res.data
+  } catch (err) {
+    console.error("Failed to fetch products", err)
   }
 }
 
@@ -178,8 +250,43 @@ const saveAdjustment = async () => {
   }
 }
 
+const openAssignModal = () => {
+  assignForm.value.warehouse = selectedWarehouse.value || ''
+  assignForm.value.product = ''
+  assignForm.value.quantity = 0
+  isAssignModalOpen.value = true
+}
+
+const closeAssignModal = () => {
+  isAssignModalOpen.value = false
+}
+
+const saveAssignment = async () => {
+  if (!assignForm.value.warehouse || !assignForm.value.product) {
+    alert("Please select both a warehouse and a product.")
+    return
+  }
+  assigning.value = true
+  try {
+    await warehouseStockAPI.create({
+      warehouse: Number(assignForm.value.warehouse),
+      product: Number(assignForm.value.product),
+      quantity: assignForm.value.quantity,
+      low_stock_threshold: 0
+    })
+    await fetchStock()
+    closeAssignModal()
+  } catch (err: any) {
+    console.error("Failed to assign product", err)
+    alert(err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || 'Failed to assign product. It might already be assigned.')
+  } finally {
+    assigning.value = false
+  }
+}
+
 onMounted(async () => {
   await fetchWarehouses()
+  await fetchProducts()
   await fetchStock()
 })
 </script>

@@ -11,7 +11,6 @@
         </RouterLink>
       </div>
     </div>
-
     <!-- Search & Filter -->
     <div class="mb-4 relative">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -27,7 +26,6 @@
         @input="handleSearch"
       />
     </div>
-
     <!-- Products Table -->
     <div class="bg-white shadow rounded-lg border border-gray-200 flex-1 flex flex-col overflow-hidden">
       <div class="overflow-x-auto flex-1">
@@ -39,12 +37,14 @@
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barcode</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HS code</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sale price</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="productsStore.loading">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                 <div class="inline-flex items-center">
                   <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -55,7 +55,7 @@
               </td>
             </tr>
             <tr v-else-if="productsStore.products.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                 No products found
               </td>
             </tr>
@@ -65,9 +65,14 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.barcode || '—' }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.hs_code || '—' }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatPrice(product.selling_price) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.tax_rate_percent ?? '—' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.current_stock ?? '—' }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                  Active
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                >
+                  {{ product.is_active ? 'Active' : 'Inactive' }}
                 </span>
               </td>
             </tr>
@@ -101,21 +106,17 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProductsStore } from '@/stores/pos/productsStore'
-
 const router = useRouter()
 const productsStore = useProductsStore()
 const searchQuery = ref('')
 let searchTimeout: any = null
-
 onMounted(async () => {
   await productsStore.fetchProducts()
 })
-
 const handleSearch = () => {
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(async () => {
@@ -126,24 +127,19 @@ const handleSearch = () => {
     }
   }, 300)
 }
-
 const handlePageSizeChange = async () => {
   await productsStore.fetchProducts(1) // reset to first page
 }
-
 const formatPrice = (price: number) => {
   return Number(price).toFixed(2)
 }
-
 const totalPages = computed(() => {
   return Math.ceil(productsStore.pagination.count / productsStore.pagination.pageSize) || 1
 })
-
 const startIndex = computed(() => {
   if (productsStore.products.length === 0) return 0
   return (productsStore.pagination.page - 1) * productsStore.pagination.pageSize + 1
 })
-
 const endIndex = computed(() => {
   const end = productsStore.pagination.page * productsStore.pagination.pageSize
   return end > productsStore.pagination.count ? productsStore.pagination.count : end

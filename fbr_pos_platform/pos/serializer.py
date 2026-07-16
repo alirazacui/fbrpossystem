@@ -129,6 +129,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     is_low_stock = serializers.BooleanField(read_only=True)
+    warehouse_id = serializers.IntegerField(
+        write_only=True,
+        required=False,
+        help_text="ID of the specific warehouse to add this product to. If omitted, adds to default warehouse."
+    )
  
     class Meta:
         model  = Product
@@ -142,6 +147,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "image",
+            "warehouse_id",
  
             # ── Pricing ────────────────────────────────────────────
             "selling_price",
@@ -258,10 +264,31 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         return value
  
     def create(self, validated_data):
+        warehouse_id = validated_data.pop("warehouse_id", None)
         request = self.context.get("request")
         validated_data["company"]    = request.user.company
         validated_data["created_by"] = request.user
-        return super().create(validated_data)
+        product = super().create(validated_data)
+        
+        # Initialize WarehouseStock for this product
+        from pos.models import WarehouseStock
+        from companies.models import Warehouse
+        
+        warehouse = None
+        if warehouse_id:
+            warehouse = Warehouse.objects.filter(id=warehouse_id, company=product.company).first()
+        if not warehouse:
+            # Fallback to default warehouse if specific one not found or not provided
+            warehouse = Warehouse.objects.filter(company=product.company, is_default=True).first()
+            
+        if warehouse:
+            WarehouseStock.objects.create(
+                warehouse=warehouse,
+                product=product,
+                quantity=product.current_stock or 0
+            )
+            
+        return product
  
  
 class ProductStockUpdateSerializer(serializers.ModelSerializer):
@@ -1371,3 +1398,17 @@ class WarehouseStockSerializer(serializers.ModelSerializer):
             'quantity', 'low_stock_threshold', 'notes', 'is_low', 'updated_at',
         ]
         read_only_fields = ['id', 'product_name', 'product_sku', 'product_barcode', 'warehouse_name', 'is_low', 'updated_at']
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        company = request.user.company
+        
+        warehouse = attrs.get('warehouse')
+        product = attrs.get('product')
+        
+        if warehouse and warehouse.company != company:
+            raise serializers.ValidationError({"warehouse": "Invalid warehouse."})
+        if product and product.company != company:
+            raise serializers.ValidationError({"product": "Invalid product."})
+            
+        return attrs

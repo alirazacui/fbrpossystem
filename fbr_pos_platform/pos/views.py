@@ -48,6 +48,7 @@ class CategoryViewSet(
 
 class WarehouseStockViewSet(
     AuditLogMixin,
+    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
@@ -55,7 +56,7 @@ class WarehouseStockViewSet(
 ):
     """
     Warehouse stock management.
-    Owner/Admin: Read and update stock levels.
+    Owner/Admin: Create, Read and update stock levels.
     """
     serializer_class = WarehouseStockSerializer
     permission_classes = [IsOwnerOrAdmin]

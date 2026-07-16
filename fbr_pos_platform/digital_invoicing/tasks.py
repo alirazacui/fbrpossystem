@@ -75,7 +75,7 @@ def submit_invoice_to_fbr(self, sale_id: int):
     company = sale.company
     is_sandbox = True
     
-    if company.fbr_production_token:
+    if company.fbr_sandbox_complete and company.fbr_production_token:
         is_sandbox = False
         token = company.fbr_production_token
     elif company.fbr_sandbox_token:
@@ -178,18 +178,17 @@ def submit_invoice_to_fbr(self, sale_id: int):
             ip_address="127.0.0.1"
         )
         
-        # ── Decrement Stock ONLY on Production FBR Success ──
-        if not is_sandbox:
-            from django.db import transaction
-            with transaction.atomic():
-                for line in sale.lines.select_related("product").all():
-                    product = line.product
-                    if product.track_inventory:
-                        product.refresh_from_db()
-                        product.current_stock = (
-                            float(product.current_stock) - float(line.quantity)
-                        )
-                        product.save(update_fields=["current_stock", "updated_at"])
+        # ── Decrement Stock ──
+        from django.db import transaction
+        with transaction.atomic():
+            for line in sale.lines.select_related("product").all():
+                product = line.product
+                if product.track_inventory:
+                    product.refresh_from_db()
+                    product.current_stock = (
+                        float(product.current_stock) - float(line.quantity)
+                    )
+                    product.save(update_fields=["current_stock", "updated_at"])
                         
         logger.info(
             f"[FBR Task] ✓ Sale {sale_id} submitted. "

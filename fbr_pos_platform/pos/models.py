@@ -666,6 +666,15 @@ class WarehouseStock(models.Model):
     def is_low(self):
         return self.low_stock_threshold > 0 and self.quantity <= self.low_stock_threshold
 
+    # ---------------------------------------------------------------------------
+# Signal — sync WarehouseStock when a new Product is created
+# ---------------------------------------------------------------------------
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+
+
 
 """
 pos/customer_models.py

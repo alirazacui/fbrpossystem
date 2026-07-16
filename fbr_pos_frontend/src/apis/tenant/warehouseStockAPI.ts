@@ -18,5 +18,6 @@ export interface WarehouseStock {
 export const warehouseStockAPI = {
   getAll: (params?: any) => axiosInstance.get('/warehouse-stocks/', { params }),
   getById: (id: number) => axiosInstance.get(`/warehouse-stocks/${id}/`),
+  create: (data: Partial<WarehouseStock>) => axiosInstance.post('/warehouse-stocks/', data),
   update: (id: number, data: Partial<WarehouseStock>) => axiosInstance.patch(`/warehouse-stocks/${id}/`, data),
 }
