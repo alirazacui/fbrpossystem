@@ -16,7 +16,8 @@ FBR invoice JSON structure (PRAL DI API v1.3):
     "sellerProvince":          "Punjab",
     "sellerAddress":           "123 Main St, Lahore",
     "buyerBusinessName":       "XYZ Company",
-    "buyerNTNCNIC":            "1234567",
+    "buyerNTN":                "1234567",           // NTN (if registered business)
+    "buyerCNIC":               "12345-1234567-1",  // CNIC (if individual)
     "buyerRegistrationType":   "Registered",
     "buyerProvince":           "Punjab",
     "buyerAddress":            "456 Other St, Karachi",
@@ -44,6 +45,9 @@ FBR invoice JSON structure (PRAL DI API v1.3):
         }
     ]
 }
+
+Note: Buyer NTN and CNIC are sent separately when both are provided.
+Fallback to buyerNTNCNIC for backward compatibility if neither is available.
 ========================================================
 """
  
