@@ -11,6 +11,7 @@ export interface Customer {
   registration_type: 'Registered' | 'Unregistered'
   province?: string
   address?: string
+  vendor_code?: string
   credit_limit: number
   notes?: string
   phone?: string
@@ -31,6 +32,7 @@ export interface CustomerCreatePayload {
   ntn?: string
   registration_type: 'Registered' | 'Unregistered'
   province?: string
+  vendor_code?: string
   credit_limit?: number
   address?: string
   notes?: string

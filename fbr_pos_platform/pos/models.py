@@ -822,6 +822,17 @@ class Customer(models.Model):
         ),
     )
 
+    vendor_code = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        default="0",
+        verbose_name=_("Vendor Code"),
+        help_text=_(
+            "Optional code assigned to the customer."
+        ),
+    )
+
     # ------------------------------------------------------------------
     # 3. Contact details (not sent to FBR — for our own records)
     # ------------------------------------------------------------------

@@ -368,6 +368,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
             "ntn",
             "registration_type",
             "phone",
+            "vendor_code",
             "is_walk_in",
             "is_active",
         ]
@@ -391,6 +392,7 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
     ntn_cnic = serializers.CharField(required=False, allow_blank=True, default="")
     cnic = serializers.CharField(required=False, allow_blank=True, default="")
     ntn = serializers.CharField(required=False, allow_blank=True, default="")
+    vendor_code = serializers.CharField(required=False, allow_blank=True, default="0")
     credit_limit = serializers.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -414,6 +416,7 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
             "address",
             "credit_limit",
             "notes",
+            "vendor_code",
             # Contact
             "phone",
             "email",

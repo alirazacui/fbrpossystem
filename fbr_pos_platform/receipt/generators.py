@@ -203,6 +203,12 @@ class ThermalReceiptGenerator:
             THERMAL_MARGIN, y, size=7
         )
         y = next_line(y)
+
+        draw_text(
+            f"Delivery chalan number: REF NO ({self.sale.sale_number}) {completed.strftime('%d-%m-%Y')}",
+            THERMAL_MARGIN, y, size=6
+        )
+        y = next_line(y)
  
         draw_text(
             f"Cashier: {self.sale.cashier.get_full_name() or self.sale.cashier.email}",
@@ -216,6 +222,7 @@ class ThermalReceiptGenerator:
         cust_ntn   = getattr(cust, 'ntn_cnic', '') or ''
         cust_email = getattr(cust, 'email', '') or ''
         cust_addr  = getattr(cust, 'address', '') or ''
+        cust_code  = getattr(cust, 'vendor_code', '') or ''
         is_walkin  = (
             not cust_name
             or cust_name.strip().lower() in ('walk-in', 'walkin', 'walk in', 'anonymous', 'cash customer', '-')
@@ -235,6 +242,9 @@ class ThermalReceiptGenerator:
                 y = next_line(y)
             if cust_ntn:
                 draw_text(f"NTN/CNIC: {cust_ntn}", THERMAL_MARGIN, y, size=6)
+                y = next_line(y, 8)
+            if cust_code and cust_code != "0":
+                draw_text(f"Vendor Code: {cust_code}", THERMAL_MARGIN, y, size=6)
                 y = next_line(y, 8)
             if cust_email:
                 draw_text(f"Email: {cust_email}", THERMAL_MARGIN, y, size=6)
@@ -543,6 +553,7 @@ class A4InvoiceGenerator:
         meta_rows = [
             [_p("Invoice #", 8, color=MUT), _p(f"<b>{self.sale.sale_number}</b>", 9, color=NAV)],
             [_p("Date", 8, color=MUT), _p(completed.strftime('%d %b %Y'), 8)],
+            [_p("Delivery Challan", 8, color=MUT), _p(f"REF NO ({self.sale.sale_number}) {completed.strftime('%d-%m-%Y')}", 7, color=NAV)],
         ]
         if validated:
             meta_rows.append([_p("FBR Inv", 8, color=MUT), _p(f"<b>{self.sale.fbr_invoice_number}</b>", 7, color=GRN)])
@@ -602,9 +613,12 @@ class A4InvoiceGenerator:
                 [_p("", 8), _p("No registered account", 8, color=MUT)],
             ]
         else:
+            cust_code = getattr(customer, 'vendor_code', '') or ''
             buyer_rows = [
                 [_p("Customer", 8, color=MUT), _p(f"<b>{cust_name}</b>", 9, bold=True, color=NAV)],
             ]
+            if cust_code and cust_code != "0":
+                buyer_rows.append([_p("Vendor Code", 8, color=MUT), _p(f"<b>{cust_code}</b>", 8, bold=True)])
             if cust_ntn:
                 buyer_rows.append([_p("NTN / CNIC", 8, color=MUT), _p(f"<b>{cust_ntn}</b>", 8, bold=True)])
             if cust_mail:
