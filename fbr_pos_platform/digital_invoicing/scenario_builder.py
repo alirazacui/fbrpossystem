@@ -446,7 +446,6 @@ class ScenarioInvoiceBuilder:
         # Buyer details
         if template["buyer_registered"]:
             buyer_ntn      = self.company.fbr_test_buyer_ntn or "3640255002483"
-            buyer_cnic     = ""  # No CNIC for registered business scenarios
             buyer_name     = "Test Registered Buyer"
             buyer_reg_type = "Registered"
         else:
@@ -474,10 +473,8 @@ class ScenarioInvoiceBuilder:
             "sellerAddress":         self.company.address or "Pakistan",
 
             # ── Buyer (test data) ─────────────────────────────────────
+            "buyerNTNCNIC":               buyer_ntn,
             "buyerBusinessName":          buyer_name,
-            # Send NTN and CNIC separately when available
-            "buyerNTN":                   buyer_ntn if buyer_ntn else "",
-            "buyerCNIC":                  buyer_cnic if buyer_cnic else "",
             # FBR field name is "buyerRegistrationType"
             "buyerRegistrationType":        buyer_reg_type,
             "buyerProvince":              "Punjab",

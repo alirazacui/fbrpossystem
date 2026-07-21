@@ -918,8 +918,6 @@ class Customer(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        # Keep ntn_cnic field for backward compatibility
-        # Priority: NTN > CNIC > empty
         if self.ntn:
             self.ntn_cnic = self.ntn.strip()
         elif self.cnic:
@@ -971,27 +969,16 @@ class Customer(models.Model):
         https://gw.fbr.gov.pk/di_data/v1/di/postinvoicedata
 
         Returns:
-            dict with buyerNTN, buyerCNIC, buyerBusinessName,
+            dict with buyerNTNCNIC, buyerBusinessName,
                       buyerProvince, buyerAddress, buyerRegistrationType
         """
-        payload = {
+        return {
+            "buyerNTNCNIC":          self.ntn_cnic or "1000000000000",
             "buyerBusinessName":     self.name,
             "buyerProvince":         self.province or "Punjab",
-            "buyerAddress":          self.address or "Pakistan",
+            "buyerAddress":          self.address  or "Pakistan",
             "buyerRegistrationType": self.registration_type,
         }
-        
-        # Send NTN and CNIC separately if both are provided
-        if self.ntn:
-            payload["buyerNTN"] = self.ntn.strip()
-        if self.cnic:
-            payload["buyerCNIC"] = self.cnic.strip()
-        
-        # Fallback to combined field for backward compatibility if neither is provided
-        if not self.ntn and not self.cnic:
-            payload["buyerNTNCNIC"] = "1000000000000"
-        
-        return payload
 
     def delete(self, *args, **kwargs):
         """
