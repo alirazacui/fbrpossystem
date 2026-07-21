@@ -10,6 +10,12 @@
         <RouterView />
       </AdminLayout>
     </template>
+    <!-- School tenant routes - use SchoolLayout -->
+    <template v-else-if="authStore.isAuthenticated && isSchoolUser">
+      <SchoolLayout>
+        <RouterView />
+      </SchoolLayout>
+    </template>
     <!-- Other authenticated routes (use AppLayout) -->
     <template v-else-if="authStore.isAuthenticated">
       <AppLayout>
@@ -31,6 +37,7 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 import AppLayout from '@/layouts/AppLayout.vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
+import SchoolLayout from '@/school/components/SchoolLayout.vue'
 import GlobalAlertModal from '@/components/common/GlobalAlertModal.vue'
 import { useAlertStore } from '@/stores/common/alertStore'
 
@@ -45,6 +52,10 @@ const isLoginRoute = computed(() => {
 
 const isAdminUser = computed(() => {
   return authStore.user?.role === 'admin' || authStore.user?.role === 'admin_staff'
+})
+
+const isSchoolUser = computed(() => {
+  return authStore.user?.company_vertical === 'school'
 })
 
 onMounted(async () => {

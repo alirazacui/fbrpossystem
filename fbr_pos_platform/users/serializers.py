@@ -40,6 +40,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["email"]      = user.email
         token["role"]       = user.role
         token["company_id"] = user.company_id   # None for platform users
+        token["company_vertical"] = getattr(user.company, "vertical", None) if user.company else None
         token["status"]     = user.status
         terminal_id = getattr(user, "terminal_id", None)
         token["terminal_id"] = str(terminal_id) if terminal_id is not None else None
@@ -73,6 +74,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "full_name":  user.get_full_name(),
             "role":       user.role,
             "company_id": user.company_id,
+            "company_vertical": getattr(user.company, "vertical", None) if user.company else None,
             "terminal_id": str(getattr(user, "terminal_id", None)) if getattr(user, "terminal_id", None) is not None else None,
             "status":     user.status,
         }
@@ -126,6 +128,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
     company_ntn = serializers.CharField(
         source="company.ntn", read_only=True, default=None
     )
+    company_vertical = serializers.CharField(
+        source="company.vertical", read_only=True, default=None
+    )
     terminal_id = serializers.CharField(read_only=True, default=None)
     terminal_name = serializers.CharField(source="terminal.name", read_only=True, default=None)
     created_by_email = serializers.EmailField(
@@ -147,6 +152,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "company_id",
             "company_name",
             "company_ntn",
+            "company_vertical",
             "terminal_id",
             "terminal_name",
             "created_by",
@@ -162,6 +168,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "company_id",
             "company_name",
             "company_ntn",
+            "company_vertical",
             "created_by",
             "created_by_email",
             "date_joined",
