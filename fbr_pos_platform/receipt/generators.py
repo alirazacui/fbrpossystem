@@ -204,11 +204,12 @@ class ThermalReceiptGenerator:
         )
         y = next_line(y)
 
-        draw_text(
-            f"Delivery chalan number: REF NO ({self.sale.sale_number}) {completed.strftime('%d-%m-%Y')}",
-            THERMAL_MARGIN, y, size=6
-        )
-        y = next_line(y)
+        # Delivery chalan number commented out as per user request
+        # draw_text(
+        #     f"Delivery chalan number: REF NO ({self.sale.sale_number}) {completed.strftime('%d-%m-%Y')}",
+        #     THERMAL_MARGIN, y, size=6
+        # )
+        # y = next_line(y)
  
         draw_text(
             f"Cashier: {self.sale.cashier.get_full_name() or self.sale.cashier.email}",
@@ -553,7 +554,8 @@ class A4InvoiceGenerator:
         meta_rows = [
             [_p("Invoice #", 8, color=MUT), _p(f"<b>{self.sale.sale_number}</b>", 9, color=NAV)],
             [_p("Date", 8, color=MUT), _p(completed.strftime('%d %b %Y'), 8)],
-            [_p("Delivery Challan", 8, color=MUT), _p(f"REF NO ({self.sale.sale_number}) {completed.strftime('%d-%m-%Y')}", 7, color=NAV)],
+            # Delivery Challan commented out as per user request
+            # [_p("Delivery Challan", 8, color=MUT), _p(f"REF NO ({self.sale.sale_number}) {completed.strftime('%d-%m-%Y')}", 7, color=NAV)],
         ]
         if validated:
             meta_rows.append([_p("FBR Inv", 8, color=MUT), _p(f"<b>{self.sale.fbr_invoice_number}</b>", 7, color=GRN)])
