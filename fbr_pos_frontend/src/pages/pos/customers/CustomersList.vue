@@ -369,20 +369,6 @@
                     />
                   </div>
 
-                  <!-- Vendor Code Field -->
-                  <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center justify-between">
-                      <span>Vendor Code</span>
-                      <span class="text-[10px] text-gray-400 font-normal lowercase">(Optional code)</span>
-                    </label>
-                    <input
-                      type="text"
-                      v-model="form.vendor_code"
-                      placeholder="e.g. V-001"
-                      class="mt-1.5 w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm text-gray-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
-                    />
-                  </div>
-
                   <!-- Address Field -->
                   <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide">Address</label>
@@ -674,7 +660,6 @@ const form = reactive<CustomerCreatePayload>({
   ntn: '',
   registration_type: 'Unregistered',
   province: '',
-  vendor_code: '0',
   credit_limit: 0,
   address: '',
   notes: '',
@@ -805,7 +790,6 @@ const resetForm = () => {
   form.ntn = ''
   form.registration_type = 'Unregistered'
   form.province = ''
-  form.vendor_code = '0'
   form.credit_limit = 0
   form.address = ''
   form.notes = ''
@@ -826,7 +810,6 @@ const saveCustomer = async () => {
     address: form.address?.trim() || undefined,
     notes: form.notes?.trim() || undefined,
     province: form.province || undefined,
-    vendor_code: form.vendor_code?.trim() || undefined,
     credit_limit: Number(form.credit_limit) || 0
   }
 

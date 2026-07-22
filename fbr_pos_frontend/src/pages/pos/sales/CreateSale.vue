@@ -21,7 +21,7 @@
           </div>
           <div class="p-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Buyer</label>
-            <div class="relative">
+            <div class="relative mb-4">
               <select v-model="selectedCustomerId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm pl-3 pr-10 py-2.5 bg-white border appearance-none">
                 <option :value="null">Walk-in (unregistered)</option>
                 <option v-for="customer in customers" :key="customer.id" :value="customer.id">
@@ -32,6 +32,13 @@
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
               </div>
             </div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Vendor Code (Optional)</label>
+            <input 
+              type="text" 
+              v-model="vendorCode" 
+              placeholder="Enter vendor code if applicable"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm px-3 py-2.5 bg-white border"
+            />
           </div>
         </div>
 
@@ -361,6 +368,7 @@ const showProductSelector = ref(false)
 const productSearchQuery = ref('')
 const isSubmitting = ref(false)
 const notes = ref('')
+const vendorCode = ref('')
 
 interface LocalSaleLine {
   product_id: number;
@@ -506,6 +514,7 @@ const submitInvoice = async () => {
       customer: selectedCustomerId.value || undefined,
       notes: notes.value || '',
       sale_type: 'Sale Invoice',
+      vendor_code: vendorCode.value || '',
       // cash_session if applicable
     }
     

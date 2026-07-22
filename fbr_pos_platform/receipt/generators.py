@@ -223,7 +223,7 @@ class ThermalReceiptGenerator:
         cust_ntn   = getattr(cust, 'ntn_cnic', '') or ''
         cust_email = getattr(cust, 'email', '') or ''
         cust_addr  = getattr(cust, 'address', '') or ''
-        cust_code  = getattr(cust, 'vendor_code', '') or ''
+        cust_code  = getattr(self.sale, 'vendor_code', '') or ''
         is_walkin  = (
             not cust_name
             or cust_name.strip().lower() in ('walk-in', 'walkin', 'walk in', 'anonymous', 'cash customer', '-')
@@ -615,7 +615,7 @@ class A4InvoiceGenerator:
                 [_p("", 8), _p("No registered account", 8, color=MUT)],
             ]
         else:
-            cust_code = getattr(customer, 'vendor_code', '') or ''
+            cust_code = getattr(self.sale, 'vendor_code', '') or ''
             buyer_rows = [
                 [_p("Customer", 8, color=MUT), _p(f"<b>{cust_name}</b>", 9, bold=True, color=NAV)],
             ]

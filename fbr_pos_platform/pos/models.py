@@ -822,17 +822,6 @@ class Customer(models.Model):
         ),
     )
 
-    vendor_code = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        default="0",
-        verbose_name=_("Vendor Code"),
-        help_text=_(
-            "Optional code assigned to the customer."
-        ),
-    )
-
     # ------------------------------------------------------------------
     # 3. Contact details (not sent to FBR — for our own records)
     # ------------------------------------------------------------------
@@ -1613,6 +1602,19 @@ class Sale(models.Model):
         blank=True,
         verbose_name=_("Receipt Generated At"),
         help_text=_("Timestamp of last receipt generation."),
+    )
+
+    # ------------------------------------------------------------------
+    # Vendor Code (optional, invoice-specific)
+    # ------------------------------------------------------------------
+
+    vendor_code = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        default="",
+        verbose_name=_("Vendor Code"),
+        help_text=_("Optional vendor code for this invoice. Can be different for each invoice."),
     )
 
     # ------------------------------------------------------------------
