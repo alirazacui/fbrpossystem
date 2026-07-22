@@ -893,9 +893,10 @@ class CreateSaleSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model  = Sale
-        fields = ["customer", "cash_session", "sale_type", "notes"]
+        fields = ["customer", "cash_session", "sale_type", "notes", "vendor_code"]
         extra_kwargs = {
-            "customer": {"required": False, "allow_null": True}
+            "customer": {"required": False, "allow_null": True},
+            "vendor_code": {"required": False, "allow_blank": True}
         }
  
     def validate_customer(self, customer):
