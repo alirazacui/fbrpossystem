@@ -123,6 +123,14 @@ export const useProductsStore = defineStore('products', () => {
     }
   }
 
+  const reset = () => {
+    products.value = []
+    selectedProduct.value = null
+    loading.value = false
+    error.value = null
+    pagination.value = { count: 0, page: 1, pageSize: 20 }
+  }
+
   return {
     // State
     products,
@@ -141,5 +149,6 @@ export const useProductsStore = defineStore('products', () => {
     createProduct,
     updateProduct,
     deleteProduct,
+    reset,
   }
 })

@@ -10,7 +10,7 @@ const axiosInstance: AxiosInstance = axios.create({
 // Request interceptor to add JWT token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token')
+    const token = sessionStorage.getItem('access_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -30,7 +30,7 @@ axiosInstance.interceptors.response.use(
     const isAuthEndpoint = requestUrl.includes('/auth/login/') || requestUrl.includes('/auth/refresh/')
 
     if (error.response?.status === 401 && !isAuthEndpoint) {
-      const refresh = localStorage.getItem('refresh_token')
+      const refresh = sessionStorage.getItem('refresh_token')
 
       if (refresh && !originalRequest._retry) {
         originalRequest._retry = true
@@ -38,7 +38,7 @@ axiosInstance.interceptors.response.use(
           const refreshResponse = await axios.post(`${baseURL}/auth/refresh/`, { refresh })
           const newAccessToken = refreshResponse.data?.access
           if (newAccessToken) {
-            localStorage.setItem('access_token', newAccessToken)
+            sessionStorage.setItem('access_token', newAccessToken)
             originalRequest.headers = originalRequest.headers || {}
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
             return axiosInstance(originalRequest)
@@ -48,8 +48,8 @@ axiosInstance.interceptors.response.use(
         }
       }
 
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
+      sessionStorage.removeItem('access_token')
+      sessionStorage.removeItem('refresh_token')
       if (!window.location.pathname.startsWith('/login')) {
         window.location.href = '/login'
       }

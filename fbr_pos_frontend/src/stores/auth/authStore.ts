@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authAPI, type AuthUser, type LoginCredentials, type TokenResponse } from '@/apis/auth/authAPI'
+import { authAPI, type AuthUser, type LoginCredentials } from '@/apis/auth/authAPI'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref<AuthUser | null>(null)
-  const accessToken = ref<string | null>(localStorage.getItem('access_token'))
-  const refreshToken = ref<string | null>(localStorage.getItem('refresh_token'))
+  const accessToken = ref<string | null>(sessionStorage.getItem('access_token'))
+  const refreshToken = ref<string | null>(sessionStorage.getItem('refresh_token'))
   const loading = ref(false)
   const error = ref<string | null>(null)
   const isInitialized = ref(false)
@@ -28,11 +28,14 @@ export const useAuthStore = defineStore('auth', () => {
       accessToken.value = access
       refreshToken.value = refresh
 
-      localStorage.setItem('access_token', access)
-      localStorage.setItem('refresh_token', refresh)
+      sessionStorage.setItem('access_token', access)
+      sessionStorage.setItem('refresh_token', refresh)
 
       // Fetch user data
       await fetchCurrentUser()
+      
+      // Clear all other sessionStorage keys from previous sessions
+      clearAllSessionStorage()
     } catch (err: any) {
       error.value = err.response?.data?.detail || 'Login failed'
       throw err
@@ -52,8 +55,38 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       accessToken.value = null
       refreshToken.value = null
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
+      sessionStorage.removeItem('access_token')
+      sessionStorage.removeItem('refresh_token')
+      
+      // Clear all sessionStorage to prevent data leakage
+      clearAllSessionStorage()
+      
+      // Clear all Pinia stores
+      clearAllPiniaStores()
+    }
+  }
+  
+  const clearAllSessionStorage = () => {
+    // Clear all sessionStorage except auth tokens (which are handled separately)
+    const keysToKeep = ['access_token', 'refresh_token']
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i)
+      if (key && !keysToKeep.includes(key)) {
+        sessionStorage.removeItem(key)
+      }
+    }
+  }
+  
+  const clearAllPiniaStores = () => {
+    // This will be called from the main app to clear all stores
+    // Pinia stores need to be reset individually
+    const pinia = (window as any).__PINIA__
+    if (pinia) {
+      Object.values(pinia._s).forEach((store: any) => {
+        if (store.$reset) {
+          store.$reset()
+        }
+      })
     }
   }
 
@@ -75,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
       const { access } = response.data
 
       accessToken.value = access
-      localStorage.setItem('access_token', access)
+      sessionStorage.setItem('access_token', access)
     } catch (err) {
       console.error('Token refresh failed:', err)
       await logout()
@@ -115,5 +148,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchCurrentUser,
     refreshAccessToken,
     initialize,
+    clearAllSessionStorage,
+    clearAllPiniaStores,
   }
 })
