@@ -25,17 +25,17 @@ export interface FeePaymentPayload {
 
 export const feePaymentAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: FeePayment[]; count: number }>('/school/fee-payments/', { params }),
+    axiosInstance.get<{ results: FeePayment[]; count: number }>('/fee-payments/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<FeePayment>(`/school/fee-payments/${id}/`),
+    axiosInstance.get<FeePayment>(`/fee-payments/${id}/`),
 
   create: (payload: FeePaymentPayload) =>
-    axiosInstance.post<FeePayment>('/school/fee-payments/', payload),
+    axiosInstance.post<FeePayment>('/fee-payments/', payload),
 
   update: (id: string, payload: Partial<FeePaymentPayload>) =>
-    axiosInstance.patch<FeePayment>(`/school/fee-payments/${id}/`, payload),
+    axiosInstance.patch<FeePayment>(`/fee-payments/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/fee-payments/${id}/`),
+    axiosInstance.delete(`/fee-payments/${id}/`),
 }

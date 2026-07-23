@@ -16,17 +16,17 @@ export interface SubjectPayload {
 
 export const subjectAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Subject[]; count: number }>('/school/subjects/', { params }),
+    axiosInstance.get<{ results: Subject[]; count: number }>('/subjects/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Subject>(`/school/subjects/${id}/`),
+    axiosInstance.get<Subject>(`/subjects/${id}/`),
 
   create: (payload: SubjectPayload) =>
-    axiosInstance.post<Subject>('/school/subjects/', payload),
+    axiosInstance.post<Subject>('/subjects/', payload),
 
   update: (id: string, payload: Partial<SubjectPayload>) =>
-    axiosInstance.patch<Subject>(`/school/subjects/${id}/`, payload),
+    axiosInstance.patch<Subject>(`/subjects/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/subjects/${id}/`),
+    axiosInstance.delete(`/subjects/${id}/`),
 }

@@ -11,11 +11,13 @@ class AcademicSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicSession
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = grade
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +28,7 @@ class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = subject
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class ClassSubjectAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,11 +39,13 @@ class GuardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = guardian
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class StudentGuardianAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,6 +56,7 @@ class StaffSerializer(serializers.ModelSerializer):
     class Meta:
         model = Staff
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -66,11 +72,13 @@ class FeeHeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeeHead
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class FeeStructureSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeeStructure
         fields = '__all__'
+        read_only_fields = ['tennant_id']
 
 class FeeStructureItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,6 +94,7 @@ class ExamTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamType
         fields = '__all__'
+        read_only_fields = ['company_id']
 
 class ExamSerializer(serializers.ModelSerializer):
     class Meta:

@@ -26,17 +26,17 @@ export interface StudentGuardianPayload {
 
 export const studentGuardianAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: StudentGuardian[]; count: number }>('/school/student-guardians/', { params }),
+    axiosInstance.get<{ results: StudentGuardian[]; count: number }>('/student-guardian-assignments/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<StudentGuardian>(`/school/student-guardians/${id}/`),
+    axiosInstance.get<StudentGuardian>(`/student-guardian-assignments/${id}/`),
 
   create: (payload: StudentGuardianPayload) =>
-    axiosInstance.post<StudentGuardian>('/school/student-guardians/', payload),
+    axiosInstance.post<StudentGuardian>('/student-guardian-assignments/', payload),
 
   update: (id: string, payload: Partial<StudentGuardianPayload>) =>
-    axiosInstance.patch<StudentGuardian>(`/school/student-guardians/${id}/`, payload),
+    axiosInstance.patch<StudentGuardian>(`/student-guardian-assignments/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/student-guardians/${id}/`),
+    axiosInstance.delete(`/student-guardian-assignments/${id}/`),
 }

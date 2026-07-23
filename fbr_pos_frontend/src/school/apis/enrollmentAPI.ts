@@ -29,17 +29,17 @@ export interface EnrollmentPayload {
 
 export const enrollmentAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Enrollment[]; count: number }>('/school/enrollments/', { params }),
+    axiosInstance.get<{ results: Enrollment[]; count: number }>('/enrollments/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Enrollment>(`/school/enrollments/${id}/`),
+    axiosInstance.get<Enrollment>(`/enrollments/${id}/`),
 
   create: (payload: EnrollmentPayload) =>
-    axiosInstance.post<Enrollment>('/school/enrollments/', payload),
+    axiosInstance.post<Enrollment>('/enrollments/', payload),
 
   update: (id: string, payload: Partial<EnrollmentPayload>) =>
-    axiosInstance.patch<Enrollment>(`/school/enrollments/${id}/`, payload),
+    axiosInstance.patch<Enrollment>(`/enrollments/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/enrollments/${id}/`),
+    axiosInstance.delete(`/enrollments/${id}/`),
 }

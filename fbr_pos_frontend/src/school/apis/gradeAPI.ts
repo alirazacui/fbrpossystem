@@ -16,17 +16,17 @@ export interface GradePayload {
 
 export const gradeAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Grade[]; count: number }>('/school/grades/', { params }),
+    axiosInstance.get<{ results: Grade[]; count: number }>('/grades/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Grade>(`/school/grades/${id}/`),
+    axiosInstance.get<Grade>(`/grades/${id}/`),
 
   create: (payload: GradePayload) =>
-    axiosInstance.post<Grade>('/school/grades/', payload),
+    axiosInstance.post<Grade>('/grades/', payload),
 
   update: (id: string, payload: Partial<GradePayload>) =>
-    axiosInstance.patch<Grade>(`/school/grades/${id}/`, payload),
+    axiosInstance.patch<Grade>(`/grades/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/grades/${id}/`),
+    axiosInstance.delete(`/grades/${id}/`),
 }

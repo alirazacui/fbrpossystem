@@ -20,17 +20,17 @@ export interface ClassSubjectAssignmentPayload {
 
 export const classSubjectAssignmentAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: ClassSubjectAssignment[]; count: number }>('/school/class-subject-assignments/', { params }),
+    axiosInstance.get<{ results: ClassSubjectAssignment[]; count: number }>('/class-subject-assignments/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<ClassSubjectAssignment>(`/school/class-subject-assignments/${id}/`),
+    axiosInstance.get<ClassSubjectAssignment>(`/class-subject-assignments/${id}/`),
 
   create: (payload: ClassSubjectAssignmentPayload) =>
-    axiosInstance.post<ClassSubjectAssignment>('/school/class-subject-assignments/', payload),
+    axiosInstance.post<ClassSubjectAssignment>('/class-subject-assignments/', payload),
 
   update: (id: string, payload: Partial<ClassSubjectAssignmentPayload>) =>
-    axiosInstance.patch<ClassSubjectAssignment>(`/school/class-subject-assignments/${id}/`, payload),
+    axiosInstance.patch<ClassSubjectAssignment>(`/class-subject-assignments/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/class-subject-assignments/${id}/`),
+    axiosInstance.delete(`/class-subject-assignments/${id}/`),
 }

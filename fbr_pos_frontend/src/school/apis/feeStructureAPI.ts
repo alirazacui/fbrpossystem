@@ -24,17 +24,17 @@ export interface FeeStructurePayload {
 
 export const feeStructureAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: FeeStructure[]; count: number }>('/school/fee-structures/', { params }),
+    axiosInstance.get<{ results: FeeStructure[]; count: number }>('/fee-structures/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<FeeStructure>(`/school/fee-structures/${id}/`),
+    axiosInstance.get<FeeStructure>(`/fee-structures/${id}/`),
 
   create: (payload: FeeStructurePayload) =>
-    axiosInstance.post<FeeStructure>('/school/fee-structures/', payload),
+    axiosInstance.post<FeeStructure>('/fee-structures/', payload),
 
   update: (id: string, payload: Partial<FeeStructurePayload>) =>
-    axiosInstance.patch<FeeStructure>(`/school/fee-structures/${id}/`, payload),
+    axiosInstance.patch<FeeStructure>(`/fee-structures/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/fee-structures/${id}/`),
+    axiosInstance.delete(`/fee-structures/${id}/`),
 }

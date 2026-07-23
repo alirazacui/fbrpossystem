@@ -28,17 +28,17 @@ export interface StudentFeeConcessionPayload {
 
 export const studentFeeConcessionAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: StudentFeeConcession[]; count: number }>('/school/student-fee-concessions/', { params }),
+    axiosInstance.get<{ results: StudentFeeConcession[]; count: number }>('/student-fee-concessions/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<StudentFeeConcession>(`/school/student-fee-concessions/${id}/`),
+    axiosInstance.get<StudentFeeConcession>(`/student-fee-concessions/${id}/`),
 
   create: (payload: StudentFeeConcessionPayload) =>
-    axiosInstance.post<StudentFeeConcession>('/school/student-fee-concessions/', payload),
+    axiosInstance.post<StudentFeeConcession>('/student-fee-concessions/', payload),
 
   update: (id: string, payload: Partial<StudentFeeConcessionPayload>) =>
-    axiosInstance.patch<StudentFeeConcession>(`/school/student-fee-concessions/${id}/`, payload),
+    axiosInstance.patch<StudentFeeConcession>(`/student-fee-concessions/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/student-fee-concessions/${id}/`),
+    axiosInstance.delete(`/student-fee-concessions/${id}/`),
 }

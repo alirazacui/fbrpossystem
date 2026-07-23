@@ -18,17 +18,17 @@ export interface AcademicSessionPayload {
 
 export const academicSessionAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: AcademicSession[]; count: number }>('/school/academic-sessions/', { params }),
+    axiosInstance.get<{ results: AcademicSession[]; count: number }>('/academic-sessions/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<AcademicSession>(`/school/academic-sessions/${id}/`),
+    axiosInstance.get<AcademicSession>(`/academic-sessions/${id}/`),
 
   create: (payload: AcademicSessionPayload) =>
-    axiosInstance.post<AcademicSession>('/school/academic-sessions/', payload),
+    axiosInstance.post<AcademicSession>('/academic-sessions/', payload),
 
   update: (id: string, payload: Partial<AcademicSessionPayload>) =>
-    axiosInstance.patch<AcademicSession>(`/school/academic-sessions/${id}/`, payload),
+    axiosInstance.patch<AcademicSession>(`/academic-sessions/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/academic-sessions/${id}/`),
+    axiosInstance.delete(`/academic-sessions/${id}/`),
 }

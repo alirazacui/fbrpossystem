@@ -60,20 +60,20 @@ export interface FeeInvoicePayload {
 
 export const feeInvoiceAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: FeeInvoice[]; count: number }>('/school/fee-invoices/', { params }),
+    axiosInstance.get<{ results: FeeInvoice[]; count: number }>('/fee-invoices/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<FeeInvoice>(`/school/fee-invoices/${id}/`),
+    axiosInstance.get<FeeInvoice>(`/fee-invoices/${id}/`),
 
   create: (payload: FeeInvoicePayload) =>
-    axiosInstance.post<FeeInvoice>('/school/fee-invoices/', payload),
+    axiosInstance.post<FeeInvoice>('/fee-invoices/', payload),
 
   update: (id: string, payload: Partial<FeeInvoicePayload>) =>
-    axiosInstance.patch<FeeInvoice>(`/school/fee-invoices/${id}/`, payload),
+    axiosInstance.patch<FeeInvoice>(`/fee-invoices/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/fee-invoices/${id}/`),
+    axiosInstance.delete(`/fee-invoices/${id}/`),
 
   generateFbr: (id: string) =>
-    axiosInstance.post<{ message: string; core_invoice_id: string }>(`/school/fee-invoices/${id}/generate-fbr/`),
+    axiosInstance.post<{ message: string; core_invoice_id: string }>(`/fee-invoices/${id}/generate-fbr/`),
 }

@@ -29,17 +29,17 @@ export interface StudentExamResultPayload {
 
 export const studentExamResultAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: StudentExamResult[]; count: number }>('/school/exam-results/', { params }),
+    axiosInstance.get<{ results: StudentExamResult[]; count: number }>('/student-exam-results/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<StudentExamResult>(`/school/exam-results/${id}/`),
+    axiosInstance.get<StudentExamResult>(`/student-exam-results/${id}/`),
 
   create: (payload: StudentExamResultPayload) =>
-    axiosInstance.post<StudentExamResult>('/school/exam-results/', payload),
+    axiosInstance.post<StudentExamResult>('/student-exam-results/', payload),
 
   update: (id: string, payload: Partial<StudentExamResultPayload>) =>
-    axiosInstance.patch<StudentExamResult>(`/school/exam-results/${id}/`, payload),
+    axiosInstance.patch<StudentExamResult>(`/student-exam-results/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/exam-results/${id}/`),
+    axiosInstance.delete(`/student-exam-results/${id}/`),
 }

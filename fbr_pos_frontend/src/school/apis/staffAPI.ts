@@ -28,17 +28,17 @@ export interface StaffPayload {
 
 export const staffAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Staff[]; count: number }>('/school/staff/', { params }),
+    axiosInstance.get<{ results: Staff[]; count: number }>('/staff/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Staff>(`/school/staff/${id}/`),
+    axiosInstance.get<Staff>(`/staff/${id}/`),
 
   create: (payload: StaffPayload) =>
-    axiosInstance.post<Staff>('/school/staff/', payload),
+    axiosInstance.post<Staff>('/staff/', payload),
 
   update: (id: string, payload: Partial<StaffPayload>) =>
-    axiosInstance.patch<Staff>(`/school/staff/${id}/`, payload),
+    axiosInstance.patch<Staff>(`/staff/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/staff/${id}/`),
+    axiosInstance.delete(`/staff/${id}/`),
 }

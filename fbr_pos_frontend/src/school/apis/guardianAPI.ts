@@ -22,17 +22,17 @@ export interface GuardianPayload {
 
 export const guardianAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Guardian[]; count: number }>('/school/guardians/', { params }),
+    axiosInstance.get<{ results: Guardian[]; count: number }>('/guardians/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Guardian>(`/school/guardians/${id}/`),
+    axiosInstance.get<Guardian>(`/guardians/${id}/`),
 
   create: (payload: GuardianPayload) =>
-    axiosInstance.post<Guardian>('/school/guardians/', payload),
+    axiosInstance.post<Guardian>('/guardians/', payload),
 
   update: (id: string, payload: Partial<GuardianPayload>) =>
-    axiosInstance.patch<Guardian>(`/school/guardians/${id}/`, payload),
+    axiosInstance.patch<Guardian>(`/guardians/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/guardians/${id}/`),
+    axiosInstance.delete(`/guardians/${id}/`),
 }

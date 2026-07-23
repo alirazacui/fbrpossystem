@@ -31,17 +31,17 @@ export interface ExamPayload {
 
 export const examAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Exam[]; count: number }>('/school/exams/', { params }),
+    axiosInstance.get<{ results: Exam[]; count: number }>('/exams/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Exam>(`/school/exams/${id}/`),
+    axiosInstance.get<Exam>(`/exams/${id}/`),
 
   create: (payload: ExamPayload) =>
-    axiosInstance.post<Exam>('/school/exams/', payload),
+    axiosInstance.post<Exam>('/exams/', payload),
 
   update: (id: string, payload: Partial<ExamPayload>) =>
-    axiosInstance.patch<Exam>(`/school/exams/${id}/`, payload),
+    axiosInstance.patch<Exam>(`/exams/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/exams/${id}/`),
+    axiosInstance.delete(`/exams/${id}/`),
 }

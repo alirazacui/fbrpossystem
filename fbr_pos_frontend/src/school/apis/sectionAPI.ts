@@ -25,17 +25,17 @@ export interface SectionPayload {
 
 export const sectionAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Section[]; count: number }>('/school/sections/', { params }),
+    axiosInstance.get<{ results: Section[]; count: number }>('/sections/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Section>(`/school/sections/${id}/`),
+    axiosInstance.get<Section>(`/sections/${id}/`),
 
   create: (payload: SectionPayload) =>
-    axiosInstance.post<Section>('/school/sections/', payload),
+    axiosInstance.post<Section>('/sections/', payload),
 
   update: (id: string, payload: Partial<SectionPayload>) =>
-    axiosInstance.patch<Section>(`/school/sections/${id}/`, payload),
+    axiosInstance.patch<Section>(`/sections/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/sections/${id}/`),
+    axiosInstance.delete(`/sections/${id}/`),
 }

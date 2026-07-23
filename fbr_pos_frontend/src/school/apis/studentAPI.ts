@@ -36,17 +36,17 @@ export interface StudentPayload {
 
 export const studentAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Student[]; count: number }>('/school/students/', { params }),
+    axiosInstance.get<{ results: Student[]; count: number }>('/students/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Student>(`/school/students/${id}/`),
+    axiosInstance.get<Student>(`/students/${id}/`),
 
   create: (payload: StudentPayload) =>
-    axiosInstance.post<Student>('/school/students/', payload),
+    axiosInstance.post<Student>('/students/', payload),
 
   update: (id: string, payload: Partial<StudentPayload>) =>
-    axiosInstance.patch<Student>(`/school/students/${id}/`, payload),
+    axiosInstance.patch<Student>(`/students/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/students/${id}/`),
+    axiosInstance.delete(`/students/${id}/`),
 }

@@ -23,17 +23,17 @@ export interface AttendancePayload {
 
 export const attendanceAPI = {
   list: (params?: Record<string, any>) =>
-    axiosInstance.get<{ results: Attendance[]; count: number }>('/school/attendances/', { params }),
+    axiosInstance.get<{ results: Attendance[]; count: number }>('/attendance/', { params }),
 
   retrieve: (id: string) =>
-    axiosInstance.get<Attendance>(`/school/attendances/${id}/`),
+    axiosInstance.get<Attendance>(`/attendance/${id}/`),
 
   create: (payload: AttendancePayload) =>
-    axiosInstance.post<Attendance>('/school/attendances/', payload),
+    axiosInstance.post<Attendance>('/attendance/', payload),
 
   update: (id: string, payload: Partial<AttendancePayload>) =>
-    axiosInstance.patch<Attendance>(`/school/attendances/${id}/`, payload),
+    axiosInstance.patch<Attendance>(`/attendance/${id}/`, payload),
 
   delete: (id: string) =>
-    axiosInstance.delete(`/school/attendances/${id}/`),
+    axiosInstance.delete(`/attendance/${id}/`),
 }
