@@ -283,13 +283,13 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
         return value
 
     def validate_ntn(self, value):
-        """NTN must be numeric digits only."""
+        """NTN: preserve dash format for check digit."""
         cleaned = value.replace("-", "").strip()
         if not cleaned.isdigit():
             raise serializers.ValidationError(
-                "NTN must contain digits only (dashes are stripped automatically)."
+                "NTN must contain digits only."
             )
-        return cleaned
+        return value  # keep original formatted value with dash
 
     def validate_owner_cnic(self, value):
         """CNIC: strip dashes and validate 13 digits."""
