@@ -961,8 +961,16 @@ class Customer(models.Model):
             dict with buyerNTNCNIC, buyerBusinessName,
                       buyerProvince, buyerAddress, buyerRegistrationType
         """
+        # Normalize NTN/CNIC for FBR API (strip check digit if present)
+        def normalize_ntn_for_fbr(raw_value: str) -> str:
+            if not raw_value:
+                return raw_value
+            # Strip dash and anything after it (check digit)
+            core = raw_value.split("-")[0].strip()
+            return core
+        
         return {
-            "buyerNTNCNIC":          self.ntn_cnic or "1000000000000",
+            "buyerNTNCNIC":          normalize_ntn_for_fbr(self.ntn_cnic) or "1000000000000",
             "buyerBusinessName":     self.name,
             "buyerProvince":         self.province or "Punjab",
             "buyerAddress":          self.address  or "Pakistan",

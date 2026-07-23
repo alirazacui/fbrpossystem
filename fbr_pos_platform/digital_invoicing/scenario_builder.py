@@ -43,6 +43,26 @@ logger = logging.getLogger(__name__)
 # 12. invoiceDate → date-only string "YYYY-MM-DD", never datetime
 # ---------------------------------------------------------------------------
 
+
+def normalize_ntn_for_fbr(raw_value: str) -> str:
+    """
+    Converts a stored NTN/CNIC (which may include a trailing
+    check-digit segment like '7988914-1') into the format
+    FBR's API expects: plain 7-digit NTN or 13-digit CNIC,
+    no dashes.
+    
+    Examples:
+        '7988914-1' -> '7988914'
+        '7988914'   -> '7988914'
+        '1234567890123' -> '1234567890123' (13-digit CNIC)
+    """
+    if not raw_value:
+        return raw_value
+    # Strip dash and anything after it (check digit)
+    core = raw_value.split("-")[0].strip()
+    return core
+
+
 SCENARIO_TEMPLATES = {
     "SN001": {
         "description":      "Standard Rate — Registered Buyer",
@@ -468,7 +488,7 @@ class ScenarioInvoiceBuilder:
 
             # ── Seller (real company data) ────────────────────────────
             "sellerBusinessName":    self.company.business_name,
-            "sellerNTNCNIC":         self.company.ntn,
+            "sellerNTNCNIC":         normalize_ntn_for_fbr(self.company.ntn),
             "sellerProvince":        "Punjab",
             "sellerAddress":         self.company.address or "Pakistan",
 
