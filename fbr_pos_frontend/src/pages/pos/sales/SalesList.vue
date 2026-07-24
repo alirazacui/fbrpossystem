@@ -169,13 +169,19 @@
                 Rs {{ formatMoney(sale.total_amount) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-center">
-                <span v-if="sale.status === 'completed'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                <span v-if="sale.fbr_submission_status === 'success'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                   Submitted
+                </span>
+                <span v-else-if="sale.fbr_submission_status === 'failed'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                  Failed
+                </span>
+                <span v-else-if="sale.fbr_submission_status === 'pending'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                  Pending
                 </span>
                 <span v-else-if="sale.status === 'draft' && sale.fbr_submission_status === 'validated'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                   Validated
                 </span>
-                <span v-else-if="sale.status === 'draft'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                <span v-else-if="sale.status === 'draft'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
                   Draft
                 </span>
                 <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 capitalize">

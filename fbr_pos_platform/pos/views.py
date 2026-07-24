@@ -774,13 +774,64 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
  
     @action(detail=False, methods=["get"], url_path="list")
     def list_sales(self, request):
-        """GET /api/sales/list/ — paginated sale history."""
+        """GET /api/sales/list/ — paginated sale history with comprehensive search filters.
+        
+        Supported query parameters:
+        - search: Search by invoice number or customer name
+        - customer_id: Filter by specific customer
+        - invoice_number: Exact invoice number match
+        - status: Filter by sale status (DRAFT, COMPLETED, CANCELLED)
+        - fbr_submission_status: Filter by FBR status (pending, success, failed, validated, skipped)
+        - date_from: Filter invoices from this date (YYYY-MM-DD)
+        - date_to: Filter invoices until this date (YYYY-MM-DD)
+        - branch_id: Filter by branch
+        """
         from .serializer import SaleListSerializer
-        # Optional filters
-        status_filter = request.query_params.get("status")
+        from django.db.models import Q
+        
         qs = self.get_queryset()
+        
+        # Search by invoice number or customer name
+        search = request.query_params.get("search")
+        if search:
+            qs = qs.filter(
+                Q(sale_number__icontains=search) |
+                Q(customer__name__icontains=search) |
+                Q(fbr_invoice_number__icontains=search)
+            )
+        
+        # Filter by specific customer
+        customer_id = request.query_params.get("customer_id")
+        if customer_id:
+            qs = qs.filter(customer_id=customer_id)
+        
+        # Filter by exact invoice number
+        invoice_number = request.query_params.get("invoice_number")
+        if invoice_number:
+            qs = qs.filter(sale_number__icontains=invoice_number)
+        
+        # Filter by sale status
+        status_filter = request.query_params.get("status")
         if status_filter:
             qs = qs.filter(status=status_filter)
+        
+        # Filter by FBR submission status
+        fbr_status = request.query_params.get("fbr_submission_status")
+        if fbr_status:
+            qs = qs.filter(fbr_submission_status=fbr_status)
+        
+        # Filter by date range
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+        if date_from:
+            qs = qs.filter(created_at__date__gte=date_from)
+        if date_to:
+            qs = qs.filter(created_at__date__lte=date_to)
+        
+        # Filter by branch
+        branch_id = request.query_params.get("branch_id")
+        if branch_id:
+            qs = qs.filter(branch_id=branch_id)
  
         page       = self.paginate_queryset(qs)
         serializer = SaleListSerializer(page or qs, many=True)

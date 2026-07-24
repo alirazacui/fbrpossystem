@@ -84,6 +84,22 @@
       </div>
 
       <!-- FBR Validation Messages -->
+      <div v-if="sale.fbr_submission_status === 'failed'" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md shadow-sm">
+        <div class="flex items-start">
+          <div class="flex-shrink-0 mt-0.5">
+            <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-bold text-red-800">FBR Submission Failed</h3>
+            <div class="mt-1 text-sm text-red-700 leading-relaxed font-mono whitespace-pre-wrap">
+              {{ sale.fbr_error_message || 'Unknown error occurred during FBR submission.' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div v-if="fbrError" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md shadow-sm">
         <div class="flex items-start">
           <div class="flex-shrink-0 mt-0.5">
@@ -382,7 +398,9 @@ const isFinalized = computed(() => sale.value?.status?.toLowerCase() === 'comple
 const isValidated = computed(() => sale.value?.fbr_submission_status?.toLowerCase() === 'validated')
 
 const statusText = computed(() => {
-  if (isFinalized.value) return 'Submitted'
+  if (sale.value?.fbr_submission_status?.toLowerCase() === 'success') return 'Submitted'
+  if (sale.value?.fbr_submission_status?.toLowerCase() === 'failed') return 'Failed'
+  if (sale.value?.fbr_submission_status?.toLowerCase() === 'pending') return 'Pending'
   if (isDraft.value && isValidated.value) return 'Validated'
   if (isDraft.value) return 'Draft'
   return sale.value?.status
