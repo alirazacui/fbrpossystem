@@ -125,7 +125,7 @@
                       <input type="text" :value="line.product.hs_code || 'N/A'" disabled class="w-full text-sm bg-gray-50 border border-gray-200 rounded px-2 py-1 text-gray-500 font-mono">
                     </td>
                     <td class="py-4">
-                      <input type="text" value="Kilogram" disabled class="w-full text-sm bg-gray-50 border border-gray-200 rounded px-2 py-1 text-gray-500">
+                      <input type="text" :value="line.product.unit_of_measure || 'N/A'" disabled class="w-full text-sm bg-gray-50 border border-gray-200 rounded px-2 py-1 text-gray-500">
                     </td>
                     <td class="py-4 text-right">
                       <span :class="line.product.current_stock < line.quantity ? 'text-red-500 font-bold' : 'text-gray-900 font-medium'">{{ line.product.current_stock }}</span>
