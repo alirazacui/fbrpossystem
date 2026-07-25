@@ -328,7 +328,7 @@ class ThermalReceiptGenerator:
             draw_total_row("Change:", float(self.sale.change_given))
  
         # ── FBR section ────────────────────────────────────────────────
-        if self.sale.fbr_invoice_number:
+        if getattr(self.company, 'module_fbr_di', True) and self.sale.fbr_invoice_number:
             y = next_line(y, 4)
             draw_line(y)
             y = next_line(y, 6)
@@ -781,55 +781,63 @@ class A4InvoiceGenerator:
         # ══════════════════════════════════════════════════════════════
         # 7.  FBR AUTHENTICATION & QR — shaded footer band
         # ══════════════════════════════════════════════════════════════
-        auth = (
-            f"This invoice was submitted to FBR Digital Invoicing and validated by PRAL on "
-            f"<b>{completed.strftime('%d %b %Y, %H:%M')}</b>."
-        )
-        if self.sale.fbr_invoice_number:
-            auth += f"  FBR Invoice No: <b>{self.sale.fbr_invoice_number}</b>."
-        auth += (
-            "  To verify, scan the QR code with the FBR <b>Tax Asaan</b> app "
-            "or search at <b>e.fbr.gov.pk</b>."
-        )
-        disclaimer = (
-            "Computer-generated invoice — no physical signature required. "
-            "E&OE. Goods not returnable except per documented returns policy. "
-            "Issued via FBR POS System."
-        )
-        
-        auth_text_col = [
-            _p("✔  FBR AUTHENTICATION", 8, bold=True, color=NAV),
-            Spacer(1, 2 * mm),
-            _p(auth, 7, color=TXT, leading=10),
-            Spacer(1, 2 * mm),
-            _p(disclaimer, 6, color=MUT, leading=9),
-        ]
-        
-        if self.sale.fbr_qr_code:
-            _qb2 = _generate_qr_image(self.sale.fbr_qr_code)
-            qr_footer_col = [
-                Image(_qb2, width=28 * mm, height=28 * mm),
-                _p("SCAN TO VERIFY", 6, color=MUT, align=TA_CENTER)
+        if getattr(self.company, 'module_fbr_di', True):
+            auth = (
+                f"This invoice was submitted to FBR Digital Invoicing and validated by PRAL on "
+                f"<b>{completed.strftime('%d %b %Y, %H:%M')}</b>."
+            )
+            if self.sale.fbr_invoice_number:
+                auth += f"  FBR Invoice No: <b>{self.sale.fbr_invoice_number}</b>."
+            auth += (
+                "  To verify, scan the QR code with the FBR <b>Tax Asaan</b> app "
+                "or search at <b>e.fbr.gov.pk</b>."
+            )
+            disclaimer = (
+                "Computer-generated invoice — no physical signature required. "
+                "E&OE. Goods not returnable except per documented returns policy. "
+                "Issued via FBR POS System."
+            )
+            
+            auth_text_col = [
+                _p("✔  FBR AUTHENTICATION", 8, bold=True, color=NAV),
+                Spacer(1, 2 * mm),
+                _p(auth, 7, color=TXT, leading=10),
+                Spacer(1, 2 * mm),
+                _p(disclaimer, 6, color=MUT, leading=9),
             ]
-            fbr_footer_content = [[auth_text_col, qr_footer_col]]
-            fbr_col_widths = [width - 35 * mm, 35 * mm]
-        else:
-            fbr_footer_content = [[auth_text_col]]
-            fbr_col_widths = [width]
+            
+            if self.sale.fbr_qr_code:
+                _qb2 = _generate_qr_image(self.sale.fbr_qr_code)
+                qr_footer_col = [
+                    Image(_qb2, width=28 * mm, height=28 * mm),
+                    _p("SCAN TO VERIFY", 6, color=MUT, align=TA_CENTER)
+                ]
+                fbr_footer_content = [[auth_text_col, qr_footer_col]]
+                fbr_col_widths = [width - 35 * mm, 35 * mm]
+            else:
+                fbr_footer_content = [[auth_text_col]]
+                fbr_col_widths = [width]
 
-        fbr_band = Table(fbr_footer_content, colWidths=fbr_col_widths)
-        fbr_band.setStyle(TableStyle([
-            ("BACKGROUND",   (0, 0), (-1, -1), LGRAY),
-            ("LEFTPADDING",  (0, 0), (-1, -1), 12),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-            ("TOPPADDING",   (0, 0), (-1, -1), 10),
-            ("BOTTOMPADDING",(0, 0), (-1, -1), 10),
-            ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
-            ("ALIGN",        (1, 0), (1, 0),   "CENTER"),
-            ("LINEABOVE",    (0, 0), (-1,  0),  3, NAV),
-            ("BOX",          (0, 0), (-1, -1),  0.5, MGRAY),
-        ]))
-        story.append(fbr_band)
+            fbr_band = Table(fbr_footer_content, colWidths=fbr_col_widths)
+            fbr_band.setStyle(TableStyle([
+                ("BACKGROUND",   (0, 0), (-1, -1), LGRAY),
+                ("LEFTPADDING",  (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING",   (0, 0), (-1, -1), 10),
+                ("BOTTOMPADDING",(0, 0), (-1, -1), 10),
+                ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN",        (1, 0), (1, 0),   "CENTER"),
+                ("LINEABOVE",    (0, 0), (-1,  0),  3, NAV),
+                ("BOX",          (0, 0), (-1, -1),  0.5, MGRAY),
+            ]))
+            story.append(fbr_band)
+        else:
+            disclaimer = (
+                "Computer-generated invoice — no physical signature required. "
+                "E&OE. Goods not returnable except per documented returns policy."
+            )
+            story.append(Spacer(1, 6 * mm))
+            story.append(_p(disclaimer, 7, color=MUT, align=TA_CENTER))
 
         doc.build(story, onFirstPage=_page_border, onLaterPages=_page_border)
 

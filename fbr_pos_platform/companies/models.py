@@ -187,7 +187,6 @@ class Company(models.Model):
     # Enforced in clean() and in Django admin (read-only checkboxes).
     FORCED_MODULES = [
         "module_invoices",
-        "module_fbr_di",
         "module_customer_db",
     ]
 

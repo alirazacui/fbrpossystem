@@ -263,7 +263,6 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             "owner_email",
             "owner_id",
             "enabled_modules",
-            "fbr_sandbox_complete",     # set by system, not manually
         ]
 
     def get_owner_email(self, obj):
