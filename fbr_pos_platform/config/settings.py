@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "subscriptions",
     "receipt",
     "school",
+    "public",
 
     
 ]

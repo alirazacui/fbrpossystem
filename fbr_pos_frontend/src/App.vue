@@ -47,7 +47,7 @@ const authStore = useAuthStore()
 const route = useRoute()
 
 const isLoginRoute = computed(() => {
-  return route.path === '/login' || route.path === '/login/admin' || route.path === '/login/company'
+  return route.path === '/login' || route.path === '/login/admin' || route.path === '/login/company' || route.path === '/'
 })
 
 const isAdminUser = computed(() => {

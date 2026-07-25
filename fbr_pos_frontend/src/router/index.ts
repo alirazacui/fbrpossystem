@@ -7,11 +7,14 @@ import LoginChoicePage from '@/pages/auth/LoginChoicePage.vue'
 import AdminLoginPage from '@/pages/auth/AdminLoginPage.vue'
 import CompanyOwnerLoginPage from '@/pages/auth/CompanyOwnerLoginPage.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
+import LandingPage from '@/pages/public/LandingPage.vue'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/dashboard',
+    name: 'LandingPage',
+    component: LandingPage,
+    meta: { requiresAuth: false },
   },
   {
     path: '/login',
@@ -154,6 +157,12 @@ const routes: RouteRecordRaw[] = [
         path: 'platform-settings',
         name: 'AdminPlatformSettings',
         component: () => import('@/pages/admin/PlatformSettingsPage.vue'),
+        meta: { requiresAuth: true, requiredRole: ['admin', 'admin_staff'] },
+      },
+      {
+        path: 'leads',
+        name: 'LeadsManagement',
+        component: () => import('@/pages/admin/LeadsManagementPage.vue'),
         meta: { requiresAuth: true, requiredRole: ['admin', 'admin_staff'] },
       },
       {
@@ -570,10 +579,13 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  // Redirect root '/' based on vertical
+  // Redirect authenticated users from landing page to dashboard
   if (to.path === '/' && authStore.isAuthenticated) {
     if (authStore.user?.company_vertical === 'school') {
       next('/school/dashboard')
+      return
+    } else {
+      next('/dashboard')
       return
     }
   }
