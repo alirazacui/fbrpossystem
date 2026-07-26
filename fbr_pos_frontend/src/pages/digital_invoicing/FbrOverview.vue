@@ -35,8 +35,8 @@
     <div>
       <h2 class="text-lg font-bold text-gray-900 mb-4">Quick links</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <!-- Setup wizard -->
-        <router-link to="/invoicing/setup" class="bg-white rounded-lg shadow p-4 border border-gray-100 hover:shadow-md transition-shadow group flex items-start space-x-3">
+        <!-- DI Setup wizard (only for DI clients) -->
+        <router-link v-if="hasDi" to="/invoicing/setup" class="bg-white rounded-lg shadow p-4 border border-gray-100 hover:shadow-md transition-shadow group flex items-start space-x-3">
           <div class="bg-teal-50 text-teal-600 p-2 rounded-lg group-hover:bg-teal-100 transition-colors">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -44,13 +44,27 @@
             </svg>
           </div>
           <div>
-            <h3 class="font-medium text-gray-900">Setup wizard</h3>
-            <p class="text-sm text-gray-500">Configure tokens and endpoints</p>
+            <h3 class="font-medium text-gray-900">DI Setup wizard</h3>
+            <p class="text-sm text-gray-500">Configure DI tokens and endpoints</p>
           </div>
         </router-link>
 
-        <!-- Scenario tests -->
-        <router-link to="/invoicing/scenarios" class="bg-white rounded-lg shadow p-4 border border-gray-100 hover:shadow-md transition-shadow group flex items-start space-x-3">
+        <!-- POS Setup wizard (only for POS clients) -->
+        <router-link v-if="hasPos" to="/invoicing/pos-setup" class="bg-white rounded-lg shadow p-4 border border-gray-100 hover:shadow-md transition-shadow group flex items-start space-x-3">
+          <div class="bg-purple-50 text-purple-600 p-2 rounded-lg group-hover:bg-purple-100 transition-colors">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-medium text-gray-900">POS Setup wizard</h3>
+            <p class="text-sm text-gray-500">Configure POS credentials</p>
+          </div>
+        </router-link>
+
+        <!-- Scenario tests (DI only) -->
+        <router-link v-if="hasDi" to="/invoicing/scenarios" class="bg-white rounded-lg shadow p-4 border border-gray-100 hover:shadow-md transition-shadow group flex items-start space-x-3">
           <div class="bg-indigo-50 text-indigo-600 p-2 rounded-lg group-hover:bg-indigo-100 transition-colors">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -106,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth/authStore'
 import companyAPI from '@/apis/admin/companyAPI'
 import fbrAPI from '@/apis/digital_invoicing/fbrAPI'
@@ -119,6 +133,20 @@ const lastSuccessDate = ref('No success yet')
 const passedScenarios = ref(0)
 const totalScenarios = ref(0)
 const cancelBudget = ref('0')
+const company = ref<any>(null)
+
+// business_mode is a plain string: 'pos_only' | 'di_only' | 'both'
+const hasDi = computed(() => {
+  const mode = company.value?.business_mode || ''
+  return mode === 'di_only' || mode === 'both'
+})
+
+// POS Setup wizard is shown when mode includes POS AND the module_fbr_di is enabled
+// (module_fbr_di controls whether FBR submission buttons appear in the POS sale flow)
+const hasPos = computed(() => {
+  const mode = company.value?.business_mode || ''
+  return mode === 'pos_only' || mode === 'both'
+})
 
 const loadData = async () => {
   if (!authStore.user?.company_id) return
@@ -129,6 +157,7 @@ const loadData = async () => {
     
     // Fetch company info
     const comp = await companyAPI.getCompanyDetail(compId)
+    company.value = comp
     environment.value = comp.fbr_production_token ? 'production' : 'sandbox'
     
     // Count assigned scenarios

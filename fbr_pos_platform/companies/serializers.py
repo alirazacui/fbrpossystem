@@ -211,6 +211,14 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             "fbr_ip_3",
             "fbr_crm_user_id",
 
+            # ── FBR Retail POS (IMS) ───────────────────────
+            "pos_id",
+            "pos_access_code",
+            "pos_sandbox_token",
+            "pos_production_token",
+            "pos_sandbox_endpoint",
+            "pos_production_endpoint",
+
             # ── Sandbox scenarios ──────────────────────────
             "fbr_scenario_sn001",
             "fbr_scenario_sn002",

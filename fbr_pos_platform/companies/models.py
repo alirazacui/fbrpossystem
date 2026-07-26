@@ -576,7 +576,67 @@ class Company(models.Model):
     )
 
     # ------------------------------------------------------------------
-    # 8. FBR sandbox scenarios — SN001 to SN028
+    # 8. FBR Retail POS (IMS) Integration
+    #
+    # These fields are for FBR Retail POS integration (separate from Digital Invoicing).
+    # Used when business_mode includes 'pos'. Client enters these credentials
+    # in their FBR settings page after login.
+    # ------------------------------------------------------------------
+
+    pos_id = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name=_("POS ID"),
+        help_text=_(
+            "POS Registration Number issued by FBR after POS Client Registration. "
+            "Entered by the client in FBR settings page."
+        ),
+    )
+
+    pos_access_code = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("POS Access Code"),
+        help_text=_(
+            "Access Code for POS integration. "
+            "Entered by the client in FBR settings page."
+        ),
+    )
+
+    pos_sandbox_token = models.TextField(
+        blank=True,
+        verbose_name=_("POS Sandbox Token"),
+        help_text=_(
+            "Sandbox token for POS testing. "
+            "Entered by the client in FBR settings page."
+        ),
+    )
+
+    pos_production_token = models.TextField(
+        blank=True,
+        verbose_name=_("POS Production Token"),
+        help_text=_(
+            "Production token for live POS invoice submission. "
+            "Entered by the client in FBR settings page."
+        ),
+    )
+
+    pos_sandbox_endpoint = models.URLField(
+        default="https://esp.fbr.gov.pk:8244/FBR/v1/api/Live/PostData",
+        blank=True,
+        verbose_name=_("POS Sandbox Endpoint"),
+        help_text=_("FBR POS Sandbox API endpoint."),
+    )
+
+    pos_production_endpoint = models.URLField(
+        default="https://gw.fbr.gov.pk/imsp/v1/api/Live/PostData",
+        blank=True,
+        verbose_name=_("POS Production Endpoint"),
+        help_text=_("FBR POS Production API endpoint."),
+    )
+
+    # ------------------------------------------------------------------
+    # 9. FBR sandbox scenarios — SN001 to SN028
     #
     # Individual BooleanField per scenario (not an ArrayField).
     # Admin ticks exactly which scenarios IRIS assigned to this tenant.

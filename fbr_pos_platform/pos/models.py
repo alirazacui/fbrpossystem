@@ -342,8 +342,20 @@ class Product(models.Model):
         verbose_name=_("HS Code"),
         help_text=_(
             "Harmonized System code. REQUIRED by FBR for manufacturer-cum-retailer. "
-            "Format: XXXX.XXXX (e.g. 0101.2100). "
-            "Maps to 'hsCode' in FBR invoice JSON."
+            "Format: XXXX.XXXX (e.g. 2106.9090). "
+            "Maps to 'hsCode' in FBR DI invoice JSON. "
+            "Auto-syncs with PCT Code for POS clients."
+        ),
+    )
+
+    pct_code = models.CharField(
+        max_length=8,
+        blank=True,
+        verbose_name=_("PCT Code"),
+        help_text=_(
+            "8-digit Product Classification Tax code for FBR Retail POS integration. "
+            "Required for POS clients. Maps to 'PCTCode' in POS invoice JSON. "
+            "Auto-syncs with HS Code (enter either one, the other is auto-generated)."
         ),
     )
 
@@ -523,6 +535,27 @@ class Product(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     updated_at = models.DateTimeField(auto_now=True,     verbose_name=_("Updated At"))
+
+    # ------------------------------------------------------------------
+    # Methods
+    # ------------------------------------------------------------------
+
+    def save(self, *args, **kwargs):
+        """
+        Auto-sync hs_code and pct_code to avoid duplicate entry.
+        - hs_code format: XXXX.XXXX (e.g., 2106.9090) for DI
+        - pct_code format: XXXXXXXX (e.g., 21069090) for POS
+        """
+        # If hs_code is set but pct_code is empty, auto-generate pct_code from hs_code
+        if self.hs_code and not self.pct_code:
+            self.pct_code = self.hs_code.replace(".", "")
+        
+        # If pct_code is set but hs_code is empty, auto-generate hs_code from pct_code
+        elif self.pct_code and not self.hs_code:
+            if len(self.pct_code) >= 4:
+                self.hs_code = f"{self.pct_code[:4]}.{self.pct_code[4:]}"
+        
+        super().save(*args, **kwargs)
 
     # ------------------------------------------------------------------
     # Meta

@@ -24,6 +24,7 @@ export interface AuthUser {
   company_ntn?: string | null
   terminal_id?: string | null
   terminal_name?: string | null
+  permissions?: string[]
 }
 
 export const authAPI = {

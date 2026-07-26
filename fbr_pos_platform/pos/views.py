@@ -627,14 +627,35 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
             # Complete the sale
             sale.complete()
 
-            # Mark FBR submission as pending
-            # Actual submission happens in Phase 3 via Celery task
-            if sale.company.module_fbr_di:
+            # Mark FBR submission as pending based on business_mode
+            # Actual submission happens via Celery task
+            company = sale.company
+            business_mode = company.business_mode or []
+            
+            has_pos = "pos" in business_mode
+            has_di = "di" in business_mode
+            
+            if has_pos and has_di:
+                # Both enabled - trigger both tasks
+                sale.fbr_submission_status = FBRSubmissionStatus.PENDING
+                from digital_invoicing.tasks import submit_invoice_to_fbr
+                from digital_invoicing.pos_tasks import submit_invoice_to_fbr_pos
+                submit_invoice_to_fbr.delay(sale.id)
+                submit_invoice_to_fbr_pos.delay(sale.id)
+            elif has_pos:
+                # POS only - trigger POS task
+                sale.fbr_submission_status = FBRSubmissionStatus.PENDING
+                from digital_invoicing.pos_tasks import submit_invoice_to_fbr_pos
+                submit_invoice_to_fbr_pos.delay(sale.id)
+            elif has_di:
+                # DI only - trigger DI task
                 sale.fbr_submission_status = FBRSubmissionStatus.PENDING
                 from digital_invoicing.tasks import submit_invoice_to_fbr
                 submit_invoice_to_fbr.delay(sale.id)
             else:
+                # Neither enabled - skip FBR
                 sale.fbr_submission_status = FBRSubmissionStatus.SKIPPED
+            
             sale.save(update_fields=["fbr_submission_status", "updated_at"])
  
         return Response(SaleDetailSerializer(sale).data)
@@ -647,8 +668,38 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
         sale = self.get_object()
         company = sale.company
         
-        if not company.module_fbr_di:
-            return Response({"detail": "FBR DI module is not enabled for this company."}, status=400)
+        business_mode = company.business_mode or []
+        has_pos = "pos" in business_mode
+        has_di = "di" in business_mode
+
+        if not has_pos and not has_di:
+            return Response({"detail": "Neither POS nor DI FBR module is enabled for this company."}, status=400)
+
+        # ── POS FBR Validation (Local Only) ──
+        # FBR Retail POS API does not have a separate "validate" endpoint like DI does.
+        # We just build the payload to ensure there are no missing fields, then return success.
+        if has_pos and not has_di:
+            if not company.pos_id or not (company.pos_sandbox_token or company.pos_production_token):
+                return Response({"detail": "FBR POS token or POS ID is not configured. Please set them in POS FBR Settings."}, status=400)
+            
+            from digital_invoicing.pos_invoice_builder import POSInvoiceBuilder
+            builder = POSInvoiceBuilder(sale)
+            try:
+                payload = builder.build()
+                sale.fbr_submission_status = "validated"
+                sale.save(update_fields=["fbr_submission_status"])
+                if hasattr(self, 'log_audit_action'):
+                    self.log_audit_action("validate_fbr", sale)
+                return Response({
+                    "detail": "Invoice locally validated for POS FBR (ready for submission).", 
+                    "fbr_response": {"status": "Success", "message": "Payload built successfully"}
+                })
+            except Exception as e:
+                return Response({"detail": f"Failed to build POS invoice payload: {str(e)}"}, status=400)
+
+        # ── Digital Invoicing (DI) Validation (Remote) ──
+        if not company.module_fbr_di and has_di:
+            return Response({"detail": "FBR DI module permission is not enabled for this company."}, status=400)
             
         is_sandbox = True
         if company.fbr_sandbox_complete and company.fbr_production_token:
@@ -658,7 +709,7 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
             is_sandbox = True
             token = company.fbr_sandbox_token
         else:
-            return Response({"detail": "FBR token is not configured. Please set a Sandbox or Production token."}, status=400)
+            return Response({"detail": "FBR DI token is not configured. Please set a Sandbox or Production token in DI Settings."}, status=400)
             
         from digital_invoicing.invoice_builder import FBRInvoiceBuilder
         from digital_invoicing.fbr_client import FBRClient, FBRAPIError
@@ -676,7 +727,7 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
             print("="*50 + "\n")
             
         except Exception as e:
-            return Response({"detail": f"Failed to build invoice payload: {str(e)}"}, status=400)
+            return Response({"detail": f"Failed to build DI invoice payload: {str(e)}"}, status=400)
             
         base_url = company.fbr_sandbox_endpoint if is_sandbox else company.fbr_production_endpoint
         client = FBRClient(token=token, base_url=base_url, is_sandbox=is_sandbox)
@@ -706,7 +757,7 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
             if hasattr(self, 'log_audit_action'):
                 self.log_audit_action("validate_fbr", sale)
 
-            return Response({"detail": "Invoice validated successfully with FBR.", "fbr_response": res})
+            return Response({"detail": "Invoice validated successfully with FBR DI.", "fbr_response": res})
         except FBRAPIError as e:
             latency_ms = int((__import__('time').time() - start_time) * 1000)
             from digital_invoicing.models import FBRSubmissionLog

@@ -160,6 +160,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
  
             # ── FBR tax fields ─────────────────────────────────────
             "hs_code",
+            "pct_code",
             "fbr_sale_type",
             "tax_rate_percent",
             "fbr_fixed_retail_price",

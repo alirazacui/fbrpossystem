@@ -328,12 +328,23 @@ class ThermalReceiptGenerator:
             draw_total_row("Change:", float(self.sale.change_given))
  
         # ── FBR section ────────────────────────────────────────────────
-        if getattr(self.company, 'module_fbr_di', True) and self.sale.fbr_invoice_number:
+        # Check if company has FBR enabled (DI or POS)
+        business_mode = getattr(self.company, 'business_mode', []) or []
+        has_fbr = "di" in business_mode or "pos" in business_mode
+        
+        if has_fbr and self.sale.fbr_invoice_number:
             y = next_line(y, 4)
             draw_line(y)
             y = next_line(y, 6)
  
-            draw_text("FBR VERIFIED INVOICE", 0, y, "Helvetica-Bold", 7, "center")
+            # Determine FBR type for display
+            fbr_type = "FBR"  # Generic for both DI and POS
+            if "pos" in business_mode and "di" not in business_mode:
+                fbr_type = "FBR POS"
+            elif "di" in business_mode and "pos" not in business_mode:
+                fbr_type = "FBR DI"
+            
+            draw_text(f"{fbr_type} VERIFIED INVOICE", 0, y, "Helvetica-Bold", 7, "center")
             y = next_line(y, 9)
  
             # Wrap long FBR invoice number
@@ -532,12 +543,24 @@ class A4InvoiceGenerator:
         # ══════════════════════════════════════════════════════════════
         # A) Logo
         logo_cell = []
-        try:
-            from django.conf import settings as _cfg
-            _lp = str(_cfg.BASE_DIR / "static_assets" / "fbr_digital_invoice.png")
-            logo_cell.append(Image(_lp, width=34 * mm, height=26 * mm))
-        except Exception:
-            logo_cell.append(_p("<b>FBR DIGITAL<br/>INVOICING</b>", 8, color=GRN))
+        business_mode = self.company.business_mode or []
+        has_di = "di" in business_mode
+        
+        if has_di:
+            try:
+                from django.conf import settings as _cfg
+                _lp = str(_cfg.BASE_DIR / "static_assets" / "fbr_digital_invoice.png")
+                logo_cell.append(Image(_lp, width=34 * mm, height=26 * mm))
+            except Exception:
+                logo_cell.append(_p("<b>FBR DIGITAL<br/>INVOICING</b>", 8, color=GRN))
+        else:
+            if self.company.logo:
+                try:
+                    logo_cell.append(Image(self.company.logo.path, width=34 * mm, height=26 * mm, kind='proportional'))
+                except Exception:
+                    logo_cell.append(Spacer(1, 26 * mm))
+            else:
+                logo_cell.append(Spacer(1, 26 * mm))
 
         # B) Business Name Hero
         hero_cell = [
@@ -781,9 +804,20 @@ class A4InvoiceGenerator:
         # ══════════════════════════════════════════════════════════════
         # 7.  FBR AUTHENTICATION & QR — shaded footer band
         # ══════════════════════════════════════════════════════════════
-        if getattr(self.company, 'module_fbr_di', True):
+        # Check if company has FBR enabled (DI or POS)
+        business_mode = getattr(self.company, 'business_mode', []) or []
+        has_fbr = "di" in business_mode or "pos" in business_mode
+        
+        if has_fbr:
+            # Determine FBR type for display
+            fbr_type = "FBR Digital Invoicing"
+            if "pos" in business_mode and "di" not in business_mode:
+                fbr_type = "FBR Retail POS"
+            elif "di" in business_mode and "pos" not in business_mode:
+                fbr_type = "FBR Digital Invoicing"
+            
             auth = (
-                f"This invoice was submitted to FBR Digital Invoicing and validated by PRAL on "
+                f"This invoice was submitted to {fbr_type} and validated by PRAL on "
                 f"<b>{completed.strftime('%d %b %Y, %H:%M')}</b>."
             )
             if self.sale.fbr_invoice_number:

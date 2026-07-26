@@ -354,18 +354,27 @@
             <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <input type="checkbox" checked disabled class="w-4 h-4 text-teal-600 rounded" />
               <div>
-                <p class="font-medium text-gray-900">FBR Digital Invoicing</p>
-                <p class="text-sm text-gray-600">FBR submission & tokens (locked)</p>
-              </div>
-            </div>
-            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <input type="checkbox" checked disabled class="w-4 h-4 text-teal-600 rounded" />
-              <div>
                 <p class="font-medium text-gray-900">Customer Database</p>
                 <p class="text-sm text-gray-600">Customer management (locked)</p>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- FBR DI Module (optional but prominent) -->
+        <div class="mb-8">
+          <h3 class="text-sm font-semibold text-gray-900 mb-4">FBR Digital Invoicing</h3>
+          <label class="flex items-center space-x-3 cursor-pointer p-4 border-2 border-teal-200 bg-teal-50 rounded-lg hover:bg-teal-100 transition">
+            <input
+              type="checkbox"
+              v-model="form.module_fbr_di"
+              class="w-4 h-4 text-teal-600 rounded accent-teal-600"
+            />
+            <div>
+              <p class="font-medium text-gray-900">FBR Digital Invoicing (DI)</p>
+              <p class="text-sm text-gray-600">Enable submission of invoices to PRAL / FBR. Tick this for any tenant using the Digital Invoicing product.</p>
+            </div>
+          </label>
         </div>
 
         <!-- Optional Modules -->
@@ -543,8 +552,8 @@
         </div>
       </div>
 
-      <!-- Section 7: FBR Sandbox Scenarios -->
-      <div class="bg-white rounded-lg shadow p-8">
+      <!-- Section 7: FBR Sandbox Scenarios (DI only) -->
+      <div v-if="form.business_mode !== 'pos_only'" class="bg-white rounded-lg shadow p-8">
         <h2 class="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">FBR Sandbox Scenarios</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <label v-for="(label, key) in sandboxScenarios" :key="key" class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
@@ -625,6 +634,7 @@ const form = ref<any>({
   email: '',
   website_url: '',
   subscription_plan: 'trial',
+  module_fbr_di: false,
   module_multi_branch: false,
   module_terminals_cash_sessions: false,
   module_user_management: false,

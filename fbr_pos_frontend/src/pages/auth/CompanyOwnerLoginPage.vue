@@ -308,7 +308,38 @@ const handleLogin = async () => {
     // Check if user is company-related role
     const validRoles = ['owner', 'manager', 'cashier', 'salesperson']
     if (validRoles.includes(authStore.user?.role || '')) {
-      router.push('/dashboard')
+      // Fetch company data to check business_mode
+      if (authStore.user?.company_id) {
+        try {
+          const companyAPI = (await import('@/apis/admin/companyAPI')).default
+          const company = await companyAPI.getCompanyDetail(authStore.user.company_id)
+          
+          // Check business_mode and route accordingly
+          const businessMode = company.business_mode || []
+          const hasPos = Array.isArray(businessMode) && businessMode.includes('pos')
+          const hasDi = Array.isArray(businessMode) && businessMode.includes('di')
+          
+          if (hasPos && !hasDi) {
+            // POS only - route to POS FBR setup
+            router.push('/invoicing/pos-setup')
+          } else if (hasDi && !hasPos) {
+            // DI only - route to DI FBR setup
+            router.push('/invoicing/setup')
+          } else if (hasPos && hasDi) {
+            // Both - route to FBR overview where they can choose
+            router.push('/invoicing')
+          } else {
+            // Neither - route to dashboard
+            router.push('/dashboard')
+          }
+        } catch (companyErr) {
+          console.error('Error fetching company data:', companyErr)
+          // Fallback to dashboard if company fetch fails
+          router.push('/dashboard')
+        }
+      } else {
+        router.push('/dashboard')
+      }
     } else {
       // Not a company user
       error.value = 'Unauthorized: Company access required'

@@ -67,6 +67,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             )
 
         # Add user info to the login response alongside the tokens
+        from permission_app.models import UserPermission
+        permission_codenames = UserPermission.objects.filter(
+            user=user, permission__is_active=True
+        ).values_list('permission__codename', flat=True)
+
         data["user"] = {
             "id":         user.id,
             "email":      user.email,
@@ -75,6 +80,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "company_id": user.company_id,
             "terminal_id": str(getattr(user, "terminal_id", None)) if getattr(user, "terminal_id", None) is not None else None,
             "status":     user.status,
+            "permissions": list(permission_codenames),
         }
         return data
 
@@ -131,6 +137,15 @@ class UserDetailSerializer(serializers.ModelSerializer):
     created_by_email = serializers.EmailField(
         source="created_by.email", read_only=True, default=None
     )
+    permissions = serializers.SerializerMethodField()
+
+    def get_permissions(self, obj):
+        """Return list of permission codenames for the user."""
+        from permission_app.models import UserPermission
+        permission_codenames = UserPermission.objects.filter(
+            user=obj, permission__is_active=True
+        ).values_list('permission__codename', flat=True)
+        return list(permission_codenames)
 
     class Meta:
         model  = User
@@ -151,6 +166,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "terminal_name",
             "created_by",
             "created_by_email",
+            "permissions",
             "date_joined",
             "updated_at",
         ]
@@ -164,6 +180,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "company_ntn",
             "created_by",
             "created_by_email",
+            "permissions",
             "date_joined",
             "updated_at",
         ]

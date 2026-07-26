@@ -387,6 +387,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
       },
       {
+        path: 'pos-setup',
+        name: 'PosFbrSetup',
+        component: () => import('@/pages/digital_invoicing/PosFbrSetup.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
         path: 'scenarios',
         name: 'fbr-scenarios',
         component: () => import('@/pages/digital_invoicing/FbrScenarios.vue'),

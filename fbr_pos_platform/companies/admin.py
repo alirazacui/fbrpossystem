@@ -264,3 +264,25 @@ class CompanyAdmin(admin.ModelAdmin):
             '<ul style="margin:0;padding-left:16px;">{}</ul>'.format(items)
         )
     assigned_scenarios_display.short_description = "Assigned Scenarios Summary"
+
+    def get_fieldsets(self, request, obj=None):
+        """
+        Conditionally hide scenario fieldset for POS-only clients.
+        POS clients don't need scenarios - they use POSID + Access Code instead.
+        """
+        fieldsets = super().get_fieldsets(request, obj)
+        
+        if obj and obj.business_mode:
+            # If business_mode is 'pos' only (no 'di'), hide scenario fieldset
+            if "pos" in obj.business_mode and "di" not in obj.business_mode:
+                # Remove scenario-related fieldsets
+                fieldsets = [
+                    (title, fields) for title, fields in fieldsets
+                    if "FBR Sandbox Scenarios" not in str(title)
+                ]
+            # If business_mode is 'di' only (no 'pos'), hide POS fields
+            elif "di" in obj.business_mode and "pos" not in obj.business_mode:
+                # Remove POS-related fieldsets (we'll add them in next step)
+                pass
+        
+        return fieldsets
