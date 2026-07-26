@@ -49,4 +49,7 @@ export const studentAPI = {
 
   delete: (id: string) =>
     axiosInstance.delete(`/students/${id}/`),
+    
+  admit: (payload: { student: any, guardian: any, enrollment: any }) =>
+    axiosInstance.post<{ message: string, student: Student }>('/students/admit/', payload),
 }

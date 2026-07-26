@@ -1,275 +1,407 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 flex flex-col">
     <!-- Page Header -->
-    <div class="bg-white border-b border-gray-200 px-8 py-6">
+    <div class="bg-white border-b border-gray-200 px-8 py-6 flex-shrink-0">
       <div class="flex items-center gap-3 mb-1">
         <router-link to="/school/students" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-700">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </router-link>
         <span class="text-sm text-gray-400">Students</span>
         <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        <span class="text-sm font-medium text-gray-700">New Student</span>
+        <span class="text-sm font-medium text-gray-700">Admit Student</span>
       </div>
       <div class="flex items-center justify-between mt-4">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Register New Student</h1>
-          <p class="text-sm text-gray-500 mt-0.5">Fill in all required fields to create a student profile.</p>
+          <h1 class="text-2xl font-bold text-gray-900">Student Admission Wizard</h1>
+          <p class="text-sm text-gray-500 mt-0.5">Complete all steps to admit a student and generate their enrollment.</p>
         </div>
         <div class="flex items-center gap-3">
-          <router-link to="/school/students" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm">
+          <router-link to="/school/students" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
             Cancel
           </router-link>
-          <button @click="handleSubmit" :disabled="loading" class="px-6 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm disabled:opacity-50 flex items-center gap-2 transition-colors">
+          <button v-if="currentStep < 3" @click="nextStep" class="px-6 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm flex items-center gap-2 transition-colors">
+            Next Step
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button v-if="currentStep === 3" @click="handleSubmit" :disabled="loading" class="px-6 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm disabled:opacity-50 flex items-center gap-2 transition-colors">
             <div v-if="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            {{ loading ? 'Creating...' : 'Create Student' }}
+            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            {{ loading ? 'Admitting...' : 'Complete Admission' }}
           </button>
         </div>
       </div>
     </div>
 
-    <div class="px-8 py-6 grid grid-cols-3 gap-6">
-      <!-- Left Column: Main Form -->
-      <div class="col-span-2 space-y-6">
-
-        <!-- Section: Identity -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h2 class="font-bold text-gray-900">Identity & Basic Info</h2>
-            <p class="text-xs text-gray-500 mt-0.5">Core student identification details</p>
+    <div class="flex-1 overflow-auto p-8">
+      <div class="max-w-4xl mx-auto">
+        
+        <!-- Progress Bar -->
+        <div class="mb-10 relative">
+          <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+            <div :style="`width: ${((currentStep) / 3) * 100}%`" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-500"></div>
           </div>
-          <div class="p-6 grid grid-cols-2 gap-5">
-            <div class="col-span-2">
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Full Name <span class="text-red-500">*</span></label>
-              <input v-model="form.fullname" type="text" placeholder="e.g. Ahmad Ali Khan" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow" />
-              <p v-if="errors.fullname" class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                {{ errors.fullname }}
-              </p>
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Registration Number</label>
-              <input v-model="form.registration_number" type="text" placeholder="e.g. STU-2024-001" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Gender</label>
-              <select v-model="form.gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white">
-                <option value="">Select gender...</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Date of Birth</label>
-              <input v-model="form.date_of_birth" type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Admission Date</label>
-              <input v-model="form.admission_date" type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">CNIC / B-Form Number</label>
-              <input v-model="form.cnic" type="text" placeholder="e.g. 35202-1234567-1" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-              <p class="text-xs text-gray-400 mt-1">Required for FBR invoices over Rs 20,000</p>
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
-              <div class="flex gap-3">
-                <button @click="form.status = 'active'" :class="form.status === 'active' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300'" class="flex-1 py-3 text-sm font-semibold rounded-lg border transition-all">Active</button>
-                <button @click="form.status = 'inactive'" :class="form.status === 'inactive' ? 'bg-gray-600 text-white border-gray-600' : 'bg-white text-gray-700 border-gray-300'" class="flex-1 py-3 text-sm font-semibold rounded-lg border transition-all">Inactive</button>
-              </div>
-            </div>
+          <div class="flex justify-between text-xs font-bold text-gray-400 px-1">
+            <span :class="{'text-indigo-600': currentStep >= 1}">1. Student Details</span>
+            <span :class="{'text-indigo-600': currentStep >= 2}">2. Guardian Link</span>
+            <span :class="{'text-indigo-600': currentStep >= 3}">3. Enrollment</span>
           </div>
         </div>
 
-        <!-- Section: Contact -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h2 class="font-bold text-gray-900">Contact Information</h2>
-            <p class="text-xs text-gray-500 mt-0.5">Phone, email and home address</p>
-          </div>
-          <div class="p-6 grid grid-cols-2 gap-5">
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
-              <input v-model="form.phone_number" type="tel" placeholder="03xx-xxxxxxx" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
-              <input v-model="form.email" type="email" placeholder="student@example.com" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-            </div>
-
-            <div class="col-span-2">
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Home Address</label>
-              <textarea v-model="form.address" rows="3" placeholder="Street, Area, City..." class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"></textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Error display -->
-        <div v-if="serverError" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-5 py-4 flex items-start gap-3">
+        <!-- Error Alert -->
+        <div v-if="serverError" class="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-5 py-4 flex items-start gap-3 shadow-sm">
           <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           {{ serverError }}
         </div>
-      </div>
 
-      <!-- Right Column: Photo + Class Assignment -->
-      <div class="space-y-6">
-
-        <!-- Photo Upload -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h2 class="font-bold text-gray-900">Profile Photo</h2>
-          </div>
-          <div class="p-6">
-            <div class="flex flex-col items-center gap-4">
-              <div class="w-28 h-28 rounded-2xl overflow-hidden bg-indigo-50 border-2 border-dashed border-indigo-200 flex items-center justify-center cursor-pointer hover:bg-indigo-100 transition-colors relative" @click="triggerPhotoUpload">
-                <img v-if="photoPreview" :src="photoPreview" class="w-full h-full object-cover" />
-                <div v-else class="text-center">
-                  <svg class="w-8 h-8 text-indigo-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                  <p class="text-xs text-indigo-400 font-medium">Upload Photo</p>
-                </div>
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden relative min-h-[400px]">
+          
+          <!-- Step 1: Student Details -->
+          <div v-show="currentStep === 1" class="p-8 animate-fade-in">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">1</div>
+              Student Information
+            </h2>
+            
+            <div class="grid grid-cols-2 gap-6">
+              <div class="col-span-2 sm:col-span-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Full Name <span class="text-red-500">*</span></label>
+                <input v-model="form.student.fullname" type="text" placeholder="e.g. Ahmad Ali" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+                <p v-if="errors.fullname" class="text-red-500 text-xs mt-1.5">{{ errors.fullname }}</p>
               </div>
-              <input ref="photoInput" type="file" accept="image/*" class="hidden" @change="handlePhotoChange" />
-              <button v-if="photoPreview" @click="photoPreview = ''; form.photo = null" class="text-xs text-red-500 hover:text-red-700">Remove photo</button>
-              <p class="text-xs text-gray-400 text-center">JPG, PNG up to 2MB<br>Passport size recommended</p>
+              
+              <div class="col-span-2 sm:col-span-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Registration Number</label>
+                <input v-model="form.student.registration_number" type="text" placeholder="Auto-generated if empty" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Date of Birth</label>
+                <input v-model="form.student.date_of_birth" type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Gender</label>
+                <select v-model="form.student.gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white">
+                  <option value="">Select...</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">B-Form / CNIC</label>
+                <input v-model="form.student.cnic" type="text" placeholder="Optional for minors" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
+                <input v-model="form.student.phone_number" type="tel" placeholder="03xx-xxxxxxx" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+              <div class="col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Home Address</label>
+                <textarea v-model="form.student.address" rows="2" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+              </div>
             </div>
           </div>
+
+          <!-- Step 2: Guardian Details -->
+          <div v-show="currentStep === 2" class="p-8 animate-fade-in">
+             <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">2</div>
+              Guardian Details
+            </h2>
+
+            <!-- Guardian mode toggle -->
+            <div class="flex gap-4 mb-8">
+              <label class="flex-1 flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors" :class="guardianMode === 'new' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'">
+                <input type="radio" v-model="guardianMode" value="new" class="text-indigo-600 focus:ring-indigo-500 h-5 w-5" />
+                <div>
+                  <span class="block font-bold text-gray-900">Add New Guardian</span>
+                  <span class="text-xs text-gray-500">Create a new guardian profile</span>
+                </div>
+              </label>
+              
+              <label class="flex-1 flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors" :class="guardianMode === 'existing' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'">
+                <input type="radio" v-model="guardianMode" value="existing" class="text-indigo-600 focus:ring-indigo-500 h-5 w-5" />
+                <div>
+                  <span class="block font-bold text-gray-900">Link Existing</span>
+                  <span class="text-xs text-gray-500">Search for a sibling's guardian</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Existing Guardian Search -->
+            <div v-if="guardianMode === 'existing'" class="space-y-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Select Guardian <span class="text-red-500">*</span></label>
+                <select v-model="form.guardian.id" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white">
+                  <option value="">-- Choose Guardian --</option>
+                  <option v-for="g in guardiansList" :key="g.id" :value="g.id">{{ g.first_name }} {{ g.last_name }} ({{ g.phone_number || g.cnic || 'No contact info' }})</option>
+                </select>
+                <div v-if="guardiansLoading" class="text-xs text-gray-400 mt-2">Loading guardians...</div>
+              </div>
+            </div>
+
+            <!-- New Guardian Form -->
+            <div v-if="guardianMode === 'new'" class="grid grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">First Name <span class="text-red-500">*</span></label>
+                <input v-model="form.guardian.first_name" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Last Name <span class="text-red-500">*</span></label>
+                <input v-model="form.guardian.last_name" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number <span class="text-red-500">*</span></label>
+                <input v-model="form.guardian.phone_number" type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">CNIC</label>
+                <input v-model="form.guardian.cnic" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+                <p class="text-xs text-gray-400 mt-1">Highly recommended for FBR billing.</p>
+              </div>
+            </div>
+
+            <!-- Relation (Shared) -->
+            <div class="mt-8 pt-6 border-t border-gray-100 grid grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Relationship to Student <span class="text-red-500">*</span></label>
+                <select v-model="form.guardian.relation" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white">
+                  <option value="Father">Father</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Guardian">Guardian</option>
+                  <option value="Uncle">Uncle</option>
+                  <option value="Aunt">Aunt</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="flex items-center">
+                <label class="flex items-center gap-3 mt-4 cursor-pointer">
+                  <input v-model="form.guardian.is_primary_billing_contact" type="checkbox" class="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                  <span class="text-sm font-semibold text-gray-900">Primary Billing Contact</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Step 3: Enrollment -->
+          <div v-show="currentStep === 3" class="p-8 animate-fade-in">
+             <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">3</div>
+              Academic Enrollment
+            </h2>
+
+            <div class="grid grid-cols-2 gap-6">
+              
+              <div class="col-span-2 sm:col-span-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Academic Session <span class="text-red-500">*</span></label>
+                <select v-model="form.enrollment.academic_session_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white">
+                  <option value="">Select Session...</option>
+                  <option v-for="s in sessionsList" :key="s.id" :value="s.id">{{ s.name }}</option>
+                </select>
+              </div>
+
+              <div class="col-span-2 sm:col-span-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Grade <span class="text-red-500">*</span></label>
+                <select v-model="form.enrollment.grade_id" @change="handleGradeChange" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white">
+                  <option value="">Select Grade...</option>
+                  <option v-for="g in gradesList" :key="g.id" :value="g.id">{{ g.name }}</option>
+                </select>
+              </div>
+
+              <div class="col-span-2 sm:col-span-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Section <span class="text-red-500">*</span></label>
+                <select v-model="form.enrollment.section_id" :disabled="!form.enrollment.grade_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100">
+                  <option value="">Select Section...</option>
+                  <option v-for="sec in filteredSections" :key="sec.id" :value="sec.id">{{ sec.name }}</option>
+                </select>
+              </div>
+              
+              <div class="col-span-2 sm:col-span-1">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Enrollment Date</label>
+                <input v-model="form.enrollment.enrollment_date" type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+            </div>
+
+            <!-- Final Review Box -->
+            <div class="mt-8 p-5 bg-green-50 border border-green-200 rounded-xl">
+              <h3 class="text-sm font-bold text-green-900 mb-1">Ready to Admit</h3>
+              <p class="text-xs text-green-700">Clicking Complete Admission will automatically register the student, link the guardian, and create the enrollment in one transaction.</p>
+            </div>
+          </div>
+
+        </div>
+        
+        <!-- Bottom Nav Bar -->
+        <div class="flex items-center justify-between mt-6">
+          <button v-if="currentStep > 1" @click="currentStep--" class="px-6 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
+            &larr; Back
+          </button>
+          <div v-else></div> <!-- Spacer -->
+          
+          <button v-if="currentStep < 3" @click="nextStep" class="px-6 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-colors">
+            Next Step &rarr;
+          </button>
         </div>
 
-        <!-- Class / Section Assignment -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h2 class="font-bold text-gray-900">Class Assignment</h2>
-            <p class="text-xs text-gray-500 mt-0.5">Assign section and grade</p>
-          </div>
-          <div class="p-6 space-y-4">
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Section</label>
-              <select v-model="form.current_section_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-                <option value="">Unassigned</option>
-                <option v-for="sec in sections" :key="sec.id" :value="sec.id">{{ sec.name }} {{ sec.grade_name ? `(${sec.grade_name})` : '' }}</option>
-              </select>
-            </div>
-            <div v-if="sectionsLoading" class="text-xs text-gray-400 flex items-center gap-2">
-              <div class="w-3 h-3 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin"></div>
-              Loading sections...
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Tips -->
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
-          <h3 class="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            After Creating
-          </h3>
-          <ul class="space-y-2 text-xs text-blue-700">
-            <li class="flex items-start gap-2">
-              <span class="w-4 h-4 bg-blue-200 rounded-full flex items-center justify-center text-blue-800 font-bold text-[10px] flex-shrink-0 mt-0.5">1</span>
-              Link a guardian from the student's detail page
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-4 h-4 bg-blue-200 rounded-full flex items-center justify-center text-blue-800 font-bold text-[10px] flex-shrink-0 mt-0.5">2</span>
-              Create an enrollment for the current session
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-4 h-4 bg-blue-200 rounded-full flex items-center justify-center text-blue-800 font-bold text-[10px] flex-shrink-0 mt-0.5">3</span>
-              Generate a fee invoice for this student
-            </li>
-          </ul>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { studentAPI } from '@/school/apis/studentAPI'
 import { sectionAPI, type Section } from '@/school/apis/sectionAPI'
+import { academicSessionAPI, type AcademicSession } from '@/school/apis/academicSessionAPI'
+import { gradeAPI, type Grade } from '@/school/apis/gradeAPI'
+import { guardianAPI, type Guardian } from '@/school/apis/guardianAPI'
 
 const router = useRouter()
+const currentStep = ref(1)
+
 const loading = ref(false)
 const serverError = ref('')
 const errors = ref<Record<string, string>>({})
-const sectionsLoading = ref(false)
-const photoInput = ref<HTMLInputElement | null>(null)
-const photoPreview = ref('')
+
+const guardianMode = ref<'new' | 'existing'>('new')
+
+const guardiansList = ref<Guardian[]>([])
+const guardiansLoading = ref(false)
+
+const sessionsList = ref<AcademicSession[]>([])
+const gradesList = ref<Grade[]>([])
+const sectionsList = ref<Section[]>([])
 
 const form = ref({
-  fullname: '',
-  email: '',
-  phone_number: '',
-  cnic: '',
-  date_of_birth: '',
-  gender: '' as 'male' | 'female' | '',
-  registration_number: '',
-  admission_date: new Date().toISOString().split('T')[0],
-  current_section_id: '',
-  address: '',
-  status: 'active' as 'active' | 'inactive',
-  photo: null as File | null,
-})
-
-const sections = ref<Section[]>([])
-
-onMounted(async () => {
-  sectionsLoading.value = true
-  try {
-    const res = await sectionAPI.list({ page_size: 100 })
-    sections.value = res.data.results || (res.data as any)
-  } catch {
-    // sections optional
-  } finally {
-    sectionsLoading.value = false
+  student: {
+    fullname: '',
+    registration_number: '',
+    date_of_birth: '',
+    gender: '',
+    cnic: '',
+    phone_number: '',
+    address: '',
+    admission_date: new Date().toISOString().split('T')[0],
+  },
+  guardian: {
+    id: '', // for existing
+    first_name: '',
+    last_name: '',
+    phone_number: '',
+    cnic: '',
+    relation: 'Father',
+    is_primary_billing_contact: true
+  },
+  enrollment: {
+    academic_session_id: '',
+    grade_id: '',
+    section_id: '',
+    enrollment_date: new Date().toISOString().split('T')[0],
   }
 })
 
-const triggerPhotoUpload = () => photoInput.value?.click()
+// Auto filter sections when grade changes
+const filteredSections = computed(() => {
+  if (!form.value.enrollment.grade_id) return []
+  return sectionsList.value.filter(s => s.grade_id === form.value.enrollment.grade_id)
+})
 
-const handlePhotoChange = (e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  form.value.photo = file
-  const reader = new FileReader()
-  reader.onload = (ev) => { photoPreview.value = ev.target?.result as string }
-  reader.readAsDataURL(file)
+const handleGradeChange = () => {
+  form.value.enrollment.section_id = ''
+}
+
+onMounted(async () => {
+  try {
+    const [sessRes, gradeRes, secRes, guardRes] = await Promise.all([
+      academicSessionAPI.list({ page_size: 100 }),
+      gradeAPI.list({ page_size: 100 }),
+      sectionAPI.list({ page_size: 100 }),
+      guardianAPI.list({ page_size: 500 }) // In real app, might want searchable select
+    ])
+    
+    sessionsList.value = sessRes.data.results || sessRes.data
+    gradesList.value = gradeRes.data.results || gradeRes.data
+    sectionsList.value = secRes.data.results || secRes.data
+    guardiansList.value = guardRes.data.results || guardRes.data
+
+    // Auto-select active session
+    const activeSession = sessionsList.value.find(s => s.is_active)
+    if (activeSession) {
+      form.value.enrollment.academic_session_id = activeSession.id
+    }
+  } catch (err) {
+    console.error("Failed to load reference data", err)
+  }
+})
+
+const nextStep = () => {
+  errors.value = {}
+  
+  if (currentStep.value === 1) {
+    if (!form.value.student.fullname) {
+      errors.value.fullname = 'Full Name is required'
+      return
+    }
+  } else if (currentStep.value === 2) {
+    if (guardianMode.value === 'new') {
+      if (!form.value.guardian.first_name || !form.value.guardian.phone_number) {
+        serverError.value = 'Guardian First Name and Phone are required'
+        return
+      }
+      form.value.guardian.id = '' // Ensure blank
+    } else {
+      if (!form.value.guardian.id) {
+        serverError.value = 'Please select a guardian'
+        return
+      }
+    }
+    serverError.value = ''
+  }
+
+  currentStep.value++
 }
 
 const handleSubmit = async () => {
-  errors.value = {}
   serverError.value = ''
-  if (!form.value.fullname.trim()) { errors.value.fullname = 'Full name is required.'; return }
+  
+  // Validate Step 3
+  if (!form.value.enrollment.academic_session_id || !form.value.enrollment.grade_id || !form.value.enrollment.section_id) {
+    serverError.value = 'Session, Grade, and Section are all required to enroll the student.'
+    return
+  }
 
   loading.value = true
   try {
-    const payload = new FormData()
-    Object.entries(form.value).forEach(([key, val]) => {
-      if (val === null || val === '') return
-      if (val instanceof File) { payload.append(key, val) }
-      else { payload.append(key, String(val)) }
-    })
+    const payload = {
+      student: form.value.student,
+      guardian: guardianMode.value === 'new' ? form.value.guardian : { id: form.value.guardian.id, relation: form.value.guardian.relation, is_primary_billing_contact: form.value.guardian.is_primary_billing_contact },
+      enrollment: form.value.enrollment
+    }
 
-    await studentAPI.create(payload as any)
+    await studentAPI.admit(payload)
     router.push('/school/students')
   } catch (err: any) {
     const data = err.response?.data
-    if (data && typeof data === 'object') {
-      Object.entries(data).forEach(([k, v]: any) => {
-        errors.value[k] = Array.isArray(v) ? v.join(', ') : String(v)
-      })
-    }
-    serverError.value = data?.detail || 'Failed to create student. Please check the form.'
+    serverError.value = data?.error || data?.detail || 'Failed to complete admission process.'
   } finally {
     loading.value = false
   }
 }
 </script>
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

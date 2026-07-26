@@ -36,4 +36,7 @@ export const attendanceAPI = {
 
   delete: (id: string) =>
     axiosInstance.delete(`/attendance/${id}/`),
+    
+  bulkMark: (payload: { date: string, section_id: string, attendances: any[] }) =>
+    axiosInstance.post<{ message: string, created: number, updated: number }>('/attendance/bulk-mark/', payload),
 }
