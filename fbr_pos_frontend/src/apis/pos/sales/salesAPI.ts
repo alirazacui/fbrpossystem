@@ -84,6 +84,10 @@ export const salesAPI = {
   validateFbr: (id: number) =>
     axiosInstance.post(`/sales/${id}/validate_fbr/`, {}),
 
+  // Retry FBR submission
+  retryFbr: (id: number) =>
+    axiosInstance.post(`/sales/${id}/retry_fbr/`, {}),
+
   // Cancel sale
   cancel: (id: number) =>
     axiosInstance.post(`/sales/${id}/cancel/`, {}),

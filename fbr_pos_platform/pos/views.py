@@ -659,6 +659,46 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
             sale.save(update_fields=["fbr_submission_status", "updated_at"])
  
         return Response(SaleDetailSerializer(sale).data)
+
+    @action(detail=True, methods=["post"], url_path="retry_fbr")
+    def retry_fbr(self, request, pk=None):
+        """
+        POST /api/pos/sales/{id}/retry_fbr/
+        Retries a failed FBR submission.
+        """
+        sale = self.get_object()
+        
+        if sale.fbr_submission_status not in [FBRSubmissionStatus.FAILED, FBRSubmissionStatus.PENDING]:
+            return Response({"detail": "Only failed or pending submissions can be retried."}, status=400)
+            
+        company = sale.company
+        business_mode = company.business_mode or []
+        has_pos = "pos" in business_mode
+        has_di = "di" in business_mode
+        
+        if not has_pos and not has_di:
+            return Response({"detail": "Neither POS nor DI FBR module is enabled for this company."}, status=400)
+            
+        sale.fbr_submission_status = FBRSubmissionStatus.PENDING
+        sale.save(update_fields=["fbr_submission_status"])
+        
+        if has_pos and has_di:
+            from digital_invoicing.tasks import submit_invoice_to_fbr
+            from digital_invoicing.pos_tasks import submit_invoice_to_fbr_pos
+            submit_invoice_to_fbr.delay(sale.id)
+            submit_invoice_to_fbr_pos.delay(sale.id)
+        elif has_pos:
+            from digital_invoicing.pos_tasks import submit_invoice_to_fbr_pos
+            submit_invoice_to_fbr_pos.delay(sale.id)
+        elif has_di:
+            from digital_invoicing.tasks import submit_invoice_to_fbr
+            submit_invoice_to_fbr.delay(sale.id)
+            
+        if hasattr(self, 'log_audit_action'):
+            self.log_audit_action("retry_fbr", sale)
+            
+        from .serializer import SaleDetailSerializer
+        return Response(SaleDetailSerializer(sale).data)
  
     # ── Validate invoice with FBR ─────────────────────────────────────
     
