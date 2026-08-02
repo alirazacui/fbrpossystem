@@ -107,6 +107,7 @@ class BusinessVertical(models.TextChoices):
     ELECTRONICS   = "electronics",   _("Electronics")
     CLOTHING      = "clothing",      _("Clothing / Apparel")
     WHOLESALE     = "wholesale",     _("Wholesale")
+    SCHOOL        = "school",        _("School / Education")
     OTHER         = "other",         _("Other")
 
 

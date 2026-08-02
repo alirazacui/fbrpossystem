@@ -7,11 +7,14 @@ import LoginChoicePage from '@/pages/auth/LoginChoicePage.vue'
 import AdminLoginPage from '@/pages/auth/AdminLoginPage.vue'
 import CompanyOwnerLoginPage from '@/pages/auth/CompanyOwnerLoginPage.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
+import LandingPage from '@/pages/public/LandingPage.vue'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/dashboard',
+    name: 'LandingPage',
+    component: LandingPage,
+    meta: { requiresAuth: false },
   },
   {
     path: '/login',
@@ -154,6 +157,12 @@ const routes: RouteRecordRaw[] = [
         path: 'platform-settings',
         name: 'AdminPlatformSettings',
         component: () => import('@/pages/admin/PlatformSettingsPage.vue'),
+        meta: { requiresAuth: true, requiredRole: ['admin', 'admin_staff'] },
+      },
+      {
+        path: 'leads',
+        name: 'LeadsManagement',
+        component: () => import('@/pages/admin/LeadsManagementPage.vue'),
         meta: { requiresAuth: true, requiredRole: ['admin', 'admin_staff'] },
       },
       {
@@ -433,6 +442,106 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  
+  // School Routes
+  {
+    path: '/school',
+    children: [
+      {
+        path: 'dashboard',
+        name: 'SchoolDashboard',
+        component: () => import('@/school/pages/SchoolDashboard.vue'),
+        meta: { requiresAuth: true },
+      },
+      // Academic Sessions
+      { path: 'sessions', name: 'SessionsList', component: () => import('@/school/pages/sessions/SessionsList.vue'), meta: { requiresAuth: true } },
+      { path: 'sessions/:id', name: 'SessionDetail', component: () => import('@/school/pages/sessions/SessionDetail.vue'), meta: { requiresAuth: true } },
+      // Grades
+      { path: 'grades', name: 'GradesList', component: () => import('@/school/pages/grades/GradesList.vue'), meta: { requiresAuth: true } },
+      { path: 'grades/:id', name: 'GradeDetail', component: () => import('@/school/pages/grades/GradeDetail.vue'), meta: { requiresAuth: true } },
+      // Subjects
+      { path: 'subjects', name: 'SubjectsList', component: () => import('@/school/pages/subjects/SubjectsList.vue'), meta: { requiresAuth: true } },
+      { path: 'subjects/:id', name: 'SubjectDetail', component: () => import('@/school/pages/subjects/SubjectDetail.vue'), meta: { requiresAuth: true } },
+      // Staff
+      { path: 'staff', name: 'StaffList', component: () => import('@/school/pages/staff/StaffList.vue'), meta: { requiresAuth: true } },
+      { path: 'staff/create', name: 'CreateStaff', component: () => import('@/school/pages/staff/CreateStaff.vue'), meta: { requiresAuth: true } },
+      { path: 'staff/:id', name: 'StaffDetail', component: () => import('@/school/pages/staff/StaffDetail.vue'), meta: { requiresAuth: true } },
+      { path: 'staff/:id/edit', name: 'EditStaff', component: () => import('@/school/pages/staff/EditStaff.vue'), meta: { requiresAuth: true } },
+      
+      // Phase 2: Sections
+      { path: 'sections', name: 'SectionsList', component: () => import('@/school/pages/sections/SectionsList.vue'), meta: { requiresAuth: true } },
+      { path: 'sections/:id', name: 'SectionDetail', component: () => import('@/school/pages/sections/SectionDetail.vue'), meta: { requiresAuth: true } },
+      
+      // Phase 2: Class Subjects
+      { path: 'class-subjects', name: 'ClassSubjectsList', component: () => import('@/school/pages/class-subjects/ClassSubjectsList.vue'), meta: { requiresAuth: true } },
+      { path: 'class-subjects/:id', name: 'ClassSubjectDetail', component: () => import('@/school/pages/class-subjects/ClassSubjectDetail.vue'), meta: { requiresAuth: true } },
+      
+      // Phase 2: Guardians
+      { path: 'guardians', name: 'GuardiansList', component: () => import('@/school/pages/guardians/GuardiansList.vue'), meta: { requiresAuth: true } },
+      { path: 'guardians/create', name: 'CreateGuardian', component: () => import('@/school/pages/guardians/CreateGuardian.vue'), meta: { requiresAuth: true } },
+      { path: 'guardians/:id', name: 'GuardianDetail', component: () => import('@/school/pages/guardians/GuardianDetail.vue'), meta: { requiresAuth: true } },
+      { path: 'guardians/:id/edit', name: 'EditGuardian', component: () => import('@/school/pages/guardians/EditGuardian.vue'), meta: { requiresAuth: true } },
+
+      // Phase 3: Students
+      { path: 'students', name: 'StudentsList', component: () => import('@/school/pages/students/StudentsList.vue'), meta: { requiresAuth: true } },
+      { path: 'students/create', name: 'CreateStudent', component: () => import('@/school/pages/students/CreateStudent.vue'), meta: { requiresAuth: true } },
+      { path: 'students/:id', name: 'StudentDetail', component: () => import('@/school/pages/students/StudentDetail.vue'), meta: { requiresAuth: true } },
+      { path: 'students/:id/edit', name: 'EditStudent', component: () => import('@/school/pages/students/EditStudent.vue'), meta: { requiresAuth: true } },
+      
+      // Phase 3: Student Guardians
+      { path: 'student-guardians', name: 'StudentGuardiansList', component: () => import('@/school/pages/student-guardians/StudentGuardiansList.vue'), meta: { requiresAuth: true } },
+      { path: 'student-guardians/create', name: 'CreateStudentGuardian', component: () => import('@/school/pages/student-guardians/CreateStudentGuardian.vue'), meta: { requiresAuth: true } },
+      { path: 'student-guardians/:id/edit', name: 'EditStudentGuardian', component: () => import('@/school/pages/student-guardians/EditStudentGuardian.vue'), meta: { requiresAuth: true } },
+      
+      // Phase 3: Enrollments
+      { path: 'enrollments', name: 'EnrollmentsList', component: () => import('@/school/pages/enrollments/EnrollmentsList.vue'), meta: { requiresAuth: true } },
+      { path: 'enrollments/create', name: 'CreateEnrollment', component: () => import('@/school/pages/enrollments/CreateEnrollment.vue'), meta: { requiresAuth: true } },
+      { path: 'enrollments/:id/edit', name: 'EditEnrollment', component: () => import('@/school/pages/enrollments/EditEnrollment.vue'), meta: { requiresAuth: true } },
+
+      // Attendance
+      { path: 'attendance', name: 'AttendanceList', component: () => import('@/school/pages/attendance/AttendanceList.vue'), meta: { requiresAuth: true } },
+      { path: 'attendance/create', name: 'CreateAttendance', component: () => import('@/school/pages/attendance/CreateAttendance.vue'), meta: { requiresAuth: true } },
+      { path: 'attendance/:id/edit', name: 'EditAttendance', component: () => import('@/school/pages/attendance/EditAttendance.vue'), meta: { requiresAuth: true } },
+
+      // Phase 4: Fee Structures
+      { path: 'fee-structures', name: 'FeeStructuresList', component: () => import('@/school/pages/fee-structures/FeeStructuresList.vue'), meta: { requiresAuth: true } },
+      { path: 'fee-structures/:id', name: 'FeeStructureDetail', component: () => import('@/school/pages/fee-structures/FeeStructureDetail.vue'), meta: { requiresAuth: true } },
+
+      // Phase 4: Fee Concessions
+      { path: 'concessions', name: 'ConcessionsList', component: () => import('@/school/pages/concessions/ConcessionsList.vue'), meta: { requiresAuth: true } },
+      { path: 'concessions/create', name: 'CreateConcession', component: () => import('@/school/pages/concessions/CreateConcession.vue'), meta: { requiresAuth: true } },
+      { path: 'concessions/:id', name: 'ConcessionDetail', component: () => import('@/school/pages/concessions/ConcessionDetail.vue'), meta: { requiresAuth: true } },
+      { path: 'concessions/:id/edit', name: 'EditConcession', component: () => import('@/school/pages/concessions/EditConcession.vue'), meta: { requiresAuth: true } },
+
+      // Phase 4: Fee Invoices
+      { path: 'invoices', name: 'InvoicesList', component: () => import('@/school/pages/invoices/InvoicesList.vue'), meta: { requiresAuth: true } },
+      { path: 'invoices/create', name: 'CreateInvoice', component: () => import('@/school/pages/invoices/CreateInvoice.vue'), meta: { requiresAuth: true } },
+      { path: 'invoices/:id', name: 'InvoiceDetail', component: () => import('@/school/pages/invoices/InvoiceDetail.vue'), meta: { requiresAuth: true } },
+
+      // FBR
+      { path: 'fbr', name: 'SchoolFbrSetup', component: () => import('@/school/pages/fbr/SchoolFbrSetup.vue'), meta: { requiresAuth: true } },
+      { path: 'fbr/scenarios', name: 'SchoolFbrScenarios', component: () => import('@/school/pages/fbr/SchoolFbrScenarios.vue'), meta: { requiresAuth: true } },
+      { path: 'fbr/submissions', name: 'SchoolFbrSubmissions', component: () => import('@/school/pages/fbr/SchoolFbrSubmissions.vue'), meta: { requiresAuth: true } },
+
+      // Phase 5: Exam Types
+      { path: 'exam-types', name: 'ExamTypesList', component: () => import('@/school/pages/exam-types/ExamTypesList.vue'), meta: { requiresAuth: true } },
+
+      // Phase 5: Exams
+      { path: 'exams', name: 'ExamsList', component: () => import('@/school/pages/exams/ExamsList.vue'), meta: { requiresAuth: true } },
+      { path: 'exams/create', name: 'CreateExam', component: () => import('@/school/pages/exams/CreateExam.vue'), meta: { requiresAuth: true } },
+      { path: 'exams/:id', name: 'ExamDetail', component: () => import('@/school/pages/exams/ExamDetail.vue'), meta: { requiresAuth: true } },
+      { path: 'exams/:id/edit', name: 'EditExam', component: () => import('@/school/pages/exams/EditExam.vue'), meta: { requiresAuth: true } },
+
+      // Phase 5: Exam Results
+      { path: 'exam-results', name: 'ExamResultsList', component: () => import('@/school/pages/exam-results/ExamResultsList.vue'), meta: { requiresAuth: true } },
+      { path: 'exam-results/create', name: 'CreateExamResult', component: () => import('@/school/pages/exam-results/CreateExamResult.vue'), meta: { requiresAuth: true } },
+      { path: 'exam-results/:id/edit', name: 'EditExamResult', component: () => import('@/school/pages/exam-results/EditExamResult.vue'), meta: { requiresAuth: true } },
+
+      // Fee Heads
+      { path: 'fee-heads', name: 'FeeHeadsList', component: () => import('@/school/pages/fee-heads/FeeHeadsList.vue'), meta: { requiresAuth: true } },
+      { path: 'fee-heads/:id', name: 'FeeHeadDetail', component: () => import('@/school/pages/fee-heads/FeeHeadDetail.vue'), meta: { requiresAuth: true } },
+    ]
+  },
 ]
 
 const router = createRouter({
@@ -468,8 +577,23 @@ router.beforeEach((to, _from, next) => {
 
   // Redirect authenticated users away from login pages
   if ((to.path === '/login' || to.path === '/login/admin' || to.path === '/login/company') && authStore.isAuthenticated) {
-    next('/dashboard')
+    if (authStore.user?.company_vertical === 'school') {
+      next('/school/dashboard')
+    } else {
+      next('/dashboard')
+    }
     return
+  }
+
+  // Redirect authenticated users from landing page to dashboard
+  if (to.path === '/' && authStore.isAuthenticated) {
+    if (authStore.user?.company_vertical === 'school') {
+      next('/school/dashboard')
+      return
+    } else {
+      next('/dashboard')
+      return
+    }
   }
 
   next()

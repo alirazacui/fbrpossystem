@@ -700,13 +700,26 @@ class WarehouseStock(models.Model):
         return self.low_stock_threshold > 0 and self.quantity <= self.low_stock_threshold
 
     # ---------------------------------------------------------------------------
-# Signal — sync WarehouseStock when a new Product is created
+# Signal — sync WarehouseStock to Product.current_stock
 # ---------------------------------------------------------------------------
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.db.models import Sum
 
-
-
+@receiver(post_save, sender=WarehouseStock)
+@receiver(post_delete, sender=WarehouseStock)
+def sync_product_stock_from_warehouse(sender, instance, **kwargs):
+    """
+    Whenever a WarehouseStock record is saved or deleted, aggregate the total
+    quantity across all warehouses for the product and update Product.current_stock.
+    """
+    product = instance.product
+    total_stock = WarehouseStock.objects.filter(product=product).aggregate(
+        total=Sum('quantity')
+    )['total'] or 0
+    
+    # We use .filter().update() to prevent recursively triggering product saves
+    Product.objects.filter(pk=product.pk).update(current_stock=total_stock)
 
 
 """

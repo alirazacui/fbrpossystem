@@ -627,35 +627,45 @@ class SaleViewSet(AuditLogMixin, viewsets.ModelViewSet):
             # Complete the sale
             sale.complete()
 
+            # Deduct stock for each line
+            from pos.models import WarehouseStock
+            for line in sale.lines.all():
+                qty = float(line.quantity)
+                product = line.product
+
+                warehouse_stock = WarehouseStock.objects.filter(product=product).first()
+                if warehouse_stock:
+                    warehouse_stock.quantity = float(warehouse_stock.quantity) - qty
+                    warehouse_stock.save(update_fields=['quantity', 'updated_at'])
+                else:
+                    product.refresh_from_db()
+                    product.current_stock = float(product.current_stock) - qty
+                    product.save(update_fields=['current_stock', 'updated_at'])
+
             # Mark FBR submission as pending based on business_mode
-            # Actual submission happens via Celery task
             company = sale.company
             business_mode = company.business_mode or []
-            
+
             has_pos = "pos" in business_mode
             has_di = "di" in business_mode
-            
+
             if has_pos and has_di:
-                # Both enabled - trigger both tasks
                 sale.fbr_submission_status = FBRSubmissionStatus.PENDING
                 from digital_invoicing.tasks import submit_invoice_to_fbr
                 from digital_invoicing.pos_tasks import submit_invoice_to_fbr_pos
                 submit_invoice_to_fbr.delay(sale.id)
                 submit_invoice_to_fbr_pos.delay(sale.id)
             elif has_pos:
-                # POS only - trigger POS task
                 sale.fbr_submission_status = FBRSubmissionStatus.PENDING
                 from digital_invoicing.pos_tasks import submit_invoice_to_fbr_pos
                 submit_invoice_to_fbr_pos.delay(sale.id)
             elif has_di:
-                # DI only - trigger DI task
                 sale.fbr_submission_status = FBRSubmissionStatus.PENDING
                 from digital_invoicing.tasks import submit_invoice_to_fbr
                 submit_invoice_to_fbr.delay(sale.id)
             else:
-                # Neither enabled - skip FBR
                 sale.fbr_submission_status = FBRSubmissionStatus.SKIPPED
-            
+
             sale.save(update_fields=["fbr_submission_status", "updated_at"])
  
         return Response(SaleDetailSerializer(sale).data)
@@ -1057,16 +1067,21 @@ class SaleReturnViewSet(AuditLogMixin, viewsets.ModelViewSet):
                 total_return_amount += float(return_line.return_line_total)
                 total_return_tax    += float(return_line.return_tax)
  
-                # Restore stock if product tracks inventory
+                # Restore stock 
+                from pos.models import WarehouseStock
                 product = original_line.product
-                if product.track_inventory:
+                warehouse_stock = WarehouseStock.objects.filter(product=product).first()
+                if warehouse_stock:
+                    warehouse_stock.quantity = float(warehouse_stock.quantity) + float(qty_returned)
+                    warehouse_stock.save(update_fields=["quantity", "updated_at"])
+                else:
                     product.refresh_from_db()
                     product.current_stock = (
                         float(product.current_stock) + float(qty_returned)
                     )
                     product.save(update_fields=["current_stock", "updated_at"])
-                    return_line.stock_restored = True
-                    return_line.save(update_fields=["stock_restored"])
+                return_line.stock_restored = True
+                return_line.save(update_fields=["stock_restored"])
  
             # ── Update SaleReturn totals ───────────────────────────────
             sale_return.total_return_amount = round(total_return_amount, 2)

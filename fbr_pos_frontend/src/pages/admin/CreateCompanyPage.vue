@@ -248,6 +248,7 @@
               <option value="electronics">Electronics</option>
               <option value="clothing">Clothing / Apparel</option>
               <option value="wholesale">Wholesale</option>
+              <option value="school">School / Education</option>
               <option value="other">Other</option>
             </select>
           </div>

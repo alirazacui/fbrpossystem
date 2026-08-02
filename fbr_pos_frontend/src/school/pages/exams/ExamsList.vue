@@ -1,0 +1,103 @@
+<template>
+  <div class="p-8 space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Exams</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage exams scheduled for each class.</p>
+      </div>
+      <router-link to="/school/exams/create" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Schedule Exam
+      </router-link>
+    </div>
+
+    <div v-if="loading" class="flex items-center justify-center py-20"><div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div></div>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{{ error }}</div>
+    
+    <div v-else-if="exams.length === 0" class="bg-white border border-gray-200 rounded-xl p-16 text-center">
+      <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <h3 class="text-base font-semibold text-gray-700 mb-1">No exams scheduled</h3>
+      <router-link to="/school/exams/create" class="text-sm text-indigo-600 font-semibold hover:underline">Schedule Exam →</router-link>
+    </div>
+    
+    <div v-else class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Exam</th>
+            <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
+            <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Grade / Section</th>
+            <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Start Date</th>
+            <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr v-for="e in exams" :key="e.id" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-semibold text-gray-900">{{ e.name }}</td>
+            <td class="px-6 py-4 text-gray-600">{{ e.exam_type_name || '—' }}</td>
+            <td class="px-6 py-4 text-gray-600">{{ e.grade_name || '—' }} <span v-if="e.section_name">/ {{ e.section_name }}</span></td>
+            <td class="px-6 py-4 text-gray-600">{{ e.start_date }}</td>
+            <td class="px-6 py-4">
+              <span :class="e.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'" class="px-2 py-0.5 rounded-full text-xs font-semibold">{{ e.is_active ? 'Active' : 'Inactive' }}</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <router-link :to="`/school/exams/${e.id}`" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">View</router-link>
+                <router-link :to="`/school/exams/${e.id}/edit`" class="text-xs text-gray-500 hover:text-gray-800 font-semibold">Edit</router-link>
+                <button @click="confirmDelete(e)" class="text-xs text-red-500 hover:text-red-700 font-semibold">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div v-if="deleteTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+        <h3 class="text-base font-bold text-gray-900 mb-2">Delete Exam?</h3>
+        <p class="text-sm text-gray-500 mb-5">Delete <strong>{{ deleteTarget.name }}</strong>?</p>
+        <div class="flex gap-3 justify-end">
+          <button @click="deleteTarget = null" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button @click="handleDelete" :disabled="deleting" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">
+            {{ deleting ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { examAPI, type Exam } from '@/school/apis/examAPI'
+
+const exams = ref<Exam[]>([])
+const loading = ref(true)
+const error = ref('')
+const deleteTarget = ref<Exam | null>(null)
+const deleting = ref(false)
+
+const fetchExams = async () => {
+  loading.value = true
+  try {
+    const res = await examAPI.list()
+    exams.value = res.data.results || (res.data as any)
+  } catch { error.value = 'Failed to load exams.' }
+  finally { loading.value = false }
+}
+
+const confirmDelete = (e: Exam) => { deleteTarget.value = e }
+const handleDelete = async () => {
+  if (!deleteTarget.value) return
+  deleting.value = true
+  try {
+    await examAPI.delete(deleteTarget.value.id)
+    exams.value = exams.value.filter(x => x.id !== deleteTarget.value!.id)
+    deleteTarget.value = null
+  } catch { error.value = 'Failed to delete.' }
+  finally { deleting.value = false }
+}
+
+onMounted(fetchExams)
+</script>

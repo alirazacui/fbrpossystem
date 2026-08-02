@@ -22,6 +22,7 @@ export interface AuthUser {
   company_id?: number
   company_name?: string | null
   company_ntn?: string | null
+  company_vertical?: string | null
   terminal_id?: string | null
   terminal_name?: string | null
   permissions?: string[]
