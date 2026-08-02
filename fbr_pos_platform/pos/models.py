@@ -1488,6 +1488,14 @@ class Sale(models.Model):
         verbose_name=_("Status"),
     )
 
+    delivery_challan_number = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_("Delivery Challan Number"),
+        help_text=_("Optional Delivery Challan / Reference Number for this sale/invoice.")
+    )
+
     # ------------------------------------------------------------------
     # Financial totals (denormalised for fast reporting)
     # These are computed from SaleLines and stored here on completion.

@@ -809,6 +809,7 @@ class SaleListSerializer(serializers.ModelSerializer):
             "customer_name",
             "cashier_email",
             "vendor_code",
+            "delivery_challan_number",
             "total_amount",
             "amount_paid",
             "fbr_submission_status",
@@ -855,6 +856,7 @@ class SaleDetailSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "vendor_code",
+            "delivery_challan_number",
             # Financial totals
             "subtotal",
             "total_discount",
@@ -894,10 +896,11 @@ class CreateSaleSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model  = Sale
-        fields = ["customer", "cash_session", "sale_type", "notes", "vendor_code"]
+        fields = ["customer", "cash_session", "sale_type", "notes", "vendor_code", "delivery_challan_number"]
         extra_kwargs = {
             "customer": {"required": False, "allow_null": True},
-            "vendor_code": {"required": False, "allow_blank": True}
+            "vendor_code": {"required": False, "allow_blank": True},
+            "delivery_challan_number": {"required": False, "allow_blank": True}
         }
  
     def validate_customer(self, customer):
