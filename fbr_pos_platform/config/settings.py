@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "receipt",
     "school",
     "public",
+    "docs",
 
     
 ]
@@ -270,3 +271,7 @@ PLATFORM_BRAND_LOGO_PATH = config(
 )
 PLATFORM_BRAND_LOGO_URL = config("PLATFORM_BRAND_LOGO_URL", default="")
 FRONTEND_COMPANY_LOGIN_URL = config("FRONTEND_COMPANY_LOGIN_URL", default="https://myfbrpos.com/login/company")
+
+# ── CMS Article Push Receiver ────────────────────────────────────────────────
+# Secret key that must match MAIN_WEBSITE_API_KEY in the CMS .env
+DOCS_RECEIVER_API_KEY = config('DOCS_RECEIVER_API_KEY', default='')

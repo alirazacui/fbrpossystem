@@ -16,6 +16,15 @@ const routes: RouteRecordRaw[] = [
     component: LandingPage,
     meta: { requiresAuth: false },
   },
+  // ── Public Help Center ───────────────────────────────────────────────────
+  {
+    path: '/docs/:slug?',
+    name: 'DocsPage',
+    component: () => import('@/pages/public/DocsPage.vue'),
+    meta: { requiresAuth: false },
+  },
+  // ────────────────────────────────────────────────────────────────────────
+
   {
     path: '/login',
     name: 'LoginChoice',

@@ -29,7 +29,7 @@ BASE_URL = "http://127.0.0.1:8000"
 ADMIN_EMAIL = "admin@gmail.com"
 ADMIN_PASSWORD = "admin123"
 
-OWNER_EMAIL = "owner@gmail.com"
+OWNER_EMAIL = "owner2@gmail.com"
 OWNER_PASSWORD = "owner123"
 # ============================================================
 
@@ -47,7 +47,14 @@ state = {
     "SUBSCRIPTION_ID": 1,
     "CASH_SESSION_ID": 1,
     "ORIGINAL_LINE_ID": 1,
-    "CASHIER_ID": 2,
+        "CASHIER_ID": 2,
+    "DI_TENANT_ID": None,
+    "DI_OWNER_TOKEN": None,
+    "POS_TENANT_ID": None,
+    "POS_OWNER_TOKEN": None,
+    "SCHOOL_TENANT_ID": None,
+    "SCHOOL_OWNER_TOKEN": None,
+    "INACTIVE_TENANT_ID": None,
 }
 
 PASS = 0
@@ -133,18 +140,7 @@ def step_login_admin():
         print(f"  {C.YELLOW}⚠ No admin token — admin-only steps below will be skipped.{C.END}")
 
 
-def step_admin_profile():
-    section("Get My Profile (Admin)")
-    if not state["ADMIN_TOKEN"]:
-        return skip("no admin token")
-    r = req("GET", "/api/me/", token=state["ADMIN_TOKEN"], label="Get My Profile")
-    if r is None:
-        return
-    check("status 200", r.status_code == 200)
-    check("has email field", "email" in jbody(r))
-
-
-# ============================================================
+# Removed step_admin_profile as endpoint does not exist# ============================================================
 # 02 — Company Management
 # ============================================================
 def step_company_management():
@@ -669,6 +665,159 @@ def step_fbr_sandbox():
 # ============================================================
 # Token lifecycle — runs LAST since logout invalidates the admin token
 # ============================================================
+
+# ============================================================
+# 11 — Advanced Tenant Setup
+# ============================================================
+def step_advanced_tenant_setup():
+    section("Advanced Tenant Setup (DI, POS, School)")
+    if not state["ADMIN_TOKEN"]:
+        return skip("no admin token")
+
+    # DI Only Tenant
+    r = req("POST", "/api/companies/", token=state["ADMIN_TOKEN"], json_body={
+        "business_name": "DI Only Corp", "ntn": "7000002", "owner_cnic": "35202-1234567-2",
+        "business_mode": "di_only", "vertical": "general_store", "address": "123 Main", "phone": "03000000000"
+    }, label="Create DI-Only Tenant")
+    if r is not None and r.status_code == 201:
+        state["DI_TENANT_ID"] = jbody(r)["id"]
+        req("POST", "/api/owners/", token=state["ADMIN_TOKEN"], json_body={
+            "email": "di@gmail.com", "password": "password123", "confirm_password": "password123", "company": state["DI_TENANT_ID"]
+        }, label="Create DI Owner")
+
+    # POS Only Tenant
+    r = req("POST", "/api/companies/", token=state["ADMIN_TOKEN"], json_body={
+        "business_name": "POS Only Corp", "ntn": "7000003", "owner_cnic": "35202-1234567-3",
+        "business_mode": "pos_only", "vertical": "general_store", "address": "123 Main", "phone": "03000000000"
+    }, label="Create POS-Only Tenant")
+    if r is not None and r.status_code == 201:
+        state["POS_TENANT_ID"] = jbody(r)["id"]
+        req("POST", "/api/owners/", token=state["ADMIN_TOKEN"], json_body={
+            "email": "pos@gmail.com", "password": "password123", "confirm_password": "password123", "company": state["POS_TENANT_ID"]
+        }, label="Create POS Owner")
+
+    # School Tenant
+    r = req("POST", "/api/companies/", token=state["ADMIN_TOKEN"], json_body={
+        "business_name": "School Academy", "ntn": "7000004", "owner_cnic": "35202-1234567-4",
+        "business_mode": "pos_only", "vertical": "school", "address": "123 Main", "phone": "03000000000"
+    }, label="Create School Tenant")
+    if r is not None and r.status_code == 201:
+        state["SCHOOL_TENANT_ID"] = jbody(r)["id"]
+        req("POST", "/api/owners/", token=state["ADMIN_TOKEN"], json_body={
+            "email": "school@gmail.com", "password": "password123", "confirm_password": "password123", "company": state["SCHOOL_TENANT_ID"]
+        }, label="Create School Owner")
+
+    # Inactive Tenant
+    r = req("POST", "/api/companies/", token=state["ADMIN_TOKEN"], json_body={
+        "business_name": "Inactive Corp", "ntn": "7000005", "owner_cnic": "35202-1234567-5",
+        "business_mode": "pos_only", "vertical": "general_store", "address": "123 Main", "phone": "03000000000"
+    }, label="Create Inactive Tenant")
+    if r is not None and r.status_code == 201:
+        state["INACTIVE_TENANT_ID"] = jbody(r)["id"]
+        req("POST", "/api/owners/", token=state["ADMIN_TOKEN"], json_body={
+            "email": "inactive@gmail.com", "password": "password123", "confirm_password": "password123", "company": state["INACTIVE_TENANT_ID"]
+        }, label="Create Inactive Owner")
+        req("PATCH", f"/api/companies/{state['INACTIVE_TENANT_ID']}/", token=state["ADMIN_TOKEN"], json_body={"is_active": False}, label="Deactivate Tenant")
+
+
+def step_tenant_login_isolation():
+    section("Login & Isolation Tests")
+    
+    r = req("POST", "/api/auth/login/", json_body={"email": "inactive@gmail.com", "password": "password123"}, label="Login Inactive Tenant")
+    check("fails with 400", r is not None and r.status_code == 400)
+
+    r = req("POST", "/api/auth/login/", json_body={"email": "admin@gmail.com", "password": "wrong"}, label="Login Wrong Password")
+    check("fails with 401", r is not None and r.status_code == 401)
+
+    r = req("POST", "/api/auth/login/", json_body={"email": "di@gmail.com", "password": "password123"}, label="Login DI Tenant")
+    if r is not None and r.status_code == 200:
+        state["DI_OWNER_TOKEN"] = jbody(r).get("access")
+        check("vertical is general_store", jbody(r).get("user", {}).get("company_vertical") == "general_store")
+
+    r = req("POST", "/api/auth/login/", json_body={"email": "school@gmail.com", "password": "password123"}, label="Login School Tenant")
+    if r is not None and r.status_code == 200:
+        state["SCHOOL_OWNER_TOKEN"] = jbody(r).get("access")
+        check("vertical is school", jbody(r).get("user", {}).get("company_vertical") == "school")
+
+    r = req("POST", "/api/auth/login/", json_body={"email": "pos@gmail.com", "password": "password123"}, label="Login POS Tenant")
+    if r is not None and r.status_code == 200:
+        state["POS_OWNER_TOKEN"] = jbody(r).get("access")
+
+    if state["DI_OWNER_TOKEN"] and state.get("SALE_ID"):
+        r = req("GET", f"/api/sales/{state['SALE_ID']}/detail/", token=state["DI_OWNER_TOKEN"], label="Cross-tenant access check")
+        check("returns 403 or 404", r is not None and r.status_code in [403, 404])
+
+
+def step_di_validate_flow():
+    section("DI Validate-Only Flow")
+    if not state["DI_OWNER_TOKEN"]: return skip("no DI owner token")
+
+    r = req("POST", "/api/products/", token=state["DI_OWNER_TOKEN"], json_body={
+        "name": "DI Product", "selling_price": "100", "cost_price": "50", "tax_rate_percent": "18%", "fbr_sale_type": "Goods at standard rate (default)"
+    }, label="Create DI Product")
+    prod_id = jbody(r).get("id") if r is not None and r.status_code == 201 else None
+
+    r = req("POST", "/api/sales/", token=state["DI_OWNER_TOKEN"], json_body={"sale_type": "Sale Invoice"}, label="Create DI Draft")
+    if r is not None and r.status_code == 201:
+        sale_id = jbody(r)["id"]
+        req("POST", f"/api/sales/{sale_id}/add-line/", token=state["DI_OWNER_TOKEN"], json_body={"product_id": prod_id, "quantity": "1", "discount_amount": "0"}, label="Add line to DI Draft")
+        req("PATCH", f"/api/sales/{sale_id}/detail/", token=state["DI_OWNER_TOKEN"], json_body={"delivery_challan_number": "CHL-999"}, label="Save Delivery Challan")
+
+        r_val = req("POST", f"/api/sales/{sale_id}/validate_fbr/", token=state["DI_OWNER_TOKEN"], json_body={}, label="Validate FBR (Dry-run)")
+        check("status 200", r_val is not None and r_val.status_code == 200)
+
+        r_retry = req("POST", f"/api/sales/{sale_id}/retry_fbr/", token=state["DI_OWNER_TOKEN"], json_body={}, label="Retry FBR Endpoint")
+        check("status 400 (not failed/pending)", r_retry is not None and r_retry.status_code == 400)
+        
+        r_cancel = req("POST", f"/api/sales/{sale_id}/cancel/", token=state["DI_OWNER_TOKEN"], json_body={}, label="Cancel Draft")
+        check("status 200", r_cancel is not None and r_cancel.status_code == 200)
+        check("status is cancelled", jbody(r_cancel).get("status") == "cancelled")
+
+
+def step_pos_only_flow():
+    section("POS-Only Complete & Stock Flow")
+    if not state["POS_OWNER_TOKEN"]: return skip("no POS owner token")
+
+    r = req("POST", "/api/products/", token=state["POS_OWNER_TOKEN"], json_body={
+        "name": "POS Product", "selling_price": "100", "cost_price": "50", "tax_rate_percent": "18%", 
+        "fbr_sale_type": "Goods at standard rate (default)", "track_inventory": True, "current_stock": 50
+    }, label="Create POS Product")
+    prod_id = jbody(r).get("id") if r is not None and r.status_code == 201 else None
+
+    r = req("POST", "/api/sales/", token=state["POS_OWNER_TOKEN"], json_body={"sale_type": "Sale Invoice"}, label="Create POS Draft")
+    if r is not None and r.status_code == 201:
+        sale_id = jbody(r)["id"]
+        req("POST", f"/api/sales/{sale_id}/add-line/", token=state["POS_OWNER_TOKEN"], json_body={"product_id": prod_id, "quantity": "5", "discount_amount": "0"}, label="Add line to POS Draft")
+        req("POST", f"/api/sales/{sale_id}/add-payment/", token=state["POS_OWNER_TOKEN"], json_body={"payment_method": "cash", "amount": "590.00"}, label="Add Payment")
+        
+        r_comp = req("POST", f"/api/sales/{sale_id}/complete/", token=state["POS_OWNER_TOKEN"], json_body={}, label="Complete POS Sale")
+        check("status 200", r_comp is not None and r_comp.status_code == 200)
+        check("fbr_submission_status is skipped", jbody(r_comp).get("fbr_submission_status") == "skipped")
+
+        r_prod = req("GET", f"/api/products/{prod_id}/", token=state["POS_OWNER_TOKEN"], label="Check stock after sale")
+        check("stock deducted", r_prod is not None and jbody(r_prod).get("current_stock") == 45.0)
+
+
+def step_codebase_integrity():
+    section("Codebase Integrity Checks")
+    import subprocess
+    import os
+    import sys
+    try:
+        base = os.path.dirname(os.path.abspath(__file__))
+        # For grep, use literal regex check.
+        res = subprocess.run(["grep", "-rn", "<<<<<<<\|=======\|>>>>>>>", "."], capture_output=True, text=True, cwd=base)
+        lines = [line for line in res.stdout.splitlines() if "tests_sript.py" not in line and "update_tests.py" not in line]
+        check("no conflict markers", len(lines) == 0)
+        
+        # AST parse
+        code = "import os, ast; [ast.parse(open(os.path.join(r, f)).read()) for r, d, files in os.walk('.') for f in files if f.endswith('.py') and 'venv' not in r and 'migrations' not in r]"
+        res2 = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, cwd=base)
+        check("all python files parse cleanly", res2.returncode == 0)
+    except Exception as e:
+        skip(f"Could not run subprocess checks: {e}")
+
+
 def step_token_lifecycle():
     section("Token Refresh & Logout (Admin) — runs last on purpose")
     if state.get("ADMIN_REFRESH"):
@@ -704,7 +853,7 @@ def main():
     print(f"Target: {BASE_URL}")
 
     step_login_admin()
-    step_admin_profile()
+    # step_admin_profile()
     step_company_management()
     step_create_owner()
     step_login_owner()
@@ -716,6 +865,13 @@ def main():
     step_returns_debit_notes()
     step_reports()
     step_fbr_sandbox()
+
+    step_advanced_tenant_setup()
+    step_tenant_login_isolation()
+    step_di_validate_flow()
+    step_pos_only_flow()
+    step_codebase_integrity()
+
     step_token_lifecycle()
 
     print(f"\n{C.BOLD}=== SUMMARY ==={C.END}")

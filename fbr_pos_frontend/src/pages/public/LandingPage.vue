@@ -15,7 +15,7 @@
         </div>
         <nav class="hidden md:flex items-center gap-8">
           <a class="nav-link" href="#" @click.prevent="goToDocs">Docs</a>
-          <a class="nav-link" href="#" @click.prevent="showAboutUs = true">About Us</a>
+          <a class="nav-link" href="#" @click.prevent="scrollToAbout">About Us</a>
           <a class="nav-link" href="#" @click.prevent="scrollToFooter">Contact Us</a>
         </nav>
         <div class="flex items-center gap-3">
@@ -34,22 +34,22 @@
         <div class="blob blob-b"></div>
 
         <div class="max-w-7xl mx-auto px-container-margin grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative">
-          <div class="z-10 reveal" :class="{ 'reveal-in': true }">
-            <div class="inline-flex items-center gap-2 bg-primary-container/10 border border-primary-container/20 px-3 py-1 rounded-full mb-6">
+          <div class="z-10 hero-in">
+            <div class="inline-flex items-center gap-2 bg-primary-container/10 border border-primary-container/20 px-3 py-1 rounded-full mb-6 badge-pop">
               <span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
               <span class="text-primary font-label-sm text-label-sm uppercase tracking-wider">FBR Tier-1 Licensed Partner</span>
             </div>
-            <h1 class="font-display-lg text-display-lg text-on-surface leading-tight mb-4">
+            <h1 class="font-display-lg text-display-lg text-on-surface leading-tight mb-4 hero-in hero-delay-1">
               FBR Compliance Made <span class="text-gradient">Simple</span> for Pakistani Businesses.
             </h1>
-            <h2 class="font-headline-lg text-headline-lg text-primary font-bold mb-6">
+            <h2 class="font-headline-lg text-headline-lg text-primary font-bold mb-6 hero-in hero-delay-2">
               No More Manual Filing. No More Guesswork.
             </h2>
-            <p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl">
+            <p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl hero-in hero-delay-3">
               From barcode scanning to FBR-verified digital receipts, MYFBRPOS runs your entire storefront — invoicing, inventory, and tax compliance — in one place. Every sale is submitted to FBR in real time and backed by a 6-year audit trail, so you stay compliant without lifting a finger. Trusted by 500+ retailers across Pakistan.
             </p>
-            <div class="flex flex-col sm:flex-row gap-4">
-              <button @click="showAutomateBusinessModal = true" class="btn-shine bg-primary text-on-primary px-8 py-4 rounded-xl font-title-md text-title-md shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
+            <div class="flex flex-col sm:flex-row gap-4 hero-in hero-delay-4">
+              <button @click="scrollToAutomate" class="btn-shine bg-primary text-on-primary px-8 py-4 rounded-xl font-title-md text-title-md shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
                 Automate Your Business
               </button>
               <button class="group flex items-center justify-center gap-2 border-2 border-primary text-primary px-8 py-4 rounded-xl font-title-md text-title-md hover:bg-primary/5 transition-colors">
@@ -62,9 +62,9 @@
             </div>
           </div>
 
-          <div class="relative">
-            <div class="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 blur-3xl rounded-full"></div>
-            <div class="bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant relative z-10 hover:shadow-primary/10 transition-shadow duration-500">
+          <div class="relative hero-in hero-delay-2">
+            <div class="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 blur-3xl rounded-full float-slow"></div>
+            <div class="bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant relative z-10 hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-500">
               <img
                 class="w-full h-auto rounded-xl"
                 alt="Dashboard preview showing sales trends, inventory levels, and a live FBR submission status panel"
@@ -94,8 +94,8 @@
       <section class="bg-white border-y border-outline-variant py-10">
         <div class="max-w-7xl mx-auto px-container-margin">
           <div class="flex flex-wrap justify-between items-center gap-8 md:gap-12">
-            <div class="flex items-center gap-3" v-for="item in trustBar" :key="item.label">
-              <span class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <div class="flex items-center gap-3 trust-item reveal-up" v-for="(item, i) in trustBar" :key="item.label" :style="{ transitionDelay: i * 80 + 'ms' }">
+              <span class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary trust-icon">
                 <span class="material-symbols-outlined text-2xl">{{ item.icon }}</span>
               </span>
               <span class="font-title-md text-title-md text-on-surface-variant">{{ item.label }}</span>
@@ -119,7 +119,7 @@
       <!-- Core Features -->
       <section class="py-24 bg-surface">
         <div class="max-w-7xl mx-auto px-container-margin">
-          <div class="text-center mb-16">
+          <div class="text-center mb-16 reveal-up">
             <h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">Enterprise Features, Small Business Ease</h2>
             <p class="text-on-surface-variant max-w-2xl mx-auto">Everything you need to run your business legally and efficiently in Pakistan's evolving tax landscape.</p>
           </div>
@@ -130,7 +130,7 @@
               class="bento-card reveal-up bg-white p-8 rounded-2xl border border-outline-variant flex flex-col items-start h-full"
               :style="{ transitionDelay: i * 90 + 'ms' }"
             >
-              <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6">
+              <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6 feature-icon">
                 <span class="material-symbols-outlined text-3xl">{{ feature.icon }}</span>
               </div>
               <h3 class="font-title-md text-title-md mb-3">{{ feature.title }}</h3>
@@ -148,14 +148,14 @@
       <!-- Pakistan Specific Benefits -->
       <section class="py-24 bg-white relative">
         <div class="max-w-7xl mx-auto px-container-margin">
-          <div class="bg-primary/5 rounded-3xl p-8 lg:p-16 flex flex-col lg:flex-row items-center gap-12 border border-primary/10 overflow-hidden relative">
+          <div class="bg-primary/5 rounded-3xl p-8 lg:p-16 flex flex-col lg:flex-row items-center gap-12 border border-primary/10 overflow-hidden relative reveal-up">
             <div class="absolute top-0 right-0 p-8 opacity-10">
               <span class="material-symbols-outlined text-9xl">public</span>
             </div>
             <div class="flex-1 space-y-8 z-10">
               <h2 class="font-headline-lg text-headline-lg text-primary">Tailored for the Pakistani Market</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="flex gap-4" v-for="point in localBenefits" :key="point.title">
+                <div class="flex gap-4 benefit-item" v-for="point in localBenefits" :key="point.title">
                   <div class="shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
                     <span class="material-symbols-outlined text-sm">check</span>
                   </div>
@@ -173,19 +173,20 @@
       <!-- Customer Reviews Section -->
       <section class="py-24 bg-surface">
         <div class="max-w-7xl mx-auto px-container-margin">
-          <div class="text-center mb-16">
+          <div class="text-center mb-16 reveal-up">
             <h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">Trusted by Pakistani Businesses</h2>
             <p class="text-on-surface-variant max-w-2xl mx-auto">See what our customers say about MYFBRPOS</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div
-              v-for="review in reviews"
+              v-for="(review, i) in reviews"
               :key="review.name"
               class="reveal-up bg-white p-10 rounded-2xl border border-outline-variant flex flex-col relative overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
+              :style="{ transitionDelay: i * 100 + 'ms' }"
             >
               <span class="material-symbols-outlined absolute -top-2 -right-2 text-9xl text-primary/5 select-none">format_quote</span>
               <div class="flex items-center gap-1 mb-4 relative z-10">
-                <span class="material-symbols-outlined text-primary text-xl" v-for="n in 5" :key="n" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="material-symbols-outlined text-primary text-xl star-pop" v-for="n in 5" :key="n" :style="{ animationDelay: (i * 100 + n * 60) + 'ms' }" style="font-variation-settings: 'FILL' 1;">star</span>
               </div>
               <p class="text-body-md text-on-surface-variant mb-6 flex-1 relative z-10">"{{ review.quote }}"</p>
               <div class="flex items-center gap-4 relative z-10">
@@ -200,14 +201,128 @@
         </div>
       </section>
 
+      <!-- About Us (now inline, was previously a modal) -->
+      <section ref="aboutSection" class="py-24 bg-white border-t border-outline-variant scroll-mt-24">
+        <div class="max-w-5xl mx-auto px-container-margin">
+          <div class="text-center mb-14 reveal-up">
+            <div class="inline-flex items-center gap-2 bg-primary/10 px-3 py-1 rounded-full mb-4">
+              <span class="material-symbols-outlined text-primary text-sm">info</span>
+              <span class="text-primary font-label-sm text-label-sm uppercase tracking-wider">About Us</span>
+            </div>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">About MYFBRPOS</h2>
+            <p class="text-on-surface-variant max-w-2xl mx-auto">Pakistan's leading FBR-compliant Point of Sale system, built for Pakistani businesses.</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+            <div class="space-y-6 text-body-md reveal-up">
+              <p>Since 2018, we have been helping retailers, wholesalers, and service providers automate their invoicing while ensuring full compliance with FBR regulations.</p>
+              <p>Our platform integrates directly with the FBR's PRAL system, providing real-time invoice submission and verification. Every invoice you generate is automatically sent to FBR with a verifiable QR code, eliminating manual data entry and reducing compliance risks.</p>
+              <p>We provide end-to-end solutions including software implementation, staff training, ongoing technical support, and compliance consulting. Our team is available 24/7 to assist with any issues or questions. With offices in Karachi, Lahore, and Islamabad, we offer on-site support across Pakistan.</p>
+            </div>
+
+            <div class="bg-primary/5 rounded-2xl p-8 border border-primary/10 reveal-up">
+              <h4 class="font-title-md text-title-md mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">checklist</span> What We Offer
+              </h4>
+              <ul class="space-y-3">
+                <li class="flex items-start gap-3 offer-item" v-for="(item, i) in aboutOffers" :key="item" :style="{ transitionDelay: i * 70 + 'ms' }">
+                  <span class="shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center mt-0.5">
+                    <span class="material-symbols-outlined text-xs">check</span>
+                  </span>
+                  <span class="text-body-md text-on-surface-variant">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Automate Your Business (now inline, was previously a modal) -->
+      <section ref="automateSection" class="py-24 bg-surface border-t border-outline-variant scroll-mt-24">
+        <div class="max-w-3xl mx-auto px-container-margin">
+          <div class="text-center mb-12 reveal-up">
+            <div class="inline-flex items-center gap-2 bg-primary/10 px-3 py-1 rounded-full mb-4">
+              <span class="material-symbols-outlined text-primary text-sm">rocket_launch</span>
+              <span class="text-primary font-label-sm text-label-sm uppercase tracking-wider">Get Started</span>
+            </div>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">Automate Your Business</h2>
+            <p class="text-on-surface-variant max-w-xl mx-auto">Tell us a bit about your business and we'll set everything up for FBR-compliant selling.</p>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-outline-variant p-8 lg:p-10 shadow-lg reveal-up">
+            <template v-if="!automateSuccess">
+              <form @submit.prevent="submitAutomateBusiness">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="field-group">
+                    <label class="field-label">Business Name</label>
+                    <div class="field-with-icon">
+                      <span class="material-symbols-outlined field-icon">storefront</span>
+                      <input v-model="automateBusinessForm.business_name" type="text" required class="field-input" placeholder="e.g. Al-Noor Traders">
+                    </div>
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Contact Name</label>
+                    <div class="field-with-icon">
+                      <span class="material-symbols-outlined field-icon">person</span>
+                      <input v-model="automateBusinessForm.contact_name" type="text" class="field-input" placeholder="Your name">
+                    </div>
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Email</label>
+                    <div class="field-with-icon">
+                      <span class="material-symbols-outlined field-icon">mail</span>
+                      <input v-model="automateBusinessForm.email" type="email" required class="field-input" placeholder="you@business.com">
+                    </div>
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Phone Number</label>
+                    <div class="field-with-icon">
+                      <span class="material-symbols-outlined field-icon">call</span>
+                      <input v-model="automateBusinessForm.phone" type="tel" required class="field-input" placeholder="03XX-XXXXXXX">
+                    </div>
+                  </div>
+                  <div class="field-group sm:col-span-2">
+                    <label class="field-label">CNIC</label>
+                    <div class="field-with-icon">
+                      <span class="material-symbols-outlined field-icon">badge</span>
+                      <input v-model="automateBusinessForm.cnic" type="text" required class="field-input" placeholder="XXXXX-XXXXXXX-X">
+                    </div>
+                  </div>
+                  <div class="field-group sm:col-span-2">
+                    <label class="field-label">Address</label>
+                    <textarea v-model="automateBusinessForm.address" rows="2" class="field-input" placeholder="Shop / office address"></textarea>
+                  </div>
+                  <div class="field-group sm:col-span-2">
+                    <label class="field-label">Message (Optional)</label>
+                    <textarea v-model="automateBusinessForm.message" rows="3" class="field-input" placeholder="Tell us about your business, number of branches, or anything else"></textarea>
+                  </div>
+                </div>
+                <button type="submit" :disabled="submitting" class="btn-shine w-full mt-6 bg-primary text-on-primary px-6 py-3 rounded-lg font-title-md hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                  <span v-if="submitting" class="spinner"></span>
+                  {{ submitting ? 'Submitting...' : 'Get Started' }}
+                </button>
+              </form>
+            </template>
+
+            <template v-else>
+              <div class="success-state">
+                <div class="success-check"><span class="material-symbols-outlined">check</span></div>
+                <h3 class="font-headline-lg text-headline-lg mb-2">You're All Set!</h3>
+                <p class="text-body-md text-on-surface-variant">Our team will contact you shortly to get your business automated.</p>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
       <!-- Final CTA -->
       <section class="py-24 cta-gradient text-on-primary text-center relative overflow-hidden">
         <div class="blob blob-c"></div>
-        <div class="max-w-4xl mx-auto px-container-margin relative z-10">
+        <div class="max-w-4xl mx-auto px-container-margin relative z-10 reveal-up">
           <h2 class="font-display-lg text-headline-lg mb-6">Stay Compliant. Save Time. Grow Your Business.</h2>
           <p class="font-body-lg text-body-lg mb-10 opacity-90">Join 500+ Pakistani retailers who trust MYFBRPOS for their daily operations and tax reporting.</p>
           <div class="flex flex-col sm:flex-row justify-center gap-4">
-            <button @click="showAutomateBusinessModal = true" class="btn-shine bg-white text-primary px-10 py-4 rounded-xl font-title-md text-title-md shadow-xl hover:scale-[1.02] transition-all">
+            <button @click="scrollToAutomate" class="btn-shine bg-white text-primary px-10 py-4 rounded-xl font-title-md text-title-md shadow-xl hover:scale-[1.02] transition-all">
               Automate Your Business
             </button>
             <button @click="showContactModal = true" class="group relative flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm border-2 border-white/40 hover:border-white text-white px-10 py-4 rounded-xl font-title-md text-title-md transition-all overflow-hidden">
@@ -233,7 +348,7 @@
           <div>
             <h4 class="font-title-md text-on-surface dark:text-inverse-on-surface mb-6">Company</h4>
             <ul class="space-y-4">
-              <li><a class="footer-link" @click="showAboutUs = true">About Us</a></li>
+              <li><a class="footer-link" @click="scrollToAbout">About Us</a></li>
             </ul>
           </div>
           <div>
@@ -321,84 +436,6 @@
       </div>
     </Transition>
 
-    <!-- Automate Business Modal -->
-    <Transition name="modal">
-      <div v-if="showAutomateBusinessModal" class="modal-backdrop" @click.self="closeAutomateBusiness">
-        <div class="modal-card modal-card-wide max-h-[90vh] overflow-y-auto">
-          <button @click="closeAutomateBusiness" class="modal-close absolute top-6 right-6"><span class="material-symbols-outlined">close</span></button>
-
-          <template v-if="!automateSuccess">
-            <div class="modal-banner">
-              <span class="modal-banner-icon"><span class="material-symbols-outlined">rocket_launch</span></span>
-              <div>
-                <h3 class="font-headline-lg text-headline-lg leading-tight">Automate Your Business</h3>
-                <p class="text-body-md text-on-surface-variant">Tell us a bit about your business and we'll set everything up.</p>
-              </div>
-            </div>
-            <form @submit.prevent="submitAutomateBusiness">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="field-group">
-                  <label class="field-label">Business Name</label>
-                  <div class="field-with-icon">
-                    <span class="material-symbols-outlined field-icon">storefront</span>
-                    <input v-model="automateBusinessForm.business_name" type="text" required class="field-input" placeholder="e.g. Al-Noor Traders">
-                  </div>
-                </div>
-                <div class="field-group">
-                  <label class="field-label">Contact Name</label>
-                  <div class="field-with-icon">
-                    <span class="material-symbols-outlined field-icon">person</span>
-                    <input v-model="automateBusinessForm.contact_name" type="text" class="field-input" placeholder="Your name">
-                  </div>
-                </div>
-                <div class="field-group">
-                  <label class="field-label">Email</label>
-                  <div class="field-with-icon">
-                    <span class="material-symbols-outlined field-icon">mail</span>
-                    <input v-model="automateBusinessForm.email" type="email" required class="field-input" placeholder="you@business.com">
-                  </div>
-                </div>
-                <div class="field-group">
-                  <label class="field-label">Phone Number</label>
-                  <div class="field-with-icon">
-                    <span class="material-symbols-outlined field-icon">call</span>
-                    <input v-model="automateBusinessForm.phone" type="tel" required class="field-input" placeholder="03XX-XXXXXXX">
-                  </div>
-                </div>
-                <div class="field-group sm:col-span-2">
-                  <label class="field-label">CNIC</label>
-                  <div class="field-with-icon">
-                    <span class="material-symbols-outlined field-icon">badge</span>
-                    <input v-model="automateBusinessForm.cnic" type="text" required class="field-input" placeholder="XXXXX-XXXXXXX-X">
-                  </div>
-                </div>
-                <div class="field-group sm:col-span-2">
-                  <label class="field-label">Address</label>
-                  <textarea v-model="automateBusinessForm.address" rows="2" class="field-input" placeholder="Shop / office address"></textarea>
-                </div>
-                <div class="field-group sm:col-span-2">
-                  <label class="field-label">Message (Optional)</label>
-                  <textarea v-model="automateBusinessForm.message" rows="3" class="field-input" placeholder="Tell us about your business, number of branches, or anything else"></textarea>
-                </div>
-              </div>
-              <button type="submit" :disabled="submitting" class="btn-shine w-full mt-6 bg-primary text-on-primary px-6 py-3 rounded-lg font-title-md hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                <span v-if="submitting" class="spinner"></span>
-                {{ submitting ? 'Submitting...' : 'Get Started' }}
-              </button>
-            </form>
-          </template>
-
-          <template v-else>
-            <div class="success-state">
-              <div class="success-check"><span class="material-symbols-outlined">check</span></div>
-              <h3 class="font-headline-lg text-headline-lg mb-2">You're All Set!</h3>
-              <p class="text-body-md text-on-surface-variant">Our team will contact you shortly to get your business automated.</p>
-            </div>
-          </template>
-        </div>
-      </div>
-    </Transition>
-
     <!-- Contact Modal -->
     <Transition name="modal">
       <div v-if="showContactModal" class="modal-backdrop" @click.self="showContactModal = false">
@@ -426,35 +463,6 @@
         </div>
       </div>
     </Transition>
-
-    <!-- About Us Modal -->
-    <Transition name="modal">
-      <div v-if="showAboutUs" class="modal-backdrop" @click.self="showAboutUs = false">
-        <div class="modal-card max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="font-headline-lg text-headline-lg">About MYFBRPOS</h3>
-            <button @click="showAboutUs = false" class="modal-close"><span class="material-symbols-outlined">close</span></button>
-          </div>
-          <div class="space-y-6 text-body-md">
-            <p>MYFBRPOS is Pakistan's leading FBR-compliant Point of Sale system, designed specifically for Pakistani businesses. Since 2018, we have been helping retailers, wholesalers, and service providers automate their invoicing while ensuring full compliance with FBR regulations.</p>
-            <p>Our platform integrates directly with the FBR's PRAL system, providing real-time invoice submission and verification. Every invoice you generate is automatically sent to FBR with a verifiable QR code, eliminating manual data entry and reducing compliance risks.</p>
-            <h4 class="font-title-md text-title-md mt-4">What We Offer</h4>
-            <ul class="list-disc list-inside space-y-2">
-              <li>Complete POS system with inventory management</li>
-              <li>Automatic FBR invoice submission and QR code generation</li>
-              <li>Support for all 28 FBR tax scenarios</li>
-              <li>Multi-location management for growing businesses</li>
-              <li>Customer relationship management (CRM)</li>
-              <li>Detailed reporting and analytics</li>
-              <li>6-year audit trail for compliance</li>
-            </ul>
-            <h4 class="font-title-md text-title-md mt-4">Our Services</h4>
-            <p>We provide end-to-end solutions including software implementation, staff training, ongoing technical support, and compliance consulting. Our team is available 24/7 to assist with any issues or questions.</p>
-            <p>With offices in Karachi, Lahore, and Islamabad, we offer on-site support across Pakistan, ensuring our clients receive the help they need, when they need it.</p>
-          </div>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -464,15 +472,12 @@ import { publicAPI } from '@/apis/public/publicAPI'
 
 /* ---------------- Modal state ---------------- */
 const showBookDemoModal = ref(false)
-const showAutomateBusinessModal = ref(false)
 const showContactModal = ref(false)
-const showAboutUs = ref(false)
 const submitting = ref(false)
 const bookDemoSuccess = ref(false)
 const automateSuccess = ref(false)
 
 const closeBookDemo = () => { showBookDemoModal.value = false; bookDemoSuccess.value = false }
-const closeAutomateBusiness = () => { showAutomateBusinessModal.value = false; automateSuccess.value = false }
 
 /* ---------------- Header scroll effect ---------------- */
 const scrolled = ref(false)
@@ -487,14 +492,20 @@ const scrollToFooter = () => {
   setTimeout(() => { contactHighlight.value = false }, 1600)
 }
 
-/* ---------------- Docs link ----------------
-   Placeholder — tell me the destination (route, external URL, or a
-   "coming soon" modal) and I'll wire this up. For now it routes to /docs. */
+/* ---------------- About Us -> now an inline section, scroll to it ---------------- */
+const aboutSection = ref<HTMLElement | null>(null)
+const scrollToAbout = () => {
+  aboutSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+/* ---------------- Automate Your Business -> now an inline section, scroll to it ---------------- */
+const automateSection = ref<HTMLElement | null>(null)
+const scrollToAutomate = () => {
+  automateSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 const goToDocs = () => {
-  // TODO: confirm real destination
-  // e.g. window.open('https://docs.myfbrpos.com', '_blank')
-  // or: $router.push('/docs')
-  console.log('Docs link clicked — destination not yet configured')
+  window.location.href = '/docs'
 }
 
 /* ---------------- Content data ---------------- */
@@ -523,6 +534,16 @@ const reviews = [
   { initials: 'AK', name: 'Ahmed Khan', role: 'Retail Store Owner, Karachi', quote: 'MYFBRPOS has completely transformed our business operations. The FBR integration is seamless and the support team is always available.' },
   { initials: 'SA', name: 'Sara Ahmed', role: 'Clothing Boutique, Lahore', quote: 'The automated FBR submission saves us hours every week. No more manual data entry or worrying about compliance issues.' },
   { initials: 'MR', name: 'Muhammad Riaz', role: 'Electronics Store, Islamabad', quote: 'Excellent customer support and the system is very easy to use. Highly recommend for any business needing FBR compliance.' },
+]
+
+const aboutOffers = [
+  'Complete POS system with inventory management',
+  'Automatic FBR invoice submission and QR code generation',
+  'Support for all 28 FBR tax scenarios',
+  'Multi-location management for growing businesses',
+  'Customer relationship management (CRM)',
+  'Detailed reporting and analytics',
+  '6-year audit trail for compliance',
 ]
 
 /* ---------------- Stats count-up (signature moment) ---------------- */
@@ -574,7 +595,7 @@ onMounted(() => {
       }
     })
   }, { threshold: 0.15 })
-  document.querySelectorAll('.reveal-up').forEach(el => revealObserver?.observe(el))
+  document.querySelectorAll('.reveal-up, .trust-item, .benefit-item, .offer-item').forEach(el => revealObserver?.observe(el))
 })
 
 onUnmounted(() => {
@@ -623,7 +644,9 @@ const submitAutomateBusiness = async () => {
     await publicAPI.submitLead(automateBusinessForm.value)
     automateSuccess.value = true
     automateBusinessForm.value = { lead_type: 'business_automation', business_name: '', contact_name: '', email: '', phone: '', cnic: '', address: '', message: '' }
-    setTimeout(closeAutomateBusiness, 2200)
+    // Since this is now an inline section (not a modal), reset back to the
+    // empty form after a while so the person can submit again if needed.
+    setTimeout(() => { automateSuccess.value = false }, 4000)
   } catch (error) {
     alert('Failed to submit. Please try again.')
   } finally {
@@ -655,6 +678,34 @@ const submitAutomateBusiness = async () => {
 @keyframes drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(20px, 30px) scale(1.08); }
+}
+
+/* ---------- Hero entrance sequence ---------- */
+.hero-in {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hero-delay-1 { animation-delay: 0.08s; }
+.hero-delay-2 { animation-delay: 0.16s; }
+.hero-delay-3 { animation-delay: 0.24s; }
+.hero-delay-4 { animation-delay: 0.32s; }
+@keyframes hero-rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.badge-pop {
+  animation: badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both;
+}
+@keyframes badge-pop {
+  0% { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.float-slow { animation: float-slow 6s ease-in-out infinite; }
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
 }
 
 /* ---------- Text gradient ---------- */
@@ -715,20 +766,41 @@ const submitAutomateBusiness = async () => {
 /* ---------- Cards & bento hover ---------- */
 .bento-card { transition: transform 0.35s ease, box-shadow 0.35s ease; }
 .bento-card:hover { transform: translateY(-6px); box-shadow: 0 16px 32px -12px rgba(0, 104, 95, 0.18); }
+.bento-card:hover .feature-icon { transform: scale(1.12) rotate(-4deg); }
+.feature-icon { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
 .avatar-ring {
   background: linear-gradient(135deg, var(--primary), var(--primary-container));
   box-shadow: 0 0 0 3px rgba(0, 104, 95, 0.12);
 }
 
+/* ---------- Trust bar & benefit micro-interactions ---------- */
+.trust-icon { transition: transform 0.3s ease, background-color 0.3s ease; }
+.trust-item:hover .trust-icon { transform: scale(1.1); background-color: rgba(0, 104, 95, 0.18); }
+
+.benefit-item, .offer-item {
+  opacity: 0;
+  transform: translateX(-12px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.benefit-item.reveal-in, .offer-item.reveal-in { opacity: 1; transform: translateX(0); }
+
+.star-pop {
+  display: inline-block;
+  animation: star-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes star-pop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
 /* ---------- Scroll reveal ---------- */
-.reveal-up {
+.reveal-up, .trust-item {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.reveal-up.reveal-in { opacity: 1; transform: translateY(0); }
-.reveal { opacity: 1; }
+.reveal-up.reveal-in, .trust-item.reveal-in { opacity: 1; transform: translateY(0); }
 
 /* ---------- Floating badge bounce ---------- */
 @keyframes bounce-slow {
@@ -881,6 +953,17 @@ const submitAutomateBusiness = async () => {
   background: rgba(0, 104, 95, 0.1);
   color: var(--primary);
   display: flex; align-items: center; justify-content: center;
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .hero-in, .badge-pop, .float-slow, .animate-bounce-slow, .animate-ping-slow,
+  .blob, .reveal-up, .trust-item, .benefit-item, .offer-item, .star-pop {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 </style>
 

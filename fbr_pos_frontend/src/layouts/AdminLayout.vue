@@ -219,6 +219,27 @@
             </li>
           </ul>
         </div>
+
+        <!-- Sales & Leads -->
+        <div>
+          <h3 class="text-xs font-semibold text-teal-200 uppercase tracking-wide mb-3">Sales & Leads</h3>
+          <ul class="space-y-2">
+            <li>
+              <RouterLink
+                to="/admin/leads"
+                :class="['flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-teal-600 transition', isActive('/admin/leads') ? 'bg-teal-600' : '']"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Leads</span>
+                <span v-if="newLeadsCount > 0" class="ml-auto bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                  {{ newLeadsCount }}
+                </span>
+              </RouterLink>
+            </li>
+          </ul>
+        </div>
       </nav>
 
       <!-- Footer -->
@@ -240,9 +261,23 @@
       <!-- Top Bar -->
       <div class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
         <h2 class="text-2xl font-bold text-gray-900">Admin Panel</h2>
-        <button @click="handleLogout" class="px-4 py-2 text-red-600 hover:text-red-700 font-medium">
-          Logout
-        </button>
+        <div class="flex items-center gap-4">
+          <!-- Notification Bell -->
+          <RouterLink to="/admin/leads" class="relative p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span
+              v-if="newLeadsCount > 0"
+              class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full"
+            >
+              {{ newLeadsCount > 9 ? '9+' : newLeadsCount }}
+            </span>
+          </RouterLink>
+          <button @click="handleLogout" class="px-4 py-2 text-red-600 hover:text-red-700 font-medium">
+            Logout
+          </button>
+        </div>
       </div>
 
       <!-- Content -->
@@ -254,12 +289,16 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
+import { publicAPI } from '@/apis/public/publicAPI'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+
+const newLeadsCount = ref(0)
 
 const isActive = (path: string) => {
   return route.path === path
@@ -269,6 +308,22 @@ const handleLogout = async () => {
   await authStore.logout()
   router.push('/login')
 }
+
+// Fetch new (unactioned) leads count for badge
+const fetchLeadsBadge = async () => {
+  try {
+    const res = await publicAPI.getLeadStats()
+    newLeadsCount.value = res.data.new_leads ?? 0
+  } catch {
+    // silently fail — badge simply won't show
+  }
+}
+
+onMounted(() => {
+  fetchLeadsBadge()
+  // Refresh badge every 60 seconds
+  setInterval(fetchLeadsBadge, 60_000)
+})
 </script>
 
 <style scoped>
