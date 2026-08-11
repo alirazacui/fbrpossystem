@@ -43,15 +43,15 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-center gap-2">
           <!-- Validate with FBR (DI or POS) -->
-          <button v-if="(isDraft || isFailedFbr) && !isValidated && hasFbrPermission" @click="validateFbr" :disabled="actionLoading" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50">
+          <button v-if="(isDraft || isFailedFbr) && !isValidated && shouldShowFbrActions" @click="validateFbr" :disabled="actionLoading" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50">
             <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             Validate with FBR
           </button>
           
           <!-- Submit to FBR / Complete Sale -->
           <button v-if="isDraft || isFailedFbr" @click="isDraft ? submitFbr() : retryFbr()" :disabled="actionLoading" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50">
-            <svg v-if="hasFbrPermission" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            {{ hasFbrPermission ? (isFailedFbr ? 'Retry FBR Submission' : 'Submit to FBR') : 'Complete Sale' }}
+            <svg v-if="shouldShowFbrActions" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            {{ shouldShowFbrActions ? (isFailedFbr ? 'Retry FBR Submission' : 'Submit to FBR') : 'Complete Sale' }}
           </button>
           
           <!-- Download / View PDF -->
@@ -399,11 +399,19 @@ const isFinalized = computed(() => sale.value?.status?.toLowerCase() === 'comple
 const isValidated = computed(() => sale.value?.fbr_submission_status?.toLowerCase() === 'validated')
 const isFailedFbr = computed(() => sale.value?.fbr_submission_status?.toLowerCase() === 'failed')
 
-// Check if user has FBR invoicing permission (controls button visibility)
+// Show FBR buttons when the tenant has the FBR module enabled for POS/DI sales.
 const hasFbrPermission = computed(() => {
   const permissions = authStore.user?.permissions || []
-  // Check if user has any fbr_di permission (e.g., fbr_di.create, fbr_di.view, etc.)
   return permissions.some(p => p.startsWith('fbr_di.'))
+})
+
+const shouldShowFbrActions = computed(() => {
+  const businessMode = company.value?.business_mode || []
+  const hasDi = Array.isArray(businessMode) ? businessMode.includes('di') : String(businessMode).includes('di')
+  const hasPos = Array.isArray(businessMode) ? businessMode.includes('pos') : String(businessMode).includes('pos')
+  const moduleEnabled = company.value?.module_fbr_di === true || company.value?.module_fbr_di === 1 || company.value?.module_fbr_di === 'true'
+
+  return moduleEnabled && (hasDi || hasPos)
 })
 
 // Check if company has DI enabled (for API routing in backend)
