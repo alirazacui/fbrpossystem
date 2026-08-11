@@ -265,7 +265,7 @@
       <div v-if="company?.module_fbr_di" class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="px-5 py-4 flex items-center">
           <h2 class="text-sm font-bold text-gray-900">FBR submissions log</h2>
-          <span class="text-gray-400 font-normal text-sm ml-1">({{ mockLogs.length }} roundtrip{{ mockLogs.length !== 1 ? 's' : '' }})</span>
+          <span class="text-gray-400 font-normal text-sm ml-1">({{ submissionLogs.length }} roundtrip{{ submissionLogs.length !== 1 ? 's' : '' }})</span>
         </div>
         <div class="overflow-x-auto border-t border-gray-100">
           <table class="min-w-full divide-y divide-gray-100">
@@ -281,10 +281,10 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
-              <tr v-if="mockLogs.length === 0">
+              <tr v-if="submissionLogs.length === 0">
                 <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500 italic">No FBR logs recorded for this invoice yet.</td>
               </tr>
-              <tr v-else v-for="(log, i) in mockLogs" :key="i" class="hover:bg-gray-50 transition-colors">
+              <tr v-else v-for="(log, i) in submissionLogs" :key="i" class="hover:bg-gray-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">{{ log.when }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">{{ log.endpoint }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -389,6 +389,7 @@ const router = useRouter()
 const saleId = Number(route.params.id)
 const sale = ref<any>(null)
 const company = ref<any>(null)
+const submissionLogs = ref<any[]>([])
 const loading = ref(true)
 const actionLoading = ref(false)
 const showActions = ref(false)
@@ -446,45 +447,32 @@ const closeActions = () => {
   }, 200)
 }
 
-// Mock logs based on state
-const mockLogs = computed(() => {
-  if (!sale.value) return []
-  const logs = []
-  
-  if (isFinalized.value || sale.value.fbr_submission_status === 'SUCCESS') {
-    logs.push({
-      when: new Date(sale.value.fbr_submitted_at || sale.value.updated_at).toLocaleString('en-US'),
-      endpoint: 'postinvoicedata',
-      env: 'production',
-      http: '200',
-      pral: '00',
-      ms: '1104',
-      fbrNo: sale.value.fbr_invoice_number || '3640263516977DIQSGY46850602'
-    })
+const fetchSubmissionLogs = async () => {
+  try {
+    const res = await axiosInstance.get('/reports/fbr-submissions/')
+    submissionLogs.value = (res.data || [])
+      .filter((log: any) => String(log['Sale ID'] || '') === String(saleId))
+      .map((log: any) => ({
+        when: log.Submitted,
+        endpoint: log.Endpoint,
+        env: log.Env,
+        http: String(log.HTTP || ''),
+        pral: String(log.Code || ''),
+        ms: String(log['Latency ms'] || ''),
+        fbrNo: log['FBR invoice'] || log.Error || '',
+      }))
+  } catch (error) {
+    console.warn('Failed to load FBR submission logs', error)
+    submissionLogs.value = []
   }
-  
-  if (isValidated.value || isFinalized.value) {
-    const date = new Date(sale.value.updated_at)
-    date.setSeconds(date.getSeconds() - 7)
-    logs.push({
-      when: date.toLocaleString('en-US'),
-      endpoint: 'validateinvoicedata',
-      env: 'production',
-      http: '200',
-      pral: '00',
-      ms: '976',
-      fbrNo: ''
-    })
-  }
-  
-  return logs
-})
+}
 
 const fetchSale = async () => {
   loading.value = true
   try {
     const res = await salesAPI.retrieve(saleId)
     sale.value = res.data
+    await fetchSubmissionLogs()
   } catch (error) {
     console.error('Error fetching sale details', error)
     alert('Failed to load invoice details')
