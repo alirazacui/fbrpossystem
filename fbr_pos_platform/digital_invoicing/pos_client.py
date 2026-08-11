@@ -23,6 +23,23 @@ from typing import Dict, Optional
 logger = logging.getLogger(__name__)
 
 
+def resolve_pos_endpoint(company: object, is_sandbox: bool = True) -> str:
+    """Return the POS endpoint configured for the requested environment."""
+    if is_sandbox:
+        endpoint = getattr(company, "pos_sandbox_endpoint", "") or ""
+    else:
+        endpoint = getattr(company, "pos_production_endpoint", "") or ""
+
+    if endpoint:
+        return endpoint
+
+    fallback = getattr(company, "pos_sandbox_endpoint", "") or ""
+    if fallback:
+        return fallback
+
+    return "https://gw.fbr.gov.pk/imsp/v1/api/Live/PostData" if not is_sandbox else "https://esp.fbr.gov.pk:8244/FBR/v1/api/Live/PostData"
+
+
 class POSAPIError(Exception):
     """
     FBR POS API error.

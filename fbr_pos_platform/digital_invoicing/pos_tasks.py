@@ -42,7 +42,7 @@ def submit_invoice_to_fbr_pos(self, sale_id: int):
         9. Retry up to 3 times on network errors
     """
     from pos.models import Sale, FBRSubmissionStatus
-    from .pos_client import POSClient, POSAPIError
+    from .pos_client import POSClient, POSAPIError, resolve_pos_endpoint
     from .pos_invoice_builder import POSInvoiceBuilder
     from .submission_utils import should_keep_existing_submission_result
     from django.utils import timezone
@@ -75,18 +75,19 @@ def submit_invoice_to_fbr_pos(self, sale_id: int):
     # ── Get POS credentials ─────────────────────────────────────────
     is_sandbox = True
     
-    # Use production token if available, otherwise sandbox
+    # Use production token if available, otherwise sandbox.
+    # The saved endpoint is resolved from the company settings and applied
+    # consistently for the active environment.
     if company.pos_production_token and company.pos_access_code:
         is_sandbox = False
         token = company.pos_production_token
-        endpoint = company.pos_production_endpoint
     elif company.pos_sandbox_token and company.pos_access_code:
         is_sandbox = True
         token = company.pos_sandbox_token
-        endpoint = company.pos_sandbox_endpoint
     else:
         token = None
-        endpoint = None
+
+    endpoint = resolve_pos_endpoint(company, is_sandbox=is_sandbox) if token else None
 
     if not token or not company.pos_id:
         error_msg = "No POS ID, Access Code, or Token configured."

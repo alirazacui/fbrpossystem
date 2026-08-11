@@ -124,6 +124,10 @@
                 class="block text-blue-600 hover:underline text-left">
                 → https://gw.fbr.gov.pk/imsp/v1/api/Live/PostData &nbsp;<span class="text-green-600 font-semibold">(DI/Production gateway)</span>
               </button>
+              <button type="button" @click="form.pos_sandbox_endpoint = 'https://ims.pral.com.pk/ims/production/api/Live/PostData'"
+                class="block text-blue-600 hover:underline text-left">
+                → https://ims.pral.com.pk/ims/production/api/Live/PostData &nbsp;<span class="text-green-600 font-semibold">(Working PRAL IMS production endpoint)</span>
+              </button>
               <button type="button" @click="form.pos_sandbox_endpoint = 'https://esp.fbr.gov.pk:8244/FBR/v1/api/Live/PostData'"
                 class="block text-blue-600 hover:underline text-left">
                 → https://esp.fbr.gov.pk:8244/FBR/v1/api/Live/PostData &nbsp;<span class="text-gray-400">(Legacy Retail POS sandbox)</span>
@@ -224,6 +228,12 @@ const saveSettings = async () => {
   saving.value = true
   testResult.value = null
   try {
+    const endpoint = (form.value.pos_sandbox_endpoint || form.value.pos_production_endpoint || '').trim()
+    if (endpoint) {
+      form.value.pos_sandbox_endpoint = endpoint
+      form.value.pos_production_endpoint = endpoint
+    }
+
     const payload = {
       pos_id: form.value.pos_id,
       pos_access_code: form.value.pos_access_code,
@@ -255,6 +265,12 @@ const testConnection = async () => {
   testResult.value = null
 
   // Send current form values so the backend can test WITHOUT requiring a save first
+  const endpoint = (form.value.pos_sandbox_endpoint || form.value.pos_production_endpoint || '').trim()
+  if (endpoint) {
+    form.value.pos_sandbox_endpoint = endpoint
+    form.value.pos_production_endpoint = endpoint
+  }
+
   const requestPayload = {
     pos_id: form.value.pos_id,
     token: form.value.pos_sandbox_token,
