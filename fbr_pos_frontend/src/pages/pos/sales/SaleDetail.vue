@@ -84,7 +84,7 @@
       </div>
 
       <!-- FBR Validation Messages -->
-      <div v-if="sale.fbr_submission_status === 'failed'" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md shadow-sm">
+      <div v-if="isFailedFbr && !hasFbrInvoiceNumber" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md shadow-sm">
         <div class="flex items-start">
           <div class="flex-shrink-0 mt-0.5">
             <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -398,6 +398,11 @@ const isDraft = computed(() => sale.value?.status?.toLowerCase() === 'draft')
 const isFinalized = computed(() => sale.value?.status?.toLowerCase() === 'completed')
 const isValidated = computed(() => sale.value?.fbr_submission_status?.toLowerCase() === 'validated')
 const isFailedFbr = computed(() => sale.value?.fbr_submission_status?.toLowerCase() === 'failed')
+const hasFbrInvoiceNumber = computed(() => Boolean(sale.value?.fbr_invoice_number))
+const isFbrSuccessful = computed(() => {
+  const status = sale.value?.fbr_submission_status?.toLowerCase()
+  return status === 'success' || hasFbrInvoiceNumber.value
+})
 
 // Show FBR buttons when the tenant has the FBR module enabled for POS/DI sales.
 const hasFbrPermission = computed(() => {
@@ -427,7 +432,7 @@ const hasPos = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (sale.value?.fbr_submission_status?.toLowerCase() === 'success') return 'Submitted'
+  if (isFbrSuccessful.value) return 'Submitted'
   if (sale.value?.fbr_submission_status?.toLowerCase() === 'failed') return 'Failed'
   if (sale.value?.fbr_submission_status?.toLowerCase() === 'pending') return 'Pending'
   if (isDraft.value && isValidated.value) return 'Validated'

@@ -44,6 +44,7 @@ def submit_invoice_to_fbr_pos(self, sale_id: int):
     from pos.models import Sale, FBRSubmissionStatus
     from .pos_client import POSClient, POSAPIError
     from .pos_invoice_builder import POSInvoiceBuilder
+    from .submission_utils import should_keep_existing_submission_result
     from django.utils import timezone
 
     logger.info(f"[POS Task] Starting submission for Sale ID: {sale_id}")
@@ -244,13 +245,21 @@ def submit_invoice_to_fbr_pos(self, sale_id: int):
             f"[POS Task] FBR POS API error for Sale {sale_id}: "
             f"[{e.error_code}] {e.message}"
         )
-        sale.fbr_submission_status = FBRSubmissionStatus.FAILED
-        sale.fbr_error_code = status_code
-        sale.fbr_error_message = e.message
-        sale.save(update_fields=[
-            "fbr_submission_status", "fbr_error_code",
-            "fbr_error_message", "updated_at"
-        ])
+        if should_keep_existing_submission_result(sale):
+            logger.info(
+                f"[POS Task] Keeping existing successful submission for Sale {sale_id}; ignoring new API error"
+            )
+            sale.fbr_error_code = status_code
+            sale.fbr_error_message = e.message
+            sale.save(update_fields=["fbr_error_code", "fbr_error_message", "updated_at"])
+        else:
+            sale.fbr_submission_status = FBRSubmissionStatus.FAILED
+            sale.fbr_error_code = status_code
+            sale.fbr_error_message = e.message
+            sale.save(update_fields=[
+                "fbr_submission_status", "fbr_error_code",
+                "fbr_error_message", "updated_at"
+            ])
 
         from companies.models import AuditLog
         AuditLog.objects.create(
