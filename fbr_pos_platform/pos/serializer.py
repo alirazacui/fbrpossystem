@@ -224,8 +224,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_tax_rate_percent(self, value):
-        if value == "8%":
-            return "5%"
+        # Both 5% and 8% are valid rates — pass through without remapping.
         return value
  
     def validate_barcode(self, value):
@@ -1237,8 +1236,7 @@ class DebitNoteLineInputSerializer(serializers.Serializer):
         return attrs
 
     def validate_tax_rate_percent(self, value):
-        if value == "8%":
-            return "5%"
+        # Both 5% and 8% are valid rates — pass through without remapping.
         return value
  
  

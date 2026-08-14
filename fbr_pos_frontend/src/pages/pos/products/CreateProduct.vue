@@ -146,8 +146,9 @@
                       <option value="">— None —</option>
                       <option value="18%">Standard 18%</option>
                       <option value="17%">17%</option>
-                      <option value="15%">15%</option>
                       <option value="16%">16%</option>
+                      <option value="15%">15%</option>
+                      <option value="8%">8% — Digital Payment (Restaurant)</option>
                       <option value="5%">Reduced 5%</option>
                       <option value="0%">Zero Rated</option>
                       <option value="Exempt">Exempt</option>
@@ -351,7 +352,8 @@ const selectHS = (code: string) => {
 }
 
 const normalizeTaxRatePercent = (value: string) => {
-  return value === '8%' ? '5%' : value
+  // Both 5% and 8% are valid — pass through without remapping.
+  return value
 }
 
 const handleSave = async () => {

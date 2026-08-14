@@ -147,6 +147,7 @@ class TaxRatePercent(models.TextChoices):
     TWO         = "2%",   _("2%")
     THREE       = "3%",   _("3%")
     FIVE        = "5%",   _("5% — Reduced Rate")
+    EIGHT       = "8%",   _("8% — Digital Payment Reduced Rate (Restaurant)")
     TEN         = "10%",  _("10%")
     TWELVE      = "12%",  _("12%")
     THIRTEEN    = "13%",  _("13%")
@@ -160,9 +161,11 @@ class TaxRatePercent(models.TextChoices):
 
 
 def normalize_tax_rate_percent(value: str) -> str:
-    """Normalize legacy reduced-rate values to the current 5% rate."""
-    if value == "8%":
-        return "5%"
+    """
+    Pass-through utility — returns the tax rate string unchanged.
+    Both 5% (legacy reduced rate) and 8% (digital payment reduced rate)
+    are now first-class values. No remapping is performed.
+    """
     return value
 
 

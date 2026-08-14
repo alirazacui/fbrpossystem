@@ -325,11 +325,34 @@
         <div class="relative inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
           <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Select Payment Method</h3>
           <p class="text-sm text-gray-500 mb-4">How is the customer paying for this invoice?</p>
+
+          <!-- 8% Digital-Only Warning -->
+          <div v-if="has8PctLine" class="mb-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-300 rounded-md">
+            <svg class="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-sm text-amber-800 font-medium">
+              This invoice contains an <strong>8% tax rate</strong> item. FBR only accepts 8% with a digital payment (Card, EasyPaisa, JazzCash, Raast, or Bank Transfer).
+              <strong>Cash is not allowed</strong> and has been disabled.
+            </p>
+          </div>
           
           <div class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar p-1">
-            <label v-if="paymentSettings?.is_cash_enabled" class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="selectedPayment === 'cash' ? 'border-green-500 bg-green-50' : 'border-gray-200'">
-              <input type="radio" v-model="selectedPayment" value="cash" class="sr-only" />
+            <!-- Cash: disabled for 8% invoices -->
+            <label
+              v-if="paymentSettings?.is_cash_enabled"
+              class="flex items-center p-3 border rounded-lg"
+              :class="[
+                has8PctLine
+                  ? 'opacity-40 cursor-not-allowed border-gray-200 bg-gray-50'
+                  : selectedPayment === 'cash'
+                    ? 'border-green-500 bg-green-50 cursor-pointer hover:bg-gray-50'
+                    : 'border-gray-200 cursor-pointer hover:bg-gray-50'
+              ]"
+            >
+              <input type="radio" v-model="selectedPayment" value="cash" :disabled="has8PctLine" class="sr-only" />
               <span class="ml-2 font-medium text-gray-900">Cash</span>
+              <span v-if="has8PctLine" class="ml-auto text-xs text-amber-600 font-semibold">Not allowed for 8%</span>
             </label>
             <label v-if="paymentSettings?.is_card_enabled" class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50" :class="selectedPayment === 'card' ? 'border-green-500 bg-green-50' : 'border-gray-200'">
               <input type="radio" v-model="selectedPayment" value="card" class="sr-only" />
@@ -521,6 +544,11 @@ const executePendingAction = async () => {
 
 const paymentSettings = ref<any>(null)
 const paymentModalOpen = ref(false)
+// True when any line on this invoice carries the 8% digital-payment rate
+const has8PctLine = computed(() => {
+  return (sale.value?.lines || []).some((l: any) => l.tax_rate_percent === '8%')
+})
+
 const selectedPayment = ref('cash')
 
 const getEnabledPaymentMethods = () => {
@@ -539,6 +567,15 @@ const getEnabledPaymentMethods = () => {
 
 const syncSelectedPayment = () => {
   const enabledMethods = getEnabledPaymentMethods()
+  // For 8% invoices, Cash is not FBR-compliant — auto-select first digital method
+  const digitalMethods = ['card', 'easypaisa', 'jazzcash', 'raast', 'bank_transfer', 'cheque']
+  if (has8PctLine.value) {
+    const firstDigital = enabledMethods.find(m => digitalMethods.includes(m))
+    if (firstDigital) {
+      selectedPayment.value = firstDigital
+      return
+    }
+  }
   if (!enabledMethods.includes(selectedPayment.value)) {
     selectedPayment.value = 'cash'
   }

@@ -102,8 +102,9 @@
                     <option value="">— None —</option>
                     <option value="18%">Standard 18%</option>
                     <option value="17%">17%</option>
-                    <option value="15%">15%</option>
                     <option value="16%">16%</option>
+                    <option value="15%">15%</option>
+                    <option value="8%">8% — Digital Payment (Restaurant)</option>
                     <option value="5%">Reduced 5%</option>
                     <option value="0%">Zero Rated</option>
                     <option value="Exempt">Exempt</option>
@@ -393,7 +394,7 @@ const handleUpdate = async () => {
 const normalizeTaxRatePercent = (value: string | number) => {
   const normalized = String(value || '').trim()
   if (!normalized) return ''
-  if (normalized === '8%' || normalized === '8') return '5%'
+  // Both 5% and 8% are valid — pass through without remapping.
   if (normalized === 'Exempt') return 'Exempt'
   return normalized.endsWith('%') ? normalized : `${normalized}%`
 }

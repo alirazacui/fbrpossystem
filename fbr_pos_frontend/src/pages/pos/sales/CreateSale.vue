@@ -504,8 +504,8 @@ const calculateLineTotal = (line: LocalSaleLine) => {
 }
 
 const normalizeTaxRatePercent = (value: string | number) => {
+  // Both 5% and 8% are valid — parse directly without remapping.
   const normalized = String(value)
-  if (normalized === '8%' || normalized === '8') return 5
   return parseFloat(normalized.replace('%', '')) || 0
 }
 
