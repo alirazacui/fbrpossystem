@@ -54,11 +54,66 @@
             {{ shouldShowFbrActions ? (isFailedFbr ? 'Retry FBR Submission' : 'Submit to FBR') : 'Complete Sale' }}
           </button>
           
-          <!-- Download / View PDF -->
-          <button v-if="isFinalized" @click="downloadPdf" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50">
-            <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-            Download
-          </button>
+          <!-- Download Dropdown -->
+          <div v-if="isFinalized" class="relative">
+            <!-- Split button: main label + chevron toggle -->
+            <div class="inline-flex rounded-md shadow-sm">
+              <button
+                @click="downloadA4"
+                :disabled="actionLoading"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-l-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download
+              </button>
+              <button
+                @click="showDownloadMenu = !showDownloadMenu"
+                @blur="closeDownloadMenu"
+                :disabled="actionLoading"
+                class="inline-flex items-center px-2 py-2 border border-l-0 border-gray-300 shadow-sm text-sm font-medium rounded-r-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 focus:outline-none"
+                title="More download options"
+              >
+                <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div
+              v-show="showDownloadMenu"
+              class="origin-top-left absolute left-0 mt-1 w-52 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+            >
+              <div class="py-1">
+                <button
+                  @click.stop="downloadA4"
+                  class="flex w-full items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div class="text-left">
+                    <div class="font-medium">A4 Invoice</div>
+                    <div class="text-xs text-gray-400">Full formal invoice (210×297mm)</div>
+                  </div>
+                </button>
+                <button
+                  @click.stop="downloadThermal"
+                  class="flex w-full items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
+                >
+                  <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  <div class="text-left">
+                    <div class="font-medium">Thermal Receipt</div>
+                    <div class="text-xs text-gray-400">Small receipt (80mm roll paper)</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
           
           <!-- More Actions (...) -->
           <div class="relative">
@@ -67,7 +122,8 @@
             </button>
             <div v-show="showActions" class="origin-top-left absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 focus:outline-none">
               <div class="py-1">
-                <button @click.stop="downloadPdf" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download PDF</button>
+                <button @click.stop="downloadA4" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download A4 Invoice</button>
+                <button @click.stop="downloadThermal" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download Thermal Receipt</button>
                 <button v-if="isDraft" @click.stop="cancelSale" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">Cancel Draft</button>
                 <button v-if="isFinalized" @click.stop="cancelSale" class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 border-t border-gray-100">Mark cancelled on FBR</button>
               </div>
@@ -416,6 +472,7 @@ const submissionLogs = ref<any[]>([])
 const loading = ref(true)
 const actionLoading = ref(false)
 const showActions = ref(false)
+const showDownloadMenu = ref(false)
 const fbrError = ref('')
 
 const isDraft = computed(() => sale.value?.status?.toLowerCase() === 'draft')
@@ -467,6 +524,12 @@ const statusText = computed(() => {
 const closeActions = () => {
   setTimeout(() => {
     showActions.value = false
+  }, 200)
+}
+
+const closeDownloadMenu = () => {
+  setTimeout(() => {
+    showDownloadMenu.value = false
   }, 200)
 }
 
@@ -666,25 +729,46 @@ const cancelSale = () => {
   )
 }
 
-const downloadPdf = async () => {
+/**
+ * Opens a blob-based PDF in a new browser tab.
+ * Also logs the download action to the backend.
+ */
+const _openPdf = async (res: any, logEndpoint: string) => {
+  const file = new Blob([res.data], { type: 'application/pdf' })
+  const fileURL = URL.createObjectURL(file)
+  window.open(fileURL, '_blank')
+  try {
+    await axiosInstance.post(logEndpoint)
+  } catch (logErr) {
+    console.warn('Failed to log download:', logErr)
+  }
+}
+
+const downloadA4 = async () => {
+  showDownloadMenu.value = false
   showActions.value = false
   actionLoading.value = true
   try {
     const res = await salesAPI.printReceipt(saleId)
-    // Create a Blob from the PDF Stream
-    const file = new Blob([res.data], { type: 'application/pdf' })
-    const fileURL = URL.createObjectURL(file)
-    window.open(fileURL, '_blank')
-    
-    // Log the download action
-    try {
-      await axiosInstance.post(`/sales/${saleId}/log_download/`)
-    } catch (logErr) {
-      console.warn('Failed to log download:', logErr)
-    }
+    await _openPdf(res, `/sales/${saleId}/log_download/`)
   } catch (error) {
-    console.error('Failed to download PDF:', error)
-    alert('Failed to load PDF.')
+    console.error('Failed to download A4 PDF:', error)
+    alert('Failed to generate A4 invoice.')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const downloadThermal = async () => {
+  showDownloadMenu.value = false
+  showActions.value = false
+  actionLoading.value = true
+  try {
+    const res = await salesAPI.printThermalReceipt(saleId)
+    await _openPdf(res, `/sales/${saleId}/log_download/`)
+  } catch (error) {
+    console.error('Failed to download thermal receipt:', error)
+    alert('Failed to generate thermal receipt.')
   } finally {
     actionLoading.value = false
   }

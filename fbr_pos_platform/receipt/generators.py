@@ -35,6 +35,7 @@ from reportlab.platypus import (
     TableStyle, HRFlowable, Image,
 )
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 from config.storage_backends import invoice_pdf_upload_path
  
 logger = logging.getLogger(__name__)
@@ -44,24 +45,28 @@ THERMAL_WIDTH  = 80 * mm     # 80mm paper width
 THERMAL_MARGIN = 4 * mm      # small margins for thermal
  
  
-def _generate_qr_image(data: str, size_mm: float = 25) -> io.BytesIO:
+def _generate_qr_image(data: str) -> ImageReader:
     """
-    Generates a QR code image as a BytesIO buffer.
-    Used for FBR invoice QR code on receipts.
+    Generates a QR code image and returns a ReportLab-compatible ImageReader.
+
+    Using ImageReader (not a raw BytesIO) is critical: ReportLab internally
+    seeks back to position 0 when drawing an image, but if the BytesIO
+    position has already advanced the result is a blank/corrupt image.
+    ImageReader caches the pixel data up front, making it safe to reuse.
     """
     qr = qrcode.QRCode(
-        version           = 1,
-        error_correction  = qrcode.constants.ERROR_CORRECT_M,
-        box_size          = 4,
-        border            = 2,
+        version          = 1,
+        error_correction = qrcode.constants.ERROR_CORRECT_M,
+        box_size         = 6,   # higher box_size → crisper image when printed
+        border           = 2,
     )
     qr.add_data(data)
     qr.make(fit=True)
-    img    = qr.make_image(fill_color="black", back_color="white")
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    buffer.seek(0)
-    return buffer
+    pil_img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    pil_img.save(buf, format="PNG")
+    buf.seek(0)
+    return ImageReader(buf)
  
  
 def _s3_path_for_receipt(sale, receipt_type: str) -> str:
@@ -119,7 +124,12 @@ class ThermalReceiptGenerator:
         self.buffer  = io.BytesIO()
  
     def generate(self, force_regenerate: bool = False) -> str:
-    
+        """
+        Builds the thermal receipt PDF.
+        If force_regenerate=True the PDF is always rebuilt so that self.buffer
+        is populated (even when a cached URL already exists).
+        Returns the S3 URL of the stored receipt.
+        """
         if self.sale.receipt_thermal_url and not force_regenerate:
             return self.sale.receipt_thermal_url
 
@@ -133,21 +143,20 @@ class ThermalReceiptGenerator:
             "receipt_thermal_url",
             "receipt_generated_at",
             "updated_at",
-            ])
+        ])
         return url
  
     def _build_pdf(self):
         """Builds the complete thermal receipt using reportlab canvas."""
-        from reportlab.lib.pagesizes import portrait
- 
+
         # Dynamic page height based on content
         estimated_height = self._estimate_height()
         page_size        = (THERMAL_WIDTH, estimated_height)
- 
+
         c = canvas.Canvas(self.buffer, pagesize=page_size)
         width, height = page_size
         y             = height - THERMAL_MARGIN
- 
+
         # ── Helper functions ───────────────────────────────────────────
         def draw_text(text, x, y_pos, font="Helvetica", size=7, align="left"):
             c.setFont(font, size)
@@ -157,67 +166,73 @@ class ThermalReceiptGenerator:
                 c.drawRightString(width - THERMAL_MARGIN, y_pos, text)
             else:
                 c.drawString(x, y_pos, text)
- 
+
         def draw_line(y_pos):
             c.setLineWidth(0.3)
             c.line(THERMAL_MARGIN, y_pos, width - THERMAL_MARGIN, y_pos)
- 
-        def next_line(y_pos, spacing=8):
-            return y_pos - spacing
- 
+
+        # sp(size) = safe baseline-to-baseline gap for a given font size.
+        # Rule: font_size + 4pt breathing room.  Always call AFTER drawing text.
+        def sp(size=7):
+            return size + 4
+
         # ── Company header ─────────────────────────────────────────────
         draw_text(self.company.business_name.upper(), 0, y, "Helvetica-Bold", 10, "center")
-        y = next_line(y, 11)
- 
+        y -= sp(10)
+
         if self.company.address:
-            # wrap long address
             addr = self.company.address[:45]
-            draw_text(addr, 0, y, "Helvetica", 6, "center")
-            y = next_line(y, 8)
- 
+            draw_text(addr, 0, y, "Helvetica", 7, "center")
+            y -= sp(7)
+
         if self.company.phone:
-            draw_text(f"Tel: {self.company.phone}", 0, y, "Helvetica", 6, "center")
-            y = next_line(y, 8)
- 
-        draw_text(f"NTN: {self.company.ntn}", 0, y, "Helvetica", 6, "center")
-        y = next_line(y, 8)
- 
+            draw_text(f"Tel: {self.company.phone}", 0, y, "Helvetica", 7, "center")
+            y -= sp(7)
+
+        draw_text(f"NTN: {self.company.ntn}", 0, y, "Helvetica", 7, "center")
+        y -= sp(7)
+
         if self.company.strn:
-            draw_text(f"STRN: {self.company.strn}", 0, y, "Helvetica", 6, "center")
-            y = next_line(y, 8)
- 
+            draw_text(f"STRN: {self.company.strn}", 0, y, "Helvetica", 7, "center")
+            y -= sp(7)
+
         # ── Separator ──────────────────────────────────────────────────
+        y -= 3          # gap above the line
         draw_line(y)
-        y = next_line(y, 6)
- 
-        # ── Invoice info ───────────────────────────────────────────────
+        y -= 8          # gap below the line
+
+        # ── Invoice type heading ───────────────────────────────────────
         draw_text(self.sale.sale_type.upper(), 0, y, "Helvetica-Bold", 8, "center")
-        y = next_line(y, 10)
- 
+        y -= sp(8)
+
         draw_text(f"Invoice #: {self.sale.sale_number}", THERMAL_MARGIN, y, size=7)
-        y = next_line(y)
- 
-        completed = timezone.localtime(self.sale.completed_at) if self.sale.completed_at else timezone.localtime(timezone.now())
+        y -= sp(7)
+
+        completed = (
+            timezone.localtime(self.sale.completed_at)
+            if self.sale.completed_at
+            else timezone.localtime(timezone.now())
+        )
         draw_text(
             f"Date: {completed.strftime('%d-%b-%Y %I:%M %p')}",
             THERMAL_MARGIN, y, size=7
         )
-        y = next_line(y)
+        y -= sp(7)
 
         if getattr(self.sale, 'delivery_challan_number', None):
             draw_text(
                 f"Delivery Challan: {self.sale.delivery_challan_number}",
-                THERMAL_MARGIN, y, size=6
+                THERMAL_MARGIN, y, size=7
             )
-            y = next_line(y)
- 
+            y -= sp(7)
+
         draw_text(
             f"Cashier: {self.sale.cashier.get_full_name() or self.sale.cashier.email}",
             THERMAL_MARGIN, y, size=7
         )
-        y = next_line(y)
- 
-        # ── Customer / Bill-To ────────────────────────────────────────
+        y -= sp(7)
+
+        # ── Customer / Bill-To ─────────────────────────────────────────
         cust       = self.sale.customer
         cust_name  = getattr(cust, 'name', '') or ''
         cust_ntn   = getattr(cust, 'ntn_cnic', '') or ''
@@ -229,166 +244,172 @@ class ThermalReceiptGenerator:
             or cust_name.strip().lower() in ('walk-in', 'walkin', 'walk in', 'anonymous', 'cash customer', '-')
         )
 
+        y -= 3
         draw_line(y)
-        y = next_line(y, 6)
+        y -= 7
         draw_text("BILL TO", 0, y, "Helvetica-Bold", 7, "center")
-        y = next_line(y, 9)
+        y -= sp(7) + 2   # extra gap after section heading
 
         if is_walkin:
             draw_text("Walk-in Customer", THERMAL_MARGIN, y, "Helvetica-Bold", 7)
-            y = next_line(y)
+            y -= sp(7)
         else:
             if cust_name:
                 draw_text(cust_name, THERMAL_MARGIN, y, "Helvetica-Bold", 7)
-                y = next_line(y)
+                y -= sp(7)
             if cust_ntn:
-                draw_text(f"NTN/CNIC: {cust_ntn}", THERMAL_MARGIN, y, size=6)
-                y = next_line(y, 8)
+                draw_text(f"NTN/CNIC: {cust_ntn}", THERMAL_MARGIN, y, size=7)
+                y -= sp(7)
             if cust_code and cust_code != "0":
-                draw_text(f"Vendor Code: {cust_code}", THERMAL_MARGIN, y, size=6)
-                y = next_line(y, 8)
+                draw_text(f"Vendor Code: {cust_code}", THERMAL_MARGIN, y, size=7)
+                y -= sp(7)
             if cust_email:
-                draw_text(f"Email: {cust_email}", THERMAL_MARGIN, y, size=6)
-                y = next_line(y, 8)
+                draw_text(f"Email: {cust_email}", THERMAL_MARGIN, y, size=7)
+                y -= sp(7)
             if cust_addr:
-                # wrap long address
                 addr_line = cust_addr[:42]
-                draw_text(f"Addr: {addr_line}", THERMAL_MARGIN, y, size=6)
-                y = next_line(y, 8)
- 
-        # ── Separator ──────────────────────────────────────────────────
+                draw_text(f"Addr: {addr_line}", THERMAL_MARGIN, y, size=7)
+                y -= sp(7)
+
+        # ── Items header ───────────────────────────────────────────────
+        y -= 3
         draw_line(y)
-        y = next_line(y, 6)
- 
-        # ── Column headers ─────────────────────────────────────────────
+        y -= 8
+
         c.setFont("Helvetica-Bold", 7)
         c.drawString(THERMAL_MARGIN, y, "Item")
         c.drawRightString(width - THERMAL_MARGIN, y, "Amount")
-        y = next_line(y, 3)
+        y -= sp(7)      # gap below header text before the underline
         draw_line(y)
-        y = next_line(y, 6)
- 
+        y -= 8          # gap below header underline before first item
+
         # ── Line items ─────────────────────────────────────────────────
         for line in self.sale.lines.all():
-            c.setFont("Helvetica", 7)
-            # Product name (truncate if too long)
+            # Row 1: product name (7pt bold)
+            c.setFont("Helvetica-Bold", 7)
             name = line.product_name[:28]
             c.drawString(THERMAL_MARGIN, y, name)
-            y = next_line(y, 8)
- 
-            # Qty × price = total
-            detail = (
-                f"  {line.quantity} × Rs.{line.unit_price}"
-                f"  Tax: Rs.{line.sales_tax_applicable}"
-            )
+            y -= sp(7)
+
+            # Row 2: qty x price | tax  |  line total (right) — 6pt
+            qty    = float(line.quantity)
+            price  = float(line.unit_price)
+            tax    = float(line.sales_tax_applicable)
+            total  = float(line.line_total)
+            detail = f"  {qty:g} x Rs.{price:.2f}  Tax: Rs.{tax:.2f}"
             c.setFont("Helvetica", 6)
             c.drawString(THERMAL_MARGIN, y, detail)
             c.setFont("Helvetica-Bold", 7)
-            c.drawRightString(
-                width - THERMAL_MARGIN, y,
-                f"Rs. {line.line_total:.2f}"
-            )
-            y = next_line(y, 9)
- 
-        # ── Separator ──────────────────────────────────────────────────
+            c.drawRightString(width - THERMAL_MARGIN, y, f"Rs.{total:.2f}")
+            y -= sp(7) + 2   # extra 2pt between items
+
+        # ── Totals section ─────────────────────────────────────────────
+        y -= 3
         draw_line(y)
-        y = next_line(y, 6)
- 
-        # ── Totals ─────────────────────────────────────────────────────
-        def draw_total_row(label, value, bold=False):
+        y -= 8
+
+        def draw_total_row(label, value, bold=False, size=7):
             nonlocal y
             font = "Helvetica-Bold" if bold else "Helvetica"
-            size = 8 if bold else 7
             c.setFont(font, size)
             c.drawString(THERMAL_MARGIN, y, label)
             c.drawRightString(width - THERMAL_MARGIN, y, f"Rs. {value:.2f}")
-            y = next_line(y, 9 if bold else 8)
- 
+            y -= sp(size)
+
         draw_total_row("Subtotal:", float(self.sale.subtotal))
         if float(self.sale.total_discount) > 0:
             draw_total_row("Discount:", float(self.sale.total_discount))
         draw_total_row("Sales Tax:", float(self.sale.total_tax))
         if float(self.sale.total_fed) > 0:
             draw_total_row("FED:", float(self.sale.total_fed))
- 
+
+        # TOTAL row — surrounded by two separator lines
+        y -= 3
         draw_line(y)
-        y = next_line(y, 4)
-        draw_total_row("TOTAL:", float(self.sale.total_amount), bold=True)
+        y -= 9          # room for the 9pt bold TOTAL text
+        draw_total_row("TOTAL:", float(self.sale.total_amount), bold=True, size=9)
+        y -= 3
         draw_line(y)
-        y = next_line(y, 6)
- 
+        y -= 9
+
         # ── Payment breakdown ──────────────────────────────────────────
         for payment in self.sale.payments.all():
             draw_total_row(
                 f"{payment.get_payment_method_display()}:",
                 float(payment.amount)
             )
- 
+
         if float(self.sale.change_given) > 0:
             draw_total_row("Change:", float(self.sale.change_given))
- 
+
         # ── FBR section ────────────────────────────────────────────────
-        # Check if company has FBR enabled (DI or POS)
         business_mode = getattr(self.company, 'business_mode', []) or []
         has_fbr = "di" in business_mode or "pos" in business_mode
-        
+
         if has_fbr and self.sale.fbr_invoice_number:
-            y = next_line(y, 4)
+            y -= 3
             draw_line(y)
-            y = next_line(y, 6)
- 
-            # Determine FBR type for display
-            fbr_type = "FBR"  # Generic for both DI and POS
+            y -= 9
+
+            fbr_type = "FBR"
             if "pos" in business_mode and "di" not in business_mode:
                 fbr_type = "FBR POS"
             elif "di" in business_mode and "pos" not in business_mode:
                 fbr_type = "FBR DI"
-            
-            draw_text(f"{fbr_type} VERIFIED INVOICE", 0, y, "Helvetica-Bold", 7, "center")
-            y = next_line(y, 9)
- 
-            # Wrap long FBR invoice number
+
+            draw_text(f"{fbr_type} VERIFIED INVOICE", 0, y, "Helvetica-Bold", 8, "center")
+            y -= sp(8)
+
+            # FBR invoice number (wrap at 30 chars)
             fbr_no = self.sale.fbr_invoice_number
             if len(fbr_no) > 30:
                 draw_text(fbr_no[:30], 0, y, "Helvetica", 6, "center")
-                y = next_line(y, 8)
+                y -= sp(6)
                 draw_text(fbr_no[30:], 0, y, "Helvetica", 6, "center")
-                y = next_line(y, 8)
+                y -= sp(6)
             else:
                 draw_text(fbr_no, 0, y, "Helvetica", 6, "center")
-                y = next_line(y, 8)
- 
-            # QR Code
+                y -= sp(6)
+
+            # ── QR Code (centered, with label below) ──────────────────
             if self.sale.fbr_qr_code:
-                qr_buffer = _generate_qr_image(self.sale.fbr_qr_code, 25)
-                qr_size   = 25 * mm
+                qr_reader = _generate_qr_image(self.sale.fbr_qr_code)
+                qr_size   = 32 * mm
                 qr_x      = (width - qr_size) / 2
-                y        -= qr_size
+                y -= 4              # gap above QR
+                y -= qr_size        # reserve vertical space for the image
                 c.drawImage(
-                    qr_buffer, qr_x, y,
+                    qr_reader, qr_x, y,
                     width=qr_size, height=qr_size,
+                    preserveAspectRatio=True,
+                    mask='auto',
                 )
-                y = next_line(y, 4)
- 
+                y -= 5              # gap between image and label
+                draw_text("SCAN TO VERIFY  |  FBR Tax Asaan App", 0, y, "Helvetica", 6, "center")
+                y -= sp(6) + 2
+            else:
+                y -= 4
+
         # ── Footer ─────────────────────────────────────────────────────
+        y -= 3
         draw_line(y)
-        y = next_line(y, 6)
-        draw_text("Thank you for your business!", 0, y, "Helvetica", 7, "center")
-        y = next_line(y, 8)
+        y -= 9
+        draw_text("Thank you for your business!", 0, y, "Helvetica-Bold", 8, "center")
+        y -= sp(8)
         draw_text(
             completed.strftime("Printed: %d-%b-%Y %I:%M %p"),
             0, y, "Helvetica", 6, "center"
         )
- 
+
         c.save()
- 
+
     def _estimate_height(self) -> float:
-        """Estimates page height based on number of lines."""
-        base_height  = 185 * mm   # extra room for BILL TO section
-        lines_height = self.sale.lines.count() * 17 * mm
-        qr_height    = 30 * mm if self.sale.fbr_qr_code else 0
+        """Estimates page height based on content (generous to avoid any clipping)."""
+        base_height  = 220 * mm   # header + bill-to + totals + footer
+        lines_height = self.sale.lines.count() * 24 * mm   # 2 sub-rows per item + gap
+        qr_height    = 55 * mm if self.sale.fbr_qr_code else 0
         return base_height + lines_height + qr_height
- 
+
     def _save_to_s3(self, receipt_type: str) -> str:
         """Saves PDF buffer to S3 and returns URL."""
         self.buffer.seek(0)
@@ -841,28 +862,36 @@ class A4InvoiceGenerator:
             ]
             
             if self.sale.fbr_qr_code:
+                # ImageReader keeps pixel data in memory — safe to pass directly
+                # to ReportLab's Image() without risk of an empty-buffer bug.
+                qr_size_mm = 32 * mm
                 _qb2 = _generate_qr_image(self.sale.fbr_qr_code)
                 qr_footer_col = [
-                    Image(_qb2, width=28 * mm, height=28 * mm),
-                    _p("SCAN TO VERIFY", 6, color=MUT, align=TA_CENTER)
+                    Image(_qb2, width=qr_size_mm, height=qr_size_mm,
+                          preserveAspectRatio=True, mask='auto'),
+                    Spacer(1, 1 * mm),
+                    _p("SCAN TO VERIFY", 6, bold=True, color=NAV, align=TA_CENTER),
+                    _p("FBR Tax Asaan App", 6, color=MUT, align=TA_CENTER),
                 ]
+                # QR column: 32mm image + 2×8mm inner padding = 48mm minimum
+                qr_col_w = 48 * mm
                 fbr_footer_content = [[auth_text_col, qr_footer_col]]
-                fbr_col_widths = [width - 35 * mm, 35 * mm]
+                fbr_col_widths = [width - qr_col_w, qr_col_w]
             else:
                 fbr_footer_content = [[auth_text_col]]
                 fbr_col_widths = [width]
 
             fbr_band = Table(fbr_footer_content, colWidths=fbr_col_widths)
             fbr_band.setStyle(TableStyle([
-                ("BACKGROUND",   (0, 0), (-1, -1), LGRAY),
-                ("LEFTPADDING",  (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING",   (0, 0), (-1, -1), 10),
-                ("BOTTOMPADDING",(0, 0), (-1, -1), 10),
-                ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
-                ("ALIGN",        (1, 0), (1, 0),   "CENTER"),
-                ("LINEABOVE",    (0, 0), (-1,  0),  3, NAV),
-                ("BOX",          (0, 0), (-1, -1),  0.5, MGRAY),
+                ("BACKGROUND",    (0, 0), (-1, -1), LGRAY),
+                ("LEFTPADDING",   (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+                ("TOPPADDING",    (0, 0), (-1, -1), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN",         (1, 0), (1,  0),  "CENTER"),
+                ("LINEABOVE",     (0, 0), (-1,  0),  3, NAV),
+                ("BOX",           (0, 0), (-1, -1),  0.5, MGRAY),
             ]))
             story.append(fbr_band)
         else:

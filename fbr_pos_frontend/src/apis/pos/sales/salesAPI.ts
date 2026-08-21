@@ -92,9 +92,13 @@ export const salesAPI = {
   cancel: (id: number) =>
     axiosInstance.post(`/sales/${id}/cancel/`, {}),
 
-  // Print receipt
+  // Print A4 invoice
   printReceipt: (id: number) =>
     axiosInstance.get(`/receipts/${id}/a4/`, { responseType: 'blob' }),
+
+  // Print 80mm thermal receipt
+  printThermalReceipt: (id: number) =>
+    axiosInstance.get(`/receipts/${id}/thermal/`, { responseType: 'blob' }),
 
   // Get sale lines
   getSaleLines: (saleId: number) =>

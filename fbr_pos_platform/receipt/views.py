@@ -1,29 +1,30 @@
-from django.shortcuts import render
-
-# Create your views here.
 """
 ========================================================
 receipts/views.py
 ========================================================
 """
- 
+
+import logging
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status as http_status
 from django.http import HttpResponse
 from common.permissions import IsActiveUser
-from .generators import *
- 
+from .generators import ThermalReceiptGenerator, A4InvoiceGenerator
+
+logger = logging.getLogger(__name__)
+
+
 @api_view(["GET"])
 @permission_classes([IsActiveUser])
 def get_thermal_receipt(request, sale_id):
     """
     GET /api/receipts/{sale_id}/thermal/
- 
-    Returns URL of thermal receipt PDF.
-    Generates if not already generated.
+
+    Generates an 80mm thermal receipt and streams the PDF bytes directly
+    to the browser so it can be opened in a new tab (same pattern as A4).
     """
-    from pos.models import Sale, SaleStatus
+    from pos.models import Sale
     try:
         sale = Sale.objects.get(
             pk      = sale_id,
@@ -31,78 +32,35 @@ def get_thermal_receipt(request, sale_id):
         )
     except Sale.DoesNotExist:
         return Response(
-            {"error": "Sale not found or not completed."},
+            {"error": "Sale not found."},
             status=http_status.HTTP_404_NOT_FOUND,
         )
- 
-    try:
-        generator = ThermalReceiptGenerator(sale)
-        url       = generator.generate()
-        return Response({"url": url, "type": "thermal"})
-    except Exception as e:
-        logger.error(f"Thermal receipt generation failed for sale {sale_id}: {e}")
-        return Response(
-            {"error": f"Receipt generation failed: {str(e)}"},
-            status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
- 
- 
-from django.shortcuts import render
 
-# Create your views here.
-"""
-========================================================
-receipts/views.py
-========================================================
-"""
- 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework import status as http_status
-from django.http import HttpResponse
-from common.permissions import IsActiveUser
-from .generators import *
- 
-@api_view(["GET"])
-@permission_classes([IsActiveUser])
-def get_thermal_receipt(request, sale_id):
-    """
-    GET /api/receipts/{sale_id}/thermal/
- 
-    Returns URL of thermal receipt PDF.
-    Generates if not already generated.
-    """
-    from pos.models import Sale, SaleStatus
-    try:
-        sale = Sale.objects.get(
-            pk      = sale_id,
-            company = request.user.company,
-        )
-    except Sale.DoesNotExist:
-        return Response(
-            {"error": "Sale not found or not completed."},
-            status=http_status.HTTP_404_NOT_FOUND,
-        )
- 
     try:
         generator = ThermalReceiptGenerator(sale)
-        url       = generator.generate()
-        return Response({"url": url, "type": "thermal"})
+        # force_regenerate=True so we always get fresh bytes in the buffer
+        generator.generate(force_regenerate=True)
+        generator.buffer.seek(0)
+        response = HttpResponse(generator.buffer.read(), content_type='application/pdf')
+        response['Content-Disposition'] = (
+            f'inline; filename="receipt_{sale.sale_number or sale.id}_thermal.pdf"'
+        )
+        return response
     except Exception as e:
         logger.error(f"Thermal receipt generation failed for sale {sale_id}: {e}")
         return Response(
             {"error": f"Receipt generation failed: {str(e)}"},
             status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
- 
- 
+
+
 @api_view(["GET"])
 @permission_classes([IsActiveUser])
 def get_a4_invoice(request, sale_id):
     """
     GET /api/receipts/{sale_id}/a4/
- 
-    Returns URL of A4 invoice PDF.
+
+    Generates the full A4 invoice and streams PDF bytes directly to the browser.
     """
     from pos.models import Sale
     try:
@@ -112,22 +70,20 @@ def get_a4_invoice(request, sale_id):
         sale = sale_qs.get()
     except Sale.DoesNotExist:
         return Response(
-            {"error": "Sale not found or not completed."},
+            {"error": "Sale not found."},
             status=http_status.HTTP_404_NOT_FOUND,
         )
- 
+
     try:
         generator = A4InvoiceGenerator(sale)
-        # IMPORTANT: force_regenerate=True.
-        # generate() only fills generator.buffer with PDF bytes when it actually
-        # builds the PDF. If sale.receipt_a4_url was already set from a previous
-        # download, generate() short-circuits and returns the cached URL WITHOUT
-        # touching the buffer — leaving it empty and producing a 0-byte "PDF".
-        # Forcing regeneration guarantees we always have real bytes to send back.
+        # force_regenerate=True ensures the buffer is always populated with fresh bytes
+        # even if a cached URL already exists on the sale record.
         invoice_url = generator.generate(force_regenerate=True)
         generator.buffer.seek(0)
         response = HttpResponse(generator.buffer.read(), content_type='application/pdf')
-        response['Content-Disposition'] = f'inline; filename="invoice_{sale.sale_number or sale.id}.pdf"'
+        response['Content-Disposition'] = (
+            f'inline; filename="invoice_{sale.sale_number or sale.id}.pdf"'
+        )
         response['X-Invoice-URL'] = invoice_url
         return response
     except Exception as e:
