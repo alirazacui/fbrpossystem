@@ -48,11 +48,8 @@ THERMAL_MARGIN = 4 * mm      # small margins for thermal
 def _generate_qr_image(data: str) -> ImageReader:
     """
     Generates a QR code image and returns a ReportLab-compatible ImageReader.
-
-    Using ImageReader (not a raw BytesIO) is critical: ReportLab internally
-    seeks back to position 0 when drawing an image, but if the BytesIO
-    position has already advanced the result is a blank/corrupt image.
-    ImageReader caches the pixel data up front, making it safe to reuse.
+    Used by the canvas API (thermal receipt) — canvas.drawImage() requires
+    an ImageReader so it can safely seek back to position 0 internally.
     """
     qr = qrcode.QRCode(
         version          = 1,
@@ -67,6 +64,27 @@ def _generate_qr_image(data: str) -> ImageReader:
     pil_img.save(buf, format="PNG")
     buf.seek(0)
     return ImageReader(buf)
+
+
+def _generate_qr_buffer(data: str) -> io.BytesIO:
+    """
+    Generates a QR code image and returns a seeked BytesIO.
+    Used by the platypus API (A4 invoice) — platypus.Image() accepts a
+    file path or BytesIO, NOT an ImageReader.
+    """
+    qr = qrcode.QRCode(
+        version          = 1,
+        error_correction = qrcode.constants.ERROR_CORRECT_M,
+        box_size         = 6,
+        border           = 2,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+    pil_img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    pil_img.save(buf, format="PNG")
+    buf.seek(0)
+    return buf
  
  
 def _s3_path_for_receipt(sale, receipt_type: str) -> str:
@@ -865,10 +883,10 @@ class A4InvoiceGenerator:
                 # ImageReader keeps pixel data in memory — safe to pass directly
                 # to ReportLab's Image() without risk of an empty-buffer bug.
                 qr_size_mm = 32 * mm
-                _qb2 = _generate_qr_image(self.sale.fbr_qr_code)
+                _qb2 = _generate_qr_buffer(self.sale.fbr_qr_code)
                 qr_footer_col = [
                     Image(_qb2, width=qr_size_mm, height=qr_size_mm,
-                          preserveAspectRatio=True, mask='auto'),
+                          kind='proportional', mask='auto'),
                     Spacer(1, 1 * mm),
                     _p("SCAN TO VERIFY", 6, bold=True, color=NAV, align=TA_CENTER),
                     _p("FBR Tax Asaan App", 6, color=MUT, align=TA_CENTER),
