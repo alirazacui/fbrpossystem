@@ -70,7 +70,6 @@
           </tbody>
         </table>
       </div>
-      </div>
       
       <!-- Pagination Footer -->
       <div class="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6">
