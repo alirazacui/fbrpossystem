@@ -14,6 +14,13 @@ from common.permissions import IsOwnerOrAdmin, IsClientUser, IsActiveUser
 from .models import *
 from pos.serializer import *
 
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
  
  
 class CategoryViewSet(
@@ -93,6 +100,7 @@ class ProductViewSet(
     adjust_stock PATCH /api/products/{id}/stock/
     """
     permission_classes = [IsActiveUser]
+    pagination_class = StandardResultsSetPagination
  
     def get_queryset(self):
         user = self.request.user
@@ -244,6 +252,7 @@ class CustomerViewSet(
     activate    POST /api/customers/{id}/activate/
     """
     permission_classes = [IsActiveUser]
+    pagination_class = StandardResultsSetPagination
  
     def get_queryset(self):
         user = self.request.user
@@ -1467,13 +1476,7 @@ class DebitNoteViewSet(AuditLogMixin, viewsets.ModelViewSet):
 
 
 from rest_framework import viewsets, filters, permissions
-from rest_framework.pagination import PageNumberPagination
 from companies.mixins import AuditLogMixin
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 50
-    page_size_query_param = 'page_size'
-    max_page_size = 1000
 
  
 class HSCodeViewSet(viewsets.ReadOnlyModelViewSet):
