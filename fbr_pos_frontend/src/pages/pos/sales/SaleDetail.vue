@@ -126,6 +126,7 @@
                 <button @click.stop="downloadThermal" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Download Thermal Receipt</button>
                 <button v-if="isDraft" @click.stop="cancelSale" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">Cancel Draft</button>
                 <button v-if="isFinalized" @click.stop="cancelSale" class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 border-t border-gray-100">Mark cancelled on FBR</button>
+                <button @click.stop="deleteSale" class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 border-t border-gray-100">Permanently Delete</button>
               </div>
             </div>
           </div>
@@ -722,6 +723,27 @@ const cancelSale = () => {
         await fetchSale()
       } catch (error: any) {
         alert(error.response?.data?.message || 'Cancellation failed.')
+      } finally {
+        actionLoading.value = false
+      }
+    }
+  )
+}
+
+const deleteSale = () => {
+  showActions.value = false
+  openConfirm(
+    'Permanently Delete Invoice',
+    'Are you sure you want to permanently delete this invoice? This action cannot be undone and will remove it from the system entirely.',
+    'Delete',
+    'danger',
+    async () => {
+      actionLoading.value = true
+      try {
+        await salesAPI.delete(saleId)
+        router.push('/pos/sales')
+      } catch (error: any) {
+        alert(error.response?.data?.message || error.response?.data?.detail || 'Deletion failed.')
       } finally {
         actionLoading.value = false
       }

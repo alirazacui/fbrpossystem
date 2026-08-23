@@ -400,7 +400,7 @@ const normalizeTaxRatePercent = (value: string | number) => {
 }
 
 const deleteProduct = async () => {
-  const confirmed = await (window as any).$confirm('Are you sure you want to delete this product? This action cannot be undone.')
+  const confirmed = window.confirm('Are you sure you want to delete this product? This action cannot be undone.')
   if (!confirmed) return
 
   try {

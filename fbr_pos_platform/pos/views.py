@@ -82,6 +82,7 @@ class ProductViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     mixins.ListModelMixin,
     GenericViewSet,
 ):
@@ -122,10 +123,10 @@ class ProductViewSet(
  
     def get_permissions(self):
         """
-        create / update / adjust_stock → Owner or Admin only
+        create / update / adjust_stock / destroy → Owner or Admin only
         list / retrieve / search / by_barcode → any active client user
         """
-        if self.action in ["create", "update", "partial_update", "adjust_stock"]:
+        if self.action in ["create", "update", "partial_update", "adjust_stock", "destroy"]:
             return [IsOwnerOrAdmin()]
         return [IsActiveUser()]
     def perform_create(self, serializer):

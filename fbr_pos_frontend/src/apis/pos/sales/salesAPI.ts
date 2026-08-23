@@ -92,6 +92,10 @@ export const salesAPI = {
   cancel: (id: number) =>
     axiosInstance.post(`/sales/${id}/cancel/`, {}),
 
+  // Delete sale completely
+  delete: (id: number) =>
+    axiosInstance.delete(`/sales/${id}/`),
+
   // Print A4 invoice
   printReceipt: (id: number) =>
     axiosInstance.get(`/receipts/${id}/a4/`, { responseType: 'blob' }),
