@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import *
 from .views import SaleReturnViewSet
 from .reports_views import ReportsViewSet
+from .bulk_upload import BulkProductParseView
 
 router = DefaultRouter()
 router.register(r"categories",    CategoryViewSet,    basename="category")
@@ -18,5 +19,7 @@ router.register(r"reports", ReportsViewSet, basename="report")
 
 urlpatterns = [
     path("dashboard/", DashboardStatsView.as_view(), name="dashboard-stats"),
+    # ── Bulk product upload ───────────────────────────────────────────────
+    path("products/parse-bulk/", BulkProductParseView.as_view(), name="product-parse-bulk"),
     path("", include(router.urls)),
 ]

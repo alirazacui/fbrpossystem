@@ -284,6 +284,12 @@ const routes: RouteRecordRaw[] = [
             meta: { requiresAuth: true },
           },
           {
+            path: 'bulk-import',
+            name: 'BulkImportProducts',
+            component: () => import('@/pages/pos/products/BulkImportProducts.vue'),
+            meta: { requiresAuth: true },
+          },
+          {
             path: ':id',
             name: 'ProductDetail',
             component: () => import('@/pages/pos/products/ProductDetail.vue'),

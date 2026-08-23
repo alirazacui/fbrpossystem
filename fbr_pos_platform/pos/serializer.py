@@ -134,7 +134,9 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         required=False,
         help_text="ID of the specific warehouse to add this product to. If omitted, adds to default warehouse."
     )
- 
+    barcode = serializers.CharField(required=False, allow_blank=True)
+    sku = serializers.CharField(required=False, allow_blank=True)
+    
     class Meta:
         model  = Product
         fields = [

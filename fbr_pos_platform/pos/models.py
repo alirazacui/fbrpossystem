@@ -546,17 +546,16 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         """
         Auto-sync hs_code and pct_code to avoid duplicate entry.
-        - hs_code format: XXXX.XXXX (e.g., 2106.9090) for DI
-        - pct_code format: XXXXXXXX (e.g., 21069090) for POS
+        - hs_code is kept exactly as the user typed it.
+        - pct_code is auto-generated for POS by stripping any dots from hs_code.
         """
-        # If hs_code is set but pct_code is empty, auto-generate pct_code from hs_code
         if self.hs_code and not self.pct_code:
             self.pct_code = self.hs_code.replace(".", "")
         
-        # If pct_code is set but hs_code is empty, auto-generate hs_code from pct_code
         elif self.pct_code and not self.hs_code:
-            if len(self.pct_code) >= 4:
-                self.hs_code = f"{self.pct_code[:4]}.{self.pct_code[4:]}"
+            # Do not force a dot. Just copy the pct_code over.
+            # If the user wants a dot, they must provide it.
+            self.hs_code = self.pct_code
         
         super().save(*args, **kwargs)
 

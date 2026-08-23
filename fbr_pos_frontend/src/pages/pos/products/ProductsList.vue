@@ -3,9 +3,10 @@
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Products</h1>
       <div class="flex gap-3">
-        <button class="px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-md text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm">
-          Import CSV
-        </button>
+        <RouterLink to="/pos/products/bulk-import" class="px-4 py-2 border border-teal-600 text-teal-600 bg-white rounded-md text-sm font-semibold hover:bg-teal-50 transition-colors shadow-sm flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Bulk Import
+        </RouterLink>
         <RouterLink to="/pos/products/create" class="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-semibold hover:bg-teal-700 transition-colors shadow-sm flex items-center">
           New product
         </RouterLink>
