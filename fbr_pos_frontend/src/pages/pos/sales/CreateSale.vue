@@ -394,8 +394,8 @@ const globalDiscount = ref<number>(0)
 const fetchData = async () => {
   try {
     const [custRes, prodRes] = await Promise.all([
-      customersAPI.list({ limit: 100 }),
-      productsAPI.list({ limit: 100 })
+      customersAPI.list({ limit: 1000, page_size: 1000 }),
+      productsAPI.list({ limit: 1000, page_size: 1000 })
     ])
     customers.value = custRes.data.results || custRes.data
     products.value = prodRes.data.results || prodRes.data

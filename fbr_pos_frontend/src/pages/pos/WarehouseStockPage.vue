@@ -70,6 +70,54 @@
           </tbody>
         </table>
       </div>
+      </div>
+      
+      <!-- Pagination Footer -->
+      <div class="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6">
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p class="text-sm text-gray-700">
+              Showing <span class="font-medium">{{ startIndex }}</span>–<span class="font-medium">{{ endIndex }}</span> of <span class="font-medium">{{ totalCount }}</span>
+            </p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-700">Rows</span>
+              <select v-model="pageSize" @change="handlePageSizeChange" class="border-gray-300 rounded-md text-sm py-1 pl-2 pr-6 focus:ring-teal-500 focus:border-teal-500">
+                <option :value="20">20</option>
+                <option :value="50">50</option>
+                <option :value="100">100</option>
+              </select>
+            </div>
+            <div>
+              <p class="text-sm text-gray-700">Page {{ currentPage }} of {{ totalPages }}</p>
+            </div>
+            
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <button 
+                @click="goToPage(currentPage - 1)" 
+                :disabled="currentPage <= 1"
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span class="sr-only">Previous</span>
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button 
+                @click="goToPage(currentPage + 1)" 
+                :disabled="currentPage >= totalPages"
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span class="sr-only">Next</span>
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Adjust Stock Modal -->
@@ -158,7 +206,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { warehouseStockAPI, type WarehouseStock } from '@/apis/tenant/warehouseStockAPI'
 import { warehousesAPI, type Warehouse } from '@/apis/tenant/warehousesAPI'
 import { productsAPI, type Product } from '@/apis/pos/products/productsAPI'
@@ -169,6 +217,24 @@ const error = ref('')
 const stocks = ref<WarehouseStock[]>([])
 const warehouses = ref<Warehouse[]>([])
 const selectedWarehouse = ref('')
+
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalCount = ref(0)
+
+const totalPages = computed(() => {
+  return Math.ceil(totalCount.value / pageSize.value) || 1
+})
+
+const startIndex = computed(() => {
+  if (stocks.value.length === 0) return 0
+  return (currentPage.value - 1) * pageSize.value + 1
+})
+
+const endIndex = computed(() => {
+  const end = currentPage.value * pageSize.value
+  return end > totalCount.value ? totalCount.value : end
+})
 
 const isModalOpen = ref(false)
 const activeStock = ref<WarehouseStock | null>(null)
@@ -183,23 +249,37 @@ const assignForm = ref({
   quantity: 0
 })
 
-const fetchStock = async () => {
+const fetchStock = async (page = 1) => {
   loading.value = true
   error.value = ''
   try {
-    const params = selectedWarehouse.value ? { warehouse: selectedWarehouse.value } : {}
-    // Filter on frontend for simplicity if backend doesn't support ?warehouse= filter out of the box
-    const res = await warehouseStockAPI.getAll()
-    let data = res.data.results || res.data
-    if (selectedWarehouse.value) {
-      data = data.filter((s: WarehouseStock) => s.warehouse.toString() === selectedWarehouse.value.toString())
+    const params: Record<string, any> = {
+      page: page,
+      page_size: pageSize.value
     }
-    stocks.value = data
+    if (selectedWarehouse.value) {
+      params.warehouse = selectedWarehouse.value
+    }
+    
+    const res = await warehouseStockAPI.getAll(params)
+    stocks.value = res.data.results || res.data
+    totalCount.value = res.data.count || stocks.value.length
+    currentPage.value = page
   } catch (err: any) {
     console.error("Failed to fetch stock", err)
     error.value = err.response?.data?.detail || 'Failed to load stock data.'
   } finally {
     loading.value = false
+  }
+}
+
+const handlePageSizeChange = () => {
+  fetchStock(1)
+}
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    fetchStock(page)
   }
 }
 
