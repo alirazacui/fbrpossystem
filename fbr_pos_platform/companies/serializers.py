@@ -292,10 +292,9 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     def validate_ntn(self, value):
         """NTN: preserve dash format for check digit."""
         cleaned = value.replace("-", "").strip()
-        if not cleaned.isdigit():
-            raise serializers.ValidationError(
-                "NTN must contain digits only."
-            )
+        # Removed isdigit() check to allow alphanumeric NTNs (e.g. for PRA/special FBR clients)
+        if not cleaned:
+            raise serializers.ValidationError("NTN cannot be empty.")
         return value  # keep original formatted value with dash
 
     def validate_owner_cnic(self, value):
