@@ -81,13 +81,13 @@
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           </div>
-          <input type="text" v-model="filters.search" @input="fetchSales" placeholder="Invoice #, FBR #, or buyer name" class="block w-full pl-9 py-2 sm:text-sm border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+          <input type="text" v-model="filters.search" @input="handleFiltersChange" placeholder="Invoice #, FBR #, or buyer name" class="block w-full pl-9 py-2 sm:text-sm border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
         </div>
       </div>
       
       <div class="col-span-1">
         <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
-        <select v-model="filters.status" @change="fetchSales" class="block w-full py-2 px-3 border border-gray-300 bg-gray-50 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+        <select v-model="filters.status" @change="handleFiltersChange" class="block w-full py-2 px-3 border border-gray-300 bg-gray-50 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
           <option value="">All statuses</option>
           <option value="DRAFT">Draft</option>
           <option value="COMPLETED">Finalized</option>
@@ -97,19 +97,19 @@
 
       <div class="col-span-1">
         <label class="block text-xs font-medium text-gray-700 mb-1">Branch</label>
-        <select v-model="filters.branch" @change="fetchSales" class="block w-full py-2 px-3 border border-gray-300 bg-gray-50 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm text-gray-500">
+        <select v-model="filters.branch" @change="handleFiltersChange" class="block w-full py-2 px-3 border border-gray-300 bg-gray-50 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm text-gray-500">
           <option value="">All branches</option>
         </select>
       </div>
 
       <div class="col-span-1">
         <label class="block text-xs font-medium text-gray-700 mb-1">From</label>
-        <input type="date" v-model="filters.dateFrom" @change="fetchSales" class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+        <input type="date" v-model="filters.dateFrom" @change="handleFiltersChange" class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
       </div>
       
       <div class="col-span-1">
         <label class="block text-xs font-medium text-gray-700 mb-1">To</label>
-        <input type="date" v-model="filters.dateTo" @change="fetchSales" class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+        <input type="date" v-model="filters.dateTo" @change="handleFiltersChange" class="block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
       </div>
     </div>
 
@@ -194,17 +194,36 @@
       </div>
       
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-100 bg-white flex items-center justify-between">
+      <div class="px-6 py-4 border-t border-gray-100 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <span class="text-sm text-gray-500">
-          Showing {{ sales.length }} of {{ totalCount }} invoices.
+          Showing {{ startIndex }} to {{ endIndex }} of {{ totalCount }} invoices.
         </span>
+        <div class="flex items-center gap-3">
+          <button
+            @click="goToPage(currentPage - 1)"
+            :disabled="currentPage <= 1 || loading"
+            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span class="text-sm text-gray-600 font-medium">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+          <button
+            @click="goToPage(currentPage + 1)"
+            :disabled="currentPage >= totalPages || loading"
+            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { computed, ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { salesAPI, type Sale } from '@/apis/pos/sales/salesAPI'
 
@@ -212,6 +231,11 @@ const router = useRouter()
 const sales = ref<any[]>([])
 const loading = ref(true)
 const totalCount = ref(0)
+const currentPage = ref(1)
+const pageSize = 20
+const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize)))
+const startIndex = computed(() => (totalCount.value === 0 ? 0 : ((currentPage.value - 1) * pageSize) + 1))
+const endIndex = computed(() => Math.min(currentPage.value * pageSize, totalCount.value))
 
 const filters = reactive({
   search: '',
@@ -232,20 +256,23 @@ const stats = reactive({
 
 let searchTimeout: any = null
 
-const fetchSales = () => {
+const fetchSales = (page = currentPage.value) => {
   if (searchTimeout) clearTimeout(searchTimeout)
   
   searchTimeout = setTimeout(async () => {
     loading.value = true
     try {
-      const params: Record<string, any> = { limit: 100 }
+      const params: Record<string, any> = { page, page_size: pageSize }
       if (filters.search) params.search = filters.search
       if (filters.status) params.status = filters.status
-      // NOTE: backend needs support for these specific filters if used
+      if (filters.branch) params.branch_id = filters.branch
+      if (filters.dateFrom) params.date_from = filters.dateFrom
+      if (filters.dateTo) params.date_to = filters.dateTo
       
       const res = await salesAPI.list(params)
       sales.value = res.data.results || res.data || []
       totalCount.value = res.data.count || sales.value.length
+      currentPage.value = page
       
       // Calculate dashboard stats based on loaded data (for now)
       calculateStats()
@@ -256,6 +283,17 @@ const fetchSales = () => {
       loading.value = false
     }
   }, 300)
+}
+
+const handleFiltersChange = () => {
+  currentPage.value = 1
+  fetchSales(1)
+}
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value && page !== currentPage.value) {
+    fetchSales(page)
+  }
 }
 
 const calculateStats = () => {
