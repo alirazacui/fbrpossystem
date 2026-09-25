@@ -90,7 +90,7 @@ class UnitOfMeasure(models.TextChoices):
     METRE          = "Metre",                 _("Metre")
     METRIC_TON     = "Metric Ton",            _("Metric Ton")
     MMBTU          = "Million BTU (MMBTU)",   _("Million BTU (MMBTU)")
-    PACK           = "Pack",                  _("Pack / Packet")
+    PACK           = "Packs",                  _("Pack / Packet")
     PAIR           = "Pair",                  _("Pair")
     PALLET         = "Pallet",                _("Pallet")
     PIECE          = "Piece",                 _("Piece")

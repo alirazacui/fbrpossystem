@@ -160,10 +160,10 @@ UOM_ALIASES = {
     "pairs": "Pair",
     "set": "Set",
     "sets": "Set",
-    "pack": "Pack",
-    "packs": "Pack",
-    "packet": "Pack",
-    "packets": "Pack",
+    "pack": "Packs",
+    "packs": "Packs",
+    "packet": "Packs",
+    "packets": "Packs",
     "roll": "Roll",
     "rolls": "Roll",
     "sheet": "Sheet",
@@ -193,7 +193,7 @@ VALID_UOM = {
     "Bill of Lading", "Bottle", "Box", "Bundle", "Carat", "Carton", "Case",
     "Cubic Metre", "Dozen", "Drum", "Foot", "Gallon", "Gram", "Inch", "KG",
     "KWH", "Litre", "Mega Watt (MW)", "Metre", "Metric Ton",
-    "Million BTU (MMBTU)", "Pack", "Pair", "Pallet", "Piece", "Roll",
+    "Million BTU (MMBTU)", "Packs", "Pair", "Pallet", "Piece", "Roll",
     "Set", "Sheet", "Service", "Square Foot", "Square Metre", "Ton", "Tube", "Yard",
 }
 
