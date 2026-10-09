@@ -52,13 +52,18 @@
               <button @click="scrollToAutomate" class="btn-shine bg-primary text-on-primary px-8 py-4 rounded-xl font-title-md text-title-md shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
                 Automate Your Business
               </button>
-              <button class="group flex items-center justify-center gap-2 border-2 border-primary text-primary px-8 py-4 rounded-xl font-title-md text-title-md hover:bg-primary/5 transition-colors">
+              <a
+                href="https://www.youtube.com/watch?v=EdWNkhsd9CY"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center justify-center gap-2 border-2 border-primary text-primary px-8 py-4 rounded-xl font-title-md text-title-md hover:bg-primary/5 transition-colors"
+              >
                 <span class="relative flex items-center justify-center w-6 h-6">
                   <span class="absolute inline-flex h-full w-full rounded-full bg-primary/20 group-hover:animate-ping-slow"></span>
                   <span class="material-symbols-outlined relative text-2xl">play_circle</span>
                 </span>
                 Watch Demo
-              </button>
+              </a>
             </div>
           </div>
 
