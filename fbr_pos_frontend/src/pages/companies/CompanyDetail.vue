@@ -118,6 +118,15 @@
               <p class="font-medium text-gray-900">{{ company.ntn || 'N/A' }}</p>
             </div>
             <div>
+              <p class="text-gray-500 mb-1">Client Type</p>
+              <span
+                :class="company.client_type === 'pra' ? 'bg-indigo-100 text-indigo-800' : 'bg-teal-100 text-teal-800'"
+                class="px-2 py-1 rounded text-xs font-semibold uppercase tracking-wide"
+              >
+                {{ company.client_type === 'pra' ? 'PRA Client' : 'FBR Client' }}
+              </span>
+            </div>
+            <div>
               <p class="text-gray-500 mb-1">Address</p>
               <p class="font-medium text-gray-900">{{ company.address || 'N/A' }}</p>
             </div>

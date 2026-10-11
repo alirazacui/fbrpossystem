@@ -2,7 +2,32 @@ from types import SimpleNamespace
 
 from django.test import TestCase
 
+from companies.models import Company
+from companies.serializers import CompanyDetailSerializer
 from digital_invoicing.pos_client import resolve_pos_endpoint
+
+
+class CompanyClientTypeSerializerTests(TestCase):
+    def test_client_type_is_updatable_via_serializer(self):
+        company = Company.objects.create(
+            business_name="Test Business",
+            ntn="1234567",
+            owner_cnic="12345-6789012-3",
+            address="Main Street",
+            client_type="fbr",
+        )
+
+        serializer = CompanyDetailSerializer(
+            company,
+            data={"client_type": "pra"},
+            partial=True,
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+        company.refresh_from_db()
+        self.assertEqual(company.client_type, "pra")
 
 
 class ResolvePosEndpointTests(TestCase):

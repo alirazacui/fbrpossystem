@@ -56,6 +56,7 @@ class CompanyAdmin(admin.ModelAdmin):
 
         ("FBR / Regulatory", {
             "fields": (
+                "client_type",
                 "business_mode",
                 "fbr_business_nature",
                 "fbr_sector",

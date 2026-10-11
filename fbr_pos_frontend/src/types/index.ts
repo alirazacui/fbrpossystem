@@ -22,6 +22,7 @@ export interface Company {
   business_name: string
   ntn: string
   address: string
+  client_type?: 'fbr' | 'pra'
   logo_url?: string
   fbr_sector: string
   business_nature: string

@@ -108,6 +108,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
             "id",
             "business_name",
             "ntn",
+            "client_type",
             "vertical",
             "subscription_plan",
             "subscription_status",
@@ -157,6 +158,7 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             "tenant_owner_confirm_password",
 
             # ── FBR / regulatory ───────────────────────────
+            "client_type",
             "business_mode",
             "fbr_business_nature",
             "fbr_sector",

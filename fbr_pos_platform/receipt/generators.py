@@ -96,6 +96,37 @@ def _s3_path_for_receipt(sale, receipt_type: str) -> str:
     if receipt_type == "a4":
         return base_path
     return base_path.replace(".pdf", f"_{receipt_type}.pdf")
+
+
+def _invoice_reference_type(company) -> str:
+    """
+    Returns the invoice header reference label for a tenant.
+    Explicit client_type wins; old records fallback to business_mode/endpoint hints.
+    """
+    client_type = getattr(company, "client_type", None)
+    if client_type:
+        return str(client_type).upper()
+
+    mode = str(getattr(company, "business_mode", "") or "").lower()
+    if "di" in mode:
+        return "FBR"
+    if "pos" in mode and "di" in mode:
+        return "PRA"
+
+    endpoint_values = [
+        getattr(company, "fbr_sandbox_endpoint", ""),
+        getattr(company, "fbr_production_endpoint", ""),
+        getattr(company, "pos_sandbox_endpoint", ""),
+        getattr(company, "pos_production_endpoint", ""),
+    ]
+    joined = " ".join(str(value or "") for value in endpoint_values).lower()
+    if "pral" in joined or "ims.pral.com.pk" in joined:
+        return "PRA"
+    return "FBR"
+
+
+def _invoice_reference_label(company) -> str:
+    return f"{_invoice_reference_type(company)} Invoice Number"
  
  
 # ===========================================================================
@@ -360,7 +391,7 @@ class ThermalReceiptGenerator:
         if float(self.sale.change_given) > 0:
             draw_total_row("Change:", float(self.sale.change_given))
 
-        # ── FBR section ────────────────────────────────────────────────
+        # ── FBR / PRA section ──────────────────────────────────────────
         business_mode = getattr(self.company, 'business_mode', []) or []
         has_fbr = "di" in business_mode or "pos" in business_mode
 
@@ -369,16 +400,11 @@ class ThermalReceiptGenerator:
             draw_line(y)
             y -= 9
 
-            fbr_type = "FBR"
-            if "pos" in business_mode and "di" not in business_mode:
-                fbr_type = "FBR POS"
-            elif "di" in business_mode and "pos" not in business_mode:
-                fbr_type = "FBR DI"
-
-            draw_text(f"{fbr_type} VERIFIED INVOICE", 0, y, "Helvetica-Bold", 8, "center")
+            ref_type = _invoice_reference_type(self.company)
+            draw_text(f"{ref_type} VERIFIED INVOICE", 0, y, "Helvetica-Bold", 8, "center")
             y -= sp(8)
 
-            # FBR invoice number (wrap at 30 chars)
+            # Invoice number (wrap at 30 chars)
             fbr_no = self.sale.fbr_invoice_number
             if len(fbr_no) > 30:
                 draw_text(fbr_no[:30], 0, y, "Helvetica", 6, "center")
@@ -610,7 +636,8 @@ class A4InvoiceGenerator:
 
         # C) Meta Box (Bordered panel)
         validated = bool(self.sale.fbr_invoice_number)
-        status_txt   = "FBR VALIDATED" if validated else "PENDING SUBMISSION"
+        invoice_ref_type = _invoice_reference_type(self.company)
+        status_txt = f"{invoice_ref_type} VALIDATED" if validated else "PENDING SUBMISSION"
         status_color = GRN if validated else MUT
 
         meta_rows = [
@@ -620,7 +647,7 @@ class A4InvoiceGenerator:
         if getattr(self.sale, 'delivery_challan_number', None):
             meta_rows.append([_p("Delivery Challan", 8, color=MUT), _p(f"<b>{self.sale.delivery_challan_number}</b>", 7, color=NAV)])
         if validated:
-            meta_rows.append([_p("FBR Inv", 8, color=MUT), _p(f"<b>{self.sale.fbr_invoice_number}</b>", 7, color=GRN)])
+            meta_rows.append([_p(_invoice_reference_label(self.company), 8, color=MUT), _p(f"<b>{self.sale.fbr_invoice_number}</b>", 7, color=GRN)])
         meta_rows.append([_p("Status", 8, color=MUT), _p(f"● {status_txt}", 7, bold=True, color=status_color)])
 
         meta_table = Table(meta_rows, colWidths=[width * 0.15, width * 0.25])

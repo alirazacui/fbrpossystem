@@ -57,6 +57,11 @@ class BusinessMode(models.TextChoices):
     BOTH     = "both",     _("POS + Digital Invoicing")
 
 
+class ClientType(models.TextChoices):
+    FBR = "fbr", _("FBR Client")
+    PRA = "pra", _("PRA Client")
+
+
 class FBRBusinessNature(models.TextChoices):
     """
     Matches IRIS checkboxes exactly (screenshot 2).
@@ -225,6 +230,17 @@ class Company(models.Model):
     # ------------------------------------------------------------------
     # 2. FBR / regulatory info
     # ------------------------------------------------------------------
+
+    client_type = models.CharField(
+        max_length=20,
+        choices=ClientType.choices,
+        default=ClientType.FBR,
+        verbose_name=_("Client Type"),
+        help_text=_(
+            "Choose whether this tenant is an FBR client or a PRA client. "
+            "This label controls the wording on generated invoice headers."
+        ),
+    )
 
     business_mode = models.CharField(
         max_length=20,

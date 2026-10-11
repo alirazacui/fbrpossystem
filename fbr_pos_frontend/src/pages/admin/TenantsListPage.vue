@@ -137,6 +137,7 @@
           <tr>
             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Business Name</th>
             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">NTN</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Client Type</th>
             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Owner</th>
             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Plan</th>
             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
@@ -159,6 +160,14 @@
               </div>
             </td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ company.ntn }}</td>
+            <td class="px-6 py-4 text-sm">
+              <span
+                :class="company.client_type === 'pra' ? 'bg-indigo-100 text-indigo-800' : 'bg-teal-100 text-teal-800'"
+                class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+              >
+                {{ company.client_type === 'pra' ? 'PRA' : 'FBR' }}
+              </span>
+            </td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ company.owner_email || '-' }}</td>
             <td class="px-6 py-4 text-sm">
               <span :class="getPlanBadgeClass(company.subscription_plan)">
