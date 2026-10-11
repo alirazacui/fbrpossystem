@@ -153,7 +153,8 @@
                 <input
                   type="checkbox"
                   :checked="selectedSaleIds.length > 0 && sales.length > 0 && sales.every(sale => selectedSaleIds.includes(sale.id))"
-                  @click.stop.prevent="toggleSelectAllVisible"
+                  @click.stop
+                  @change.stop="toggleSelectAllVisible"
                   class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
               </th>
@@ -188,7 +189,8 @@
                 <input
                   type="checkbox"
                   :checked="selectedSaleIds.includes(sale.id)"
-                  @click.stop.prevent="toggleSaleSelection(sale.id)"
+                  @click.stop
+                  @change.stop="toggleSaleSelection(sale.id)"
                   class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
               </td>
