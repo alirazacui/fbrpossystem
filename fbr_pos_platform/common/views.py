@@ -241,6 +241,49 @@ class AdminInvoicesView(APIView):
         return Response(invoices_list)
 
 
+class AdminBulkInvoiceRegenerationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        sale_ids = request.data.get("sale_ids")
+        include_thermal = request.data.get("include_thermal", True)
+        include_a4 = request.data.get("include_a4", True)
+
+        if not isinstance(sale_ids, list) or not sale_ids:
+            return Response({"error": "sale_ids must be a non-empty list."}, status=400)
+
+        if not all(isinstance(sale_id, int) for sale_id in sale_ids):
+            return Response({"error": "sale_ids must contain integers only."}, status=400)
+
+        user = request.user
+        if user.is_platform_admin:
+            allowed_sale_ids = list(sale_ids)
+        elif user.is_client_user and user.company_id is not None:
+            allowed_sale_ids = list(
+                Sale.objects.filter(id__in=sale_ids, company_id=user.company_id).values_list("id", flat=True)
+            )
+        else:
+            return Response({"error": "You do not have access to regenerate these invoices."}, status=403)
+
+        if not allowed_sale_ids:
+            return Response({"error": "No valid invoices were found for your company."}, status=404)
+
+        from receipt.tasks import bulk_regenerate_invoice_documents
+        task = bulk_regenerate_invoice_documents.delay(
+            allowed_sale_ids,
+            include_thermal=bool(include_thermal),
+            include_a4=bool(include_a4),
+        )
+
+        return Response({
+            "message": "Bulk invoice regeneration queued successfully.",
+            "task_id": task.id,
+            "sale_count": len(allowed_sale_ids),
+            "include_thermal": bool(include_thermal),
+            "include_a4": bool(include_a4),
+        }, status=202)
+
+
 class AdminInvoiceDocumentView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 

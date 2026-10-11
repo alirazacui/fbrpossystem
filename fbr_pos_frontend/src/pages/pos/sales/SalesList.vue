@@ -6,7 +6,15 @@
         <h1 class="text-3xl font-black text-gray-900 tracking-tight">Invoices</h1>
         <p class="text-sm text-gray-500 mt-1">FBR Digital Invoicing &mdash; track every invoice across its lifecycle.</p>
       </div>
-      <div class="mt-4 sm:mt-0 flex justify-end w-full sm:w-auto">
+      <div class="mt-4 sm:mt-0 flex justify-end gap-2 w-full sm:w-auto">
+        <button
+          v-if="selectedSaleIds.length"
+          :disabled="bulkRegenerating"
+          @click.stop="bulkRegenerateSelected"
+          class="inline-flex items-center px-4 py-2 border border-teal-600 text-sm font-semibold rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ bulkRegenerating ? 'Regenerating...' : `Regenerate selected (${selectedSaleIds.length})` }}
+        </button>
         <RouterLink to="/pos/sales/new" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
           <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -119,6 +127,15 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50/80">
             <tr>
+              <th scope="col" class="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  :checked="selectedSaleIds.length > 0 && sales.length > 0 && sales.every(sale => selectedSaleIds.includes(sale.id))"
+                  @click.stop="toggleSelectAllVisible"
+                  @change="toggleSelectAllVisible"
+                  class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+              </th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Invoice #</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">FBR #</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</th>
@@ -146,6 +163,15 @@
               </td>
             </tr>
             <tr v-else v-for="sale in sales" :key="sale.id" @click="router.push(`/pos/sales/${sale.id}`)" class="hover:bg-gray-50 cursor-pointer transition-colors">
+              <td class="px-4 py-4 whitespace-nowrap" @click.stop>
+                <input
+                  type="checkbox"
+                  :checked="selectedSaleIds.includes(sale.id)"
+                  @click.stop="toggleSaleSelection(sale.id)"
+                  @change="toggleSaleSelection(sale.id)"
+                  class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+              </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="sale.status === 'draft' ? 'text-green-600' : 'text-gray-900'" class="text-sm font-medium">{{ sale.sale_number || '—' }}</span>
               </td>
@@ -230,6 +256,8 @@ import { salesAPI, type Sale } from '@/apis/pos/sales/salesAPI'
 const router = useRouter()
 const sales = ref<any[]>([])
 const loading = ref(true)
+const selectedSaleIds = ref<number[]>([])
+const bulkRegenerating = ref(false)
 const totalCount = ref(0)
 const currentPage = ref(1)
 const pageSize = 20
@@ -283,6 +311,41 @@ const fetchSales = (page = currentPage.value) => {
       loading.value = false
     }
   }, 300)
+}
+
+const toggleSaleSelection = (saleId: number) => {
+  if (selectedSaleIds.value.includes(saleId)) {
+    selectedSaleIds.value = selectedSaleIds.value.filter(id => id !== saleId)
+  } else {
+    selectedSaleIds.value = [...selectedSaleIds.value, saleId]
+  }
+}
+
+const toggleSelectAllVisible = () => {
+  const visibleIds = sales.value.map(sale => sale.id)
+  const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedSaleIds.value.includes(id))
+
+  if (allSelected) {
+    selectedSaleIds.value = selectedSaleIds.value.filter(id => !visibleIds.includes(id))
+  } else {
+    selectedSaleIds.value = [...new Set([...selectedSaleIds.value, ...visibleIds])]
+  }
+}
+
+const bulkRegenerateSelected = async () => {
+  if (!selectedSaleIds.value.length) return
+
+  try {
+    bulkRegenerating.value = true
+    const res = await salesAPI.bulkRegenerate(selectedSaleIds.value)
+    alert(res.data?.message || 'Regeneration queued successfully.')
+    selectedSaleIds.value = []
+  } catch (error) {
+    console.error('Failed to bulk regenerate invoices:', error)
+    alert('Bulk regeneration failed. Please try again.')
+  } finally {
+    bulkRegenerating.value = false
+  }
 }
 
 const handleFiltersChange = () => {

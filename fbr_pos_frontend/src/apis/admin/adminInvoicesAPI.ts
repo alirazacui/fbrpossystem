@@ -19,4 +19,11 @@ export const adminInvoicesAPI = {
     axiosInstance.get(`/admin-dashboard/invoices/${saleId}/document/`, {
       params: { download: download ? '1' : '0' },
     }),
+
+  bulkRegenerate: (saleIds: number[], includeThermal = true, includeA4 = true) =>
+    axiosInstance.post('/admin-dashboard/invoices/bulk-regenerate/', {
+      sale_ids: saleIds,
+      include_thermal: includeThermal,
+      include_a4: includeA4,
+    }),
 }

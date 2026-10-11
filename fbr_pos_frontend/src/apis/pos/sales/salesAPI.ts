@@ -60,6 +60,14 @@ export const salesAPI = {
   list: (params?: Record<string, any>) =>
     axiosInstance.get<{ count: number; results: Sale[] }>('/sales/list/', { params }),
 
+  // Bulk regenerate invoice PDFs for company users
+  bulkRegenerate: (saleIds: number[], includeThermal = true, includeA4 = true) =>
+    axiosInstance.post('/company/invoices/bulk-regenerate/', {
+      sale_ids: saleIds,
+      include_thermal: includeThermal,
+      include_a4: includeA4,
+    }),
+
   // Get single sale
   retrieve: (id: number) =>
     axiosInstance.get<Sale>(`/sales/${id}/detail/`),

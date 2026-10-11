@@ -11,7 +11,7 @@
     </div>
 
     <!-- Search and Filters Bar -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex justify-between items-center mb-6 gap-3">
       <div class="relative w-96">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -25,13 +25,22 @@
           placeholder="Search by Tenant or Invoice Number..." 
         />
       </div>
-      
-      <button @click="isFilterOpen = true" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
-        Filters
-        <svg class="ml-2 -mr-1 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-        </svg>
-      </button>
+
+      <div class="flex items-center gap-2">
+        <button
+          :disabled="selectedInvoiceIds.length === 0 || bulkRegenerating"
+          @click="bulkRegenerateSelected"
+          class="inline-flex items-center px-4 py-2 border border-teal-600 rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ bulkRegenerating ? 'Regenerating...' : `Regenerate selected (${selectedInvoiceIds.length})` }}
+        </button>
+        <button @click="isFilterOpen = true" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+          Filters
+          <svg class="ml-2 -mr-1 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Table -->
@@ -40,6 +49,14 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50 sticky top-0 z-10">
             <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <input
+                  type="checkbox"
+                  :checked="selectedInvoiceIds.length === filteredInvoices.length && filteredInvoices.length > 0"
+                  @change="toggleSelectAllFiltered"
+                  class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+              </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Tenant</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Invoice No.</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">FBR Invoice No.</th>
@@ -60,6 +77,14 @@
               <td colspan="8" class="px-6 py-10 text-center text-sm text-gray-500">No invoices found matching your criteria.</td>
             </tr>
             <tr v-else v-for="invoice in filteredInvoices" :key="invoice.id" class="hover:bg-gray-50">
+              <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                <input
+                  type="checkbox"
+                  :checked="selectedInvoiceIds.includes(invoice.id)"
+                  @change="toggleInvoiceSelection(invoice.id)"
+                  class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ invoice.tenant_name }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ invoice.invoice_number }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -185,6 +210,8 @@ import { adminInvoicesAPI, type AdminInvoiceItem } from '@/apis/admin/adminInvoi
 
 const invoices = ref<AdminInvoiceItem[]>([])
 const loading = ref(true)
+const selectedInvoiceIds = ref<number[]>([])
+const bulkRegenerating = ref(false)
 
 const searchQuery = ref('')
 const isFilterOpen = ref(false)
@@ -244,6 +271,37 @@ const formatDate = (dateString: string) => {
     minute: '2-digit',
     hour12: true
   }).format(date)
+}
+
+const toggleInvoiceSelection = (id: number) => {
+  const exists = selectedInvoiceIds.value.includes(id)
+  selectedInvoiceIds.value = exists
+    ? selectedInvoiceIds.value.filter(item => item !== id)
+    : [...selectedInvoiceIds.value, id]
+}
+
+const toggleSelectAllFiltered = () => {
+  const filteredIds = filteredInvoices.value.map(inv => inv.id)
+  const allSelected = filteredIds.every(id => selectedInvoiceIds.value.includes(id))
+  selectedInvoiceIds.value = allSelected
+    ? selectedInvoiceIds.value.filter(id => !filteredIds.includes(id))
+    : [...new Set([...selectedInvoiceIds.value, ...filteredIds])]
+}
+
+const bulkRegenerateSelected = async () => {
+  if (!selectedInvoiceIds.value.length) return
+
+  try {
+    bulkRegenerating.value = true
+    const res = await adminInvoicesAPI.bulkRegenerate(selectedInvoiceIds.value)
+    alert(res.data?.message || 'Regeneration queued successfully.')
+    selectedInvoiceIds.value = []
+  } catch (error) {
+    console.error('Failed to bulk regenerate invoices:', error)
+    alert('Bulk regeneration failed. Please try again.')
+  } finally {
+    bulkRegenerating.value = false
+  }
 }
 
 const openInvoice = async (invoice: AdminInvoiceItem) => {

@@ -127,8 +127,16 @@ def _invoice_reference_type(company) -> str:
 
 def _invoice_reference_label(company) -> str:
     return f"{_invoice_reference_type(company)} Invoice Number"
- 
- 
+
+
+def _invoice_validation_label(company) -> str:
+    return f"{_invoice_reference_type(company)} VALIDATED"
+
+
+def _invoice_verification_app(company) -> str:
+    return f"{_invoice_reference_type(company)} Tax Asaan App"
+
+
 # ===========================================================================
 # THERMAL RECEIPT GENERATOR (80mm)
 # ===========================================================================
@@ -391,11 +399,8 @@ class ThermalReceiptGenerator:
         if float(self.sale.change_given) > 0:
             draw_total_row("Change:", float(self.sale.change_given))
 
-        # ── FBR / PRA section ──────────────────────────────────────────
-        business_mode = getattr(self.company, 'business_mode', []) or []
-        has_fbr = "di" in business_mode or "pos" in business_mode
-
-        if has_fbr and self.sale.fbr_invoice_number:
+        # ── FBR / PRA validation section ─────────────────────────────
+        if self.sale.fbr_invoice_number:
             y -= 3
             draw_line(y)
             y -= 9
@@ -429,7 +434,7 @@ class ThermalReceiptGenerator:
                     mask='auto',
                 )
                 y -= 5              # gap between image and label
-                draw_text("SCAN TO VERIFY  |  FBR Tax Asaan App", 0, y, "Helvetica", 6, "center")
+                draw_text(f"SCAN TO VERIFY  |  {_invoice_verification_app(self.company)}", 0, y, "Helvetica", 6, "center")
                 y -= sp(6) + 2
             else:
                 y -= 4
@@ -637,7 +642,7 @@ class A4InvoiceGenerator:
         # C) Meta Box (Bordered panel)
         validated = bool(self.sale.fbr_invoice_number)
         invoice_ref_type = _invoice_reference_type(self.company)
-        status_txt = f"{invoice_ref_type} VALIDATED" if validated else "PENDING SUBMISSION"
+        status_txt = _invoice_validation_label(self.company) if validated else "PENDING SUBMISSION"
         status_color = GRN if validated else MUT
 
         meta_rows = [
@@ -870,45 +875,33 @@ class A4InvoiceGenerator:
         # ══════════════════════════════════════════════════════════════
         # 7.  FBR AUTHENTICATION & QR — shaded footer band
         # ══════════════════════════════════════════════════════════════
-        # Check if company has FBR enabled (DI or POS)
-        business_mode = getattr(self.company, 'business_mode', []) or []
-        has_fbr = "di" in business_mode or "pos" in business_mode
-        
-        if has_fbr:
-            # Determine FBR type for display
-            fbr_type = "FBR Digital Invoicing"
-            if "pos" in business_mode and "di" not in business_mode:
-                fbr_type = "FBR Retail POS"
-            elif "di" in business_mode and "pos" not in business_mode:
-                fbr_type = "FBR Digital Invoicing"
-            
+        if self.sale.fbr_invoice_number:
+            invoice_ref_type = _invoice_reference_type(self.company)
             auth = (
-                f"This invoice was submitted to {fbr_type} and validated by PRAL on "
+                f"This invoice was submitted to {invoice_ref_type} and validated by PRAL on "
                 f"<b>{completed.strftime('%d %b %Y, %H:%M')}</b>."
             )
             if self.sale.fbr_invoice_number:
-                auth += f"  FBR Invoice No: <b>{self.sale.fbr_invoice_number}</b>."
+                auth += f"  {invoice_ref_type} Invoice No: <b>{self.sale.fbr_invoice_number}</b>."
             auth += (
-                "  To verify, scan the QR code with the FBR <b>Tax Asaan</b> app "
+                f"  To verify, scan the QR code with the {invoice_ref_type} <b>Tax Asaan</b> app "
                 "or search at <b>e.fbr.gov.pk</b>."
             )
             disclaimer = (
                 "Computer-generated invoice — no physical signature required. "
                 "E&OE. Goods not returnable except per documented returns policy. "
-                "Issued via FBR POS System."
+                f"Issued via {invoice_ref_type} POS System."
             )
-            
+
             auth_text_col = [
-                _p("✔  FBR AUTHENTICATION", 8, bold=True, color=NAV),
+                _p(f"✔  {invoice_ref_type} AUTHENTICATION", 8, bold=True, color=NAV),
                 Spacer(1, 2 * mm),
                 _p(auth, 7, color=TXT, leading=10),
                 Spacer(1, 2 * mm),
                 _p(disclaimer, 6, color=MUT, leading=9),
             ]
-            
+
             if self.sale.fbr_qr_code:
-                # ImageReader keeps pixel data in memory — safe to pass directly
-                # to ReportLab's Image() without risk of an empty-buffer bug.
                 qr_size_mm = 32 * mm
                 _qb2 = _generate_qr_buffer(self.sale.fbr_qr_code)
                 qr_footer_col = [
@@ -916,9 +909,8 @@ class A4InvoiceGenerator:
                           kind='proportional', mask='auto'),
                     Spacer(1, 1 * mm),
                     _p("SCAN TO VERIFY", 6, bold=True, color=NAV, align=TA_CENTER),
-                    _p("FBR Tax Asaan App", 6, color=MUT, align=TA_CENTER),
+                    _p(_invoice_verification_app(self.company), 6, color=MUT, align=TA_CENTER),
                 ]
-                # QR column: 32mm image + 2×8mm inner padding = 48mm minimum
                 qr_col_w = 48 * mm
                 fbr_footer_content = [[auth_text_col, qr_footer_col]]
                 fbr_col_widths = [width - qr_col_w, qr_col_w]
