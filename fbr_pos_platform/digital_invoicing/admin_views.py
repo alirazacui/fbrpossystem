@@ -112,14 +112,11 @@ class FBRSubmissionAdminViewSet(viewsets.ViewSet):
             return Response({"error": "No sale is linked to this submission."}, status=404)
 
         sale = log.sale
-        invoice_url = sale.receipt_a4_url
-        if not invoice_url:
-            generator = A4InvoiceGenerator(sale)
-            invoice_url = generator.generate()
-            sale.receipt_a4_url = invoice_url
-            from django.utils import timezone
-            sale.receipt_generated_at = timezone.now()
-            sale.save(update_fields=["receipt_a4_url", "receipt_generated_at", "updated_at"])
+        generator = A4InvoiceGenerator(sale)
+        invoice_url = generator.generate(force_regenerate=True)
+        sale.receipt_a4_url = invoice_url
+        sale.receipt_generated_at = timezone.now()
+        sale.save(update_fields=["receipt_a4_url", "receipt_generated_at", "updated_at"])
 
         key = _extract_s3_key(invoice_url)
         if not key:

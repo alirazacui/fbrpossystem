@@ -1,6 +1,28 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col p-4 sm:p-8">
     <!-- Header -->
+    <div v-if="modalState.open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-gray-200 p-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Invoice action</p>
+            <h2 class="mt-2 text-xl font-bold text-gray-900">{{ modalState.title }}</h2>
+          </div>
+          <button @click.stop="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        </div>
+        <p class="mt-4 text-sm text-gray-600 whitespace-pre-line">{{ modalState.message }}</p>
+        <div class="mt-6 flex justify-end">
+          <button
+            @click.stop="closeModal"
+            :class="modalState.type === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-600 hover:bg-teal-700'"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-semibold text-white shadow-sm"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
       <div>
         <h1 class="text-3xl font-black text-gray-900 tracking-tight">Invoices</h1>
@@ -131,8 +153,7 @@
                 <input
                   type="checkbox"
                   :checked="selectedSaleIds.length > 0 && sales.length > 0 && sales.every(sale => selectedSaleIds.includes(sale.id))"
-                  @click.stop="toggleSelectAllVisible"
-                  @change="toggleSelectAllVisible"
+                  @click.stop.prevent="toggleSelectAllVisible"
                   class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
               </th>
@@ -167,8 +188,7 @@
                 <input
                   type="checkbox"
                   :checked="selectedSaleIds.includes(sale.id)"
-                  @click.stop="toggleSaleSelection(sale.id)"
-                  @change="toggleSaleSelection(sale.id)"
+                  @click.stop.prevent="toggleSaleSelection(sale.id)"
                   class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
               </td>
@@ -258,6 +278,12 @@ const sales = ref<any[]>([])
 const loading = ref(true)
 const selectedSaleIds = ref<number[]>([])
 const bulkRegenerating = ref(false)
+const modalState = ref({
+  open: false,
+  title: '',
+  message: '',
+  type: 'success' as 'success' | 'error',
+})
 const totalCount = ref(0)
 const currentPage = ref(1)
 const pageSize = 20
@@ -332,17 +358,39 @@ const toggleSelectAllVisible = () => {
   }
 }
 
+const showModal = (title: string, message: string, type: 'success' | 'error' = 'success') => {
+  modalState.value = { open: true, title, message, type }
+}
+
+const closeModal = () => {
+  modalState.value = { ...modalState.value, open: false }
+}
+
 const bulkRegenerateSelected = async () => {
   if (!selectedSaleIds.value.length) return
+
+  const confirmed = window.confirm(
+    `Regenerate PDF documents for ${selectedSaleIds.value.length} selected invoice(s)? This updates the generated invoice files without resubmitting them.`,
+  )
+
+  if (!confirmed) return
 
   try {
     bulkRegenerating.value = true
     const res = await salesAPI.bulkRegenerate(selectedSaleIds.value)
-    alert(res.data?.message || 'Regeneration queued successfully.')
+    showModal(
+      'Regeneration started',
+      res.data?.message || 'The selected invoice PDFs are being regenerated successfully.',
+      'success',
+    )
     selectedSaleIds.value = []
   } catch (error) {
     console.error('Failed to bulk regenerate invoices:', error)
-    alert('Bulk regeneration failed. Please try again.')
+    showModal(
+      'Regeneration failed',
+      'Bulk regeneration could not be completed. Please try again or contact support.',
+      'error',
+    )
   } finally {
     bulkRegenerating.value = false
   }

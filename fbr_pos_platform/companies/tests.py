@@ -1,9 +1,12 @@
 from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
+from rest_framework.request import Request
 
 from companies.models import Company
 from companies.serializers import CompanyDetailSerializer
+from common.views import AdminInvoiceDocumentView
 from digital_invoicing.pos_client import resolve_pos_endpoint
 
 
@@ -52,3 +55,32 @@ class ResolvePosEndpointTests(TestCase):
             resolve_pos_endpoint(company, is_sandbox=False),
             "https://ims.pral.com.pk/ims/production/api/Live/PostData",
         )
+
+
+class AdminInvoiceDocumentViewTests(TestCase):
+    @patch("common.views.boto3.client")
+    @patch("common.views.A4InvoiceGenerator")
+    @patch("common.views.Sale.objects.select_related")
+    def test_regenerates_cached_invoice_when_serving_document(self, mock_select_related, mock_generator_cls, mock_boto_client):
+        sale = SimpleNamespace(
+            id=42,
+            company=SimpleNamespace(),
+            receipt_a4_url="https://example.com/stale-invoice.pdf",
+            sale_number="INV-1001",
+            save=Mock(),
+        )
+        mock_select_related.return_value.get.return_value = sale
+
+        mock_generator = mock_generator_cls.return_value
+        mock_generator.generate.return_value = "https://example.com/fresh-invoice.pdf"
+        mock_boto_client.return_value.generate_presigned_url.return_value = "https://signed.example.com/fresh-invoice.pdf"
+
+        request = Request(
+            RequestFactory().get("/admin-dashboard/invoices/42/document/", {"download": "0"})
+        )
+
+        response = AdminInvoiceDocumentView().get(request, 42)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["url"], "https://signed.example.com/fresh-invoice.pdf")
+        mock_generator.generate.assert_called_once_with(force_regenerate=True)

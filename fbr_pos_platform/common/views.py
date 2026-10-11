@@ -322,10 +322,10 @@ class AdminInvoiceDocumentView(APIView):
         except Sale.DoesNotExist:
             return Response({"error": "Invoice not found"}, status=404)
 
-        if not sale.receipt_a4_url:
-            generator = A4InvoiceGenerator(sale)
-            sale.receipt_a4_url = generator.generate()
-            sale.save(update_fields=["receipt_a4_url", "receipt_generated_at", "updated_at"])
+        generator = A4InvoiceGenerator(sale)
+        sale.receipt_a4_url = generator.generate(force_regenerate=True)
+        sale.receipt_generated_at = timezone.now()
+        sale.save(update_fields=["receipt_a4_url", "receipt_generated_at", "updated_at"])
 
         key = self._extract_s3_key(sale.receipt_a4_url)
         if not key:
