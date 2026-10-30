@@ -1,0 +1,24 @@
+{% extends "docs/seo_base.html" %}
+{% block content %}
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> > Docs</nav>
+<h1>FBR Guides and Help Center</h1>
+<p class="meta">{{ meta_description }}</p>
+
+{% for category, articles in sections %}
+  <section>
+    <h2>{% if category %}{{ category.name }}{% else %}More guides{% endif %}</h2>
+    {% for article in articles %}
+      <a class="card" href="/docs/{{ article.slug }}">{{ article.title }}
+        {% if article.seo_description %}<span>{{ article.seo_description }}</span>{% endif %}
+      </a>
+    {% endfor %}
+  </section>
+{% empty %}
+  <p>Guides coming soon.</p>
+{% endfor %}
+
+<aside class="cta">
+  <p>Need a ready POS for FBR invoicing?</p>
+  <a class="btn" href="{{ cta_url }}">{{ cta_text }}</a>
+</aside>
+{% endblock %}

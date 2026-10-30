@@ -1,6 +1,8 @@
 import logging
+import hmac
 
 from django.conf import settings
+from django.db import IntegrityError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -23,7 +25,7 @@ def _verify_api_key(request):
     """
     incoming_key = request.headers.get('X-API-KEY', '').strip()
     expected_key = getattr(settings, 'DOCS_RECEIVER_API_KEY', '').strip()
-    return bool(expected_key) and incoming_key == expected_key
+    return bool(expected_key) and hmac.compare_digest(incoming_key, expected_key)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -73,21 +75,35 @@ class ReceiveArticleView(APIView):
             )
 
         # ── 2. Upsert article (source_id = unique key from CMS) ───────────
-        article, created = HelpArticle.objects.update_or_create(
-            source_id=data['source_id'],
-            defaults={
-                'title':           data['title'],
-                'slug':            data['slug'],
-                'content':         data.get('content', ''),
-                'category':        category,
-                'seo_title':       data.get('seo_title', ''),
-                'seo_description': data.get('seo_description', ''),
-                'reading_time':    data.get('reading_time', ''),
-                'featured':        data.get('featured', False),
-                'is_published':    True,
-                'published_at':    data.get('published_at'),
-            },
-        )
+        try:
+            article, created = HelpArticle.objects.update_or_create(
+                source_id=data['source_id'],
+                defaults={
+                    'title':           data['title'],
+                    'slug':            data['slug'],
+                    'content':         data.get('content', ''),
+                    'category':        category,
+                    'seo_title':       data.get('seo_title', ''),
+                    'seo_description': data.get('seo_description', ''),
+                    'reading_time':    data.get('reading_time', ''),
+                    'featured':        data.get('featured', False),
+                    'is_published':    True,
+                    'published_at':    data.get('published_at'),
+                },
+            )
+        except IntegrityError:
+            logger.warning(
+                "[docs] ReceiveArticle: slug conflict for source_id=%s slug=%s",
+                data['source_id'],
+                data['slug'],
+            )
+            return Response(
+                {
+                    'detail': 'Slug already exists for another article.',
+                    'code': 'slug_conflict',
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
 
         action_label = 'created' if created else 'updated'
         logger.info(

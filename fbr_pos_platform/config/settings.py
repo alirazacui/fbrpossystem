@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-so*&so==_p7cv0)0p_%n&ogr&i%svij2+8!0x7(l130rc8h%6h'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -275,3 +275,5 @@ FRONTEND_COMPANY_LOGIN_URL = config("FRONTEND_COMPANY_LOGIN_URL", default="https
 # ── CMS Article Push Receiver ────────────────────────────────────────────────
 # Secret key that must match MAIN_WEBSITE_API_KEY in the CMS .env
 DOCS_RECEIVER_API_KEY = config('DOCS_RECEIVER_API_KEY', default='')
+DOCS_SITE_URL = config('DOCS_SITE_URL', default='https://myfbrpos.com')
+DOCS_CTA_URL = config('DOCS_CTA_URL', default='https://myfbrpos.com/login/company')

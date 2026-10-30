@@ -66,8 +66,8 @@
               </h3>
               <ul class="space-y-0.5">
                 <li v-for="article in catNode.articles" :key="article.id">
-                  <router-link 
-                    :to="{ name: 'DocsPage', params: { slug: article.slug } }"
+                  <a
+                    :href="`/docs/${article.slug}`"
                     class="block px-3 py-2 rounded-lg text-sm transition-colors"
                     :class="route.params.slug === article.slug 
                       ? 'bg-primary text-white font-medium shadow-sm' 
@@ -75,7 +75,7 @@
                     @click="mobileSidebarOpen = false"
                   >
                     {{ article.title }}
-                  </router-link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -90,7 +90,7 @@
           <span class="material-symbols-outlined text-6xl text-error mb-4">error_outline</span>
           <h2 class="text-2xl font-bold text-on-surface mb-2">Article not found</h2>
           <p class="text-on-surface-variant mb-6">The article you are looking for does not exist or has been removed.</p>
-          <router-link to="/docs" class="text-primary hover:underline font-medium">Clear Selection</router-link>
+          <a href="/docs" class="text-primary hover:underline font-medium">Clear Selection</a>
         </div>
 
         <!-- Article Content -->

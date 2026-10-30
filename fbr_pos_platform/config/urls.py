@@ -21,6 +21,7 @@ from django.conf.urls.static import static
  
 urlpatterns = [
     path("admin/",  admin.site.urls),
+    path("", include("docs.seo_urls")),
  
     # All API endpoints under /api/
     path("api/", include("companies.urls")),

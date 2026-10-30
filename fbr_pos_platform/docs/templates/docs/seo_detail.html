@@ -1,0 +1,30 @@
+{% extends "docs/seo_base.html" %}
+{% block og_type %}article{% endblock %}
+{% block og_image %}{% if og_image %}<meta property="og:image" content="{{ og_image }}">
+  <meta name="twitter:image" content="{{ og_image }}">{% endif %}{% endblock %}
+{% block head_extra %}{% for blob in ld_json %}<script type="application/ld+json">{{ blob|safe }}</script>
+  {% endfor %}{% endblock %}
+{% block content %}
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a href="/">Home</a> > <a href="/docs">Docs</a>{% if article.category %} > {{ article.category.name }}{% endif %}
+</nav>
+<article>
+  <h1>{{ article.title }}</h1>
+  <div class="meta">
+    {% if article.reading_time %}{{ article.reading_time }} . {% endif %}Updated <time datetime="{{ article.updated_at|date:'Y-m-d' }}">{{ article.updated_at|date:'d M Y' }}</time>
+  </div>
+  <div class="prose">{{ body|safe }}</div>
+</article>
+
+<aside class="cta">
+  <p>Need a ready POS for FBR invoicing?</p>
+  <a class="btn" href="{{ cta_url }}">{{ cta_text }}</a>
+</aside>
+
+{% if related %}
+<section>
+  <h2>Related guides</h2>
+  {% for item in related %}<a class="card" href="/docs/{{ item.slug }}">{{ item.title }}</a>{% endfor %}
+</section>
+{% endif %}
+{% endblock %}
