@@ -1,12 +1,165 @@
 {% extends "docs/seo_base.html" %}
 {% block content %}
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(140deg, #f3faf8 0%, #ffffff 58%, #eef8ff 100%);
+    padding: 28px;
+    margin-top: 18px;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: -120px -100px auto auto;
+    width: 280px;
+    height: 280px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(11,107,79,0.17), rgba(11,107,79,0));
+    pointer-events: none;
+  }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .pill {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 13px;
+    color: var(--muted);
+    background: #fff;
+  }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 18px; }
+  .stat {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .stat b { display: block; font-size: 22px; line-height: 1.2; color: var(--ink); }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 28px;
+    margin-bottom: 10px;
+  }
+  .section-head p { margin: 0; color: var(--muted); font-size: 14px; }
+  .grid-cats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .cat-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cat-card h3 { margin: 0; font-size: 20px; line-height: 1.3; }
+  .cat-card .count { color: var(--muted); font-size: 13px; }
+  .cat-card ul { margin: 0; padding-left: 18px; color: var(--muted); }
+  .cat-card li { margin: 2px 0; }
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .featured {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    padding: 16px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .featured:hover { border-color: #8cb6aa; box-shadow: 0 8px 22px rgba(9, 48, 38, 0.08); }
+  .featured h3 { margin: 0 0 8px; font-size: 20px; line-height: 1.35; }
+  .featured p { margin: 0; color: var(--muted); font-size: 15px; }
+  .featured .meta { margin-top: 10px; font-size: 12px; color: var(--muted); }
+</style>
+
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> > Docs</nav>
-<h1>FBR Guides and Help Center</h1>
-<p class="meta">{{ meta_description }}</p>
+
+<section class="hero">
+  <h1>How can we help you?</h1>
+  <p class="meta">{{ meta_description }}</p>
+  <div class="pill-row">
+    <span class="pill">FBR Compliance</span>
+    <span class="pill">Digital Invoicing</span>
+    <span class="pill">POS Setup</span>
+    <span class="pill">HS and PCT Guidance</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>{{ total_articles }}</b><span>Published guides</span></div>
+    <div class="stat"><b>{{ total_categories }}</b><span>Active categories</span></div>
+    <div class="stat"><b>24/7</b><span>Searchable reference</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <h2>Documentation categories</h2>
+    <p>Automatically generated from your CMS categories.</p>
+  </div>
+  <div class="grid-cats">
+    {% for item in category_cards %}
+      <article class="cat-card" id="category-{{ item.slug }}">
+        <h3>{{ item.name }}</h3>
+        <span class="count">{{ item.count }} article{{ item.count|pluralize }}</span>
+        {% if item.teaser %}
+          <ul>
+            {% for article in item.teaser %}
+              <li><a href="/docs/{{ article.slug }}">{{ article.title }}</a></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </article>
+    {% empty %}
+      <article class="cat-card">
+        <h3>Guides coming soon</h3>
+        <span class="count">No published article yet</span>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% if featured_articles %}
+<section>
+  <div class="section-head">
+    <h2>Start here</h2>
+    <p>Top recommended articles from current published content.</p>
+  </div>
+  <div class="featured-grid">
+    {% for article in featured_articles %}
+      <a class="featured" href="/docs/{{ article.slug }}" id="article-{{ article.slug }}">
+        <h3>{{ article.title }}</h3>
+        {% if article.seo_description %}
+          <p>{{ article.seo_description }}</p>
+        {% else %}
+          <p>Open this guide to view complete instructions and practical steps.</p>
+        {% endif %}
+        <div class="meta">
+          {% if article.category %}{{ article.category.name }}{% else %}General{% endif %}
+          {% if article.reading_time %} . {{ article.reading_time }}{% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 {% for category, articles in sections %}
-  <section>
-    <h2>{% if category %}{{ category.name }}{% else %}More guides{% endif %}</h2>
+  <section id="section-{% if category %}{{ category.source_slug }}{% else %}more-guides{% endif %}">
+    <div class="section-head">
+      <h2>{% if category %}{{ category.name }}{% else %}More guides{% endif %}</h2>
+      <p>{{ articles|length }} article{{ articles|length|pluralize }}</p>
+    </div>
     {% for article in articles %}
       <a class="card" href="/docs/{{ article.slug }}">{{ article.title }}
         {% if article.seo_description %}<span>{{ article.seo_description }}</span>{% endif %}

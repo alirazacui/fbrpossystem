@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-error-container":"#93000a","primary-fixed":"#9cf2e8","on-surface-variant":"#3e4947","secondary-fixed-dim":"#68dba9","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#005137","error":"#ba1a1a","surface-variant":"#dae2fd","on-tertiary-fixed":"#002113","surface-container-high":"#e2e7ff","surface-container-highest":"#dae2fd","tertiary-fixed":"#6ffbbe","on-primary":"#ffffff","on-primary-fixed-variant":"#00504a","on-primary-fixed":"#00201d","secondary-fixed":"#85f8c4","inverse-primary":"#80d5cb","secondary":"#006c4a","on-secondary-container":"#00714e","tertiary-fixed-dim":"#4edea3","error-container":"#ffdad6","on-surface":"#131b2e","surface-container-low":"#f2f3ff","on-primary-container":"#a3faef","primary-container":"#0f766e","secondary-container":"#82f5c1","surface-container":"#eaedff","tertiary-container":"#007952","tertiary":"#005e3f","on-tertiary-fixed-variant":"#005236","surface-bright":"#faf8ff","surface-container-lowest":"#ffffff","outline":"#6e7977","on-background":"#131b2e","inverse-on-surface":"#eef0ff","surface":"#faf8ff","surface-dim":"#d2d9f4","primary-fixed-dim":"#80d5cb","inverse-surface":"#283044","on-tertiary-container":"#99ffcd","background":"#faf8ff","on-secondary":"#ffffff","on-error":"#ffffff","surface-tint":"#006a63","outline-variant":"#bdc9c6","on-secondary-fixed":"#002114","primary":"#005c55"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},spacing:{margin:"2rem",gutter:"1.5rem","space-xs":"0.25rem","gutter-mobile":"1rem","space-sm":"0.5rem","space-lg":"1.5rem","space-xl":"2.5rem","space-md":"1rem","margin-mobile":"1rem"},fontFamily:{"headline-lg":["Geist"],"body-sm":["Inter"],"headline-md":["Geist"],"headline-lg-mobile":["Geist"],"headline-sm":["Geist"],"body-md":["Inter"],"headline-xl-mobile":["Geist"],"headline-xl":["Geist"],"code-md":["JetBrains Mono"],"code-sm":["JetBrains Mono"],"label-sm":["Inter"],"label-md":["Inter"],"body-lg":["Inter"]},fontSize:{"headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.02em",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"20px",letterSpacing:"0em",fontWeight:"400"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.015em",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.015em",fontWeight:"600"}],"headline-sm":["18px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-md":["15px",{lineHeight:"24px",letterSpacing:"0em",fontWeight:"400"}],"headline-xl-mobile":["30px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"600"}],"headline-xl":["40px",{lineHeight:"48px",letterSpacing:"-0.025em",fontWeight:"600"}],"code-md":["13px",{lineHeight:"22px",letterSpacing:"-0.01em",fontWeight:"400"}],"code-sm":["12px",{lineHeight:"18px",letterSpacing:"0em",fontWeight:"500"}],"label-sm":["11px",{lineHeight:"16px",letterSpacing:"0.04em",fontWeight:"600"}],"label-md":["13px",{lineHeight:"18px",letterSpacing:"0.01em",fontWeight:"500"}],"body-lg":["17px",{lineHeight:"28px",letterSpacing:"-0.005em",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col justify-between"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-7xl mx-auto px-6 flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><img alt="MyFBRPOS Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/a/ACg8ocIS192NlQ-hZgT42Y2P39fGj1aB8h4_9lVlK_b9G6gC=s96-c"/><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight font-semibold">MyFBRPOS</span><span class="font-code-sm text-code-sm uppercase px-1.5 py-0.5 rounded bg-surface-container text-primary font-medium ml-1">Docs</span></div><div class="flex-1 max-w-md hidden md:flex items-center"><button class="w-full flex items-center justify-between px-space-md py-1.5 rounded-xl bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all shadow-[0_1px_4px_rgba(0,0,0,0.02)]" type="button"><span class="flex items-center gap-space-sm font-body-sm text-body-sm"><span class="material-symbols-outlined text-[18px]">search</span><span>Search documentation...</span></span><kbd class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">⌘K</kbd></button></div><div class="flex items-center gap-space-md"><nav class="hidden lg:flex items-center gap-space-md" data-active-classes="text-primary font-semibold"><a aria-current="page" class="transition-colors text-primary font-semibold" data-path="overview" href="#">Overview</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="fbr-compliance" href="#">Compliance</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="api-reference" href="#">API Reference</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="system-status" href="#">Status</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="https://myfbrpos.com" target="_blank">Main Website</a></nav><div class="flex items-center gap-space-sm pl-space-sm"><a class="hidden sm:inline-flex items-center justify-center px-space-md py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-all shadow-[0_1px_4px_rgba(0,0,0,0.04)]" data-path="dashboard" href="#">Go to Dashboard</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-16 flex-1 bg-surface max-w-7xl mx-auto px-6 py-space-lg"><div class="flex flex-col w-full">
+<!-- Command Search & Category Filter Overlay Trigger Modal (Hidden by Default) -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm transition-opacity duration-200" id="search-modal">
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-2xl p-space-md flex flex-col gap-space-sm" style="animation: scaleIn 0.15s ease-out;">
+<div class="flex items-center gap-space-sm pb-space-sm border-b border-surface-container">
+<span class="material-symbols-outlined text-primary text-[22px]">search</span>
+<input autofocus="" class="flex-1 bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline outline-none" id="modal-search-input" placeholder="Type a keyword, FBR error code, or topic..." type="text"/>
+<span class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant cursor-pointer" onclick="toggleSearchModal(false)">ESC</span>
+</div>
+<div class="py-space-sm flex flex-col gap-space-xs text-left max-h-80 overflow-y-auto">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline px-space-xs">Recommended Articles</span>
+<a class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors group" href="#article-fbr-code" onclick="toggleSearchModal(false)">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">article</span>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary font-medium">HS Code aur PCT Code Mein Farq — Complete Guide</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline">FBR Integration</span>
+</a>
+<a class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors group" href="#article-iris" onclick="toggleSearchModal(false)">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary font-medium">FBR Mein Register Kaise Karein? NTN & STRN Verification</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline">Compliance</span>
+</a>
+<a class="flex items-center justify-between p-space-sm rounded-lg hover:bg-surface-container-low transition-colors group" href="#category-pos" onclick="toggleSearchModal(false)">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">print</span>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary font-medium">ESC/POS 80mm Thermal Receipt Configuration</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline">Hardware</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Hero Section -->
+<section class="relative w-full py-space-xl flex flex-col items-center text-center">
+<!-- Ambient living background accent -->
+<div class="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none opacity-60">
+<div class="w-[580px] h-[340px] bg-primary-fixed/25 rounded-full blur-3xl transform -translate-y-12"></div>
+<div class="w-[420px] h-[280px] bg-secondary-fixed/20 rounded-full blur-2xl transform translate-x-32 translate-y-8"></div>
+</div>
+<!-- Tier-1 Badge -->
+<div class="inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-surface-container-low text-primary shadow-sm mb-space-md">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-code-sm text-code-sm font-semibold tracking-wide">FBR SRO 428(I)/2024 COMPLIANT • 2026 EDITION</span>
+</div>
+<!-- Main Headline -->
+<h1 class="font-headline-xl text-headline-xl text-on-surface max-w-3xl font-semibold tracking-tight mb-space-sm">
+      How can we help you?
+    </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-space-lg">
+      Explore guides, tutorials, and documentation to get the most out of MyFBRPOS — Pakistan's modern Point of Sale, inventory, and FBR digital invoicing platform.
+    </p>
+<!-- Interactive Search Bar Component -->
+<div class="w-full max-w-2xl relative shadow-md rounded-xl bg-surface-container-lowest p-1.5 transition-all focus-within:shadow-xl focus-within:bg-surface-bright">
+<div class="flex items-center px-space-sm py-1.5 gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[22px]">search</span>
+<input class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline outline-none" id="hero-search-field" onkeydown="if(event.key === 'Enter'){ executeSearch(); }" placeholder="Search documentation, guides, FBR codes, and tutorials..." type="text"/>
+<div class="hidden sm:flex items-center gap-1">
+<kbd class="font-code-sm text-code-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant shadow-sm cursor-pointer" onclick="toggleSearchModal(true)">⌘K</kbd>
+</div>
+<button class="px-space-md py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-all flex items-center gap-1 shadow-sm" onclick="executeSearch()" type="button">
+<span>Search</span>
+</button>
+</div>
+</div>
+<!-- Quick Filter Search Tags -->
+<div class="flex flex-wrap items-center justify-center gap-space-xs mt-space-md max-w-2xl">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider mr-1">Popular:</span>
+<button class="font-code-sm text-code-sm px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors shadow-sm" onclick="fillSearch('FBR Digital Invoicing')">
+        FBR Digital Invoicing
+      </button>
+<button class="font-code-sm text-code-sm px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors shadow-sm" onclick="fillSearch('HS Codes')">
+        HS Codes
+      </button>
+<button class="font-code-sm text-code-sm px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors shadow-sm" onclick="fillSearch('POS Setup')">
+        POS Setup
+      </button>
+<button class="font-code-sm text-code-sm px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors shadow-sm" onclick="fillSearch('IRIS Registration')">
+        IRIS Registration
+      </button>
+<button class="font-code-sm text-code-sm px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors shadow-sm" onclick="fillSearch('Hardware Setup')">
+        Hardware Setup
+      </button>
+</div>
+</section>
+<!-- Quick Start Guide (Step Sequence for Pakistani Retailers & Businesses) -->
+<section class="w-full py-space-lg mb-space-xl">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-lg gap-space-sm">
+<div>
+<div class="flex items-center gap-space-xs text-primary mb-1">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Fast Onboarding Roadmap</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">New to MyFBRPOS? Follow the Quick Start Path</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Get your retail store, restaurant, or distribution firm running in under 20 minutes.</p>
+</div>
+<a class="inline-flex items-center gap-1 text-primary hover:text-on-primary-fixed-variant font-label-md text-label-md font-semibold transition-colors group" href="#quickstart-walkthrough">
+<span>Read Full Getting Started Walkthrough</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+</div>
+<!-- 5-Step Horizontal Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-space-md">
+<!-- Step 1 -->
+<div class="relative bg-surface-container-low rounded-lg p-space-md flex flex-col justify-between hover:shadow-md transition-all group">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-primary-container text-on-primary font-code-sm text-code-sm flex items-center justify-center font-bold">1</span>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Account</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">Create your business</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Register account, verify NTN/STRN, and choose business type (Retailer / Wholesaler).</p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center text-primary font-label-sm text-label-sm gap-1">
+<span class="material-symbols-outlined text-[16px]">domain</span>
+<span>NTN & STRN Setup</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative bg-surface-container-low rounded-lg p-space-md flex flex-col justify-between hover:shadow-md transition-all group">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-primary-container text-on-primary font-code-sm text-code-sm flex items-center justify-center font-bold">2</span>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Config</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">Configure settings</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Branch locations, POS counters, sales tax rates, and thermal receipt headers.</p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center text-primary font-label-sm text-label-sm gap-1">
+<span class="material-symbols-outlined text-[16px]">settings_suggest</span>
+<span>Receipt Branding</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative bg-surface-container-low rounded-lg p-space-md flex flex-col justify-between hover:shadow-md transition-all group">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-primary-container text-on-primary font-code-sm text-code-sm flex items-center justify-center font-bold">3</span>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Catalog</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">Add products</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Bulk import items via Excel, assign HS / PCT codes, and set purchase/sale pricing.</p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center text-primary font-label-sm text-label-sm gap-1">
+<span class="material-symbols-outlined text-[16px]">inventory_2</span>
+<span>HS Code Mapping</span>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="relative bg-surface-container-low rounded-lg p-space-md flex flex-col justify-between hover:shadow-md transition-all group">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-primary-container text-on-primary font-code-sm text-code-sm flex items-center justify-center font-bold">4</span>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Checkout</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">Start recording sales</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Touch POS cashier interface, barcode scanner support, and split cash/card payments.</p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center text-primary font-label-sm text-label-sm gap-1">
+<span class="material-symbols-outlined text-[16px]">point_of_sale</span>
+<span>Speed Cashiering</span>
+</div>
+</div>
+<!-- Step 5 -->
+<div class="relative bg-surface-container-low rounded-lg p-space-md flex flex-col justify-between hover:shadow-md transition-all group">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="w-7 h-7 rounded-full bg-secondary text-on-secondary font-code-sm text-code-sm flex items-center justify-center font-bold">5</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Live Telemetry</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 group-hover:text-primary transition-colors">Digital invoices</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time automated FBR digital invoice generation and official QR code thermal printing.</p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center text-secondary font-label-sm text-label-sm gap-1">
+<span class="material-symbols-outlined text-[16px]">qr_code_2</span>
+<span>Auto FBR Sync</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Visual Break / Telemetry Insight Row -->
+<section class="w-full mb-space-xl grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<!-- Live Sandbox vs Prod Status -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">FBR Production Bridge</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-code-sm text-code-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 99.98% Latency
+        </span>
+</div>
+<div class="my-space-sm">
+<div class="font-headline-md text-headline-md text-on-surface font-semibold tracking-tight">184 ms Average</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Live telemetry ping between MyFBRPOS queue workers and FBR IRIS central gateways.</p>
+</div>
+<!-- Inline Sparkline Data Chart -->
+<div class="w-full h-10 flex items-end gap-1">
+<div class="flex-1 bg-surface-container-high rounded-t h-4"></div>
+<div class="flex-1 bg-surface-container-high rounded-t h-6"></div>
+<div class="flex-1 bg-primary-fixed-dim rounded-t h-5"></div>
+<div class="flex-1 bg-primary-container rounded-t h-8"></div>
+<div class="flex-1 bg-primary rounded-t h-7"></div>
+<div class="flex-1 bg-primary rounded-t h-9"></div>
+<div class="flex-1 bg-secondary rounded-t h-10"></div>
+</div>
+</div>
+<!-- Tier-1 Integration Graphic -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex-1">
+<span class="font-label-sm text-label-sm text-primary uppercase font-semibold tracking-wider">Official Integration Checklist</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mt-1">Need to connect with FBR Tier-1 e-Invoicing before deadline?</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Our cloud POS is fully compliant with Sales Tax General Order (STGO) standards. Follow our end-to-end certification guides for both POS integration & e-invoicing.
+        </p>
+<div class="flex items-center gap-space-sm mt-space-sm">
+<a class="inline-flex items-center gap-1 font-label-md text-label-md text-primary font-semibold hover:text-on-primary-fixed-variant" href="#category-fbr">
+<span>Review FBR Requirements</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+</div>
+<div class="w-full sm:w-48 h-32 rounded-lg bg-surface-container flex items-center justify-center p-3 relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
+<!-- QR Code Simulation SVG -->
+<svg class="w-24 h-24 text-on-surface" fill="currentColor" viewbox="0 0 100 100">
+<rect fill="none" height="24" rx="2" stroke="currentColor" stroke-width="4" width="24" x="10" y="10"></rect>
+<rect fill="currentColor" height="12" width="12" x="16" y="16"></rect>
+<rect fill="none" height="24" rx="2" stroke="currentColor" stroke-width="4" width="24" x="66" y="10"></rect>
+<rect fill="currentColor" height="12" width="12" x="72" y="16"></rect>
+<rect fill="none" height="24" rx="2" stroke="currentColor" stroke-width="4" width="24" x="10" y="66"></rect>
+<rect fill="currentColor" height="12" width="12" x="16" y="72"></rect>
+<rect fill="currentColor" height="8" width="8" x="42" y="15"></rect>
+<rect fill="currentColor" height="8" width="16" x="42" y="32"></rect>
+<rect fill="currentColor" height="18" width="8" x="42" y="50"></rect>
+<rect fill="currentColor" height="8" width="18" x="66" y="48"></rect>
+<rect fill="currentColor" height="12" width="24" x="60" y="72"></rect>
+</svg>
+</div>
+</div>
+</section>
+<!-- Documentation Categories Grid -->
+<section class="w-full mb-space-xl">
+<div class="flex items-center justify-between mb-space-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Documentation Categories</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Browse dedicated references across all operational pillars of MyFBRPOS.</p>
+</div>
+<span class="font-code-sm text-code-sm text-outline">10 Core Modules</span>
+</div>
+<!-- 10 Responsive Category Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
+<!-- 1. Getting Started -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-getting-started">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">rocket_launch</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">8 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Getting Started</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Learn the basics and set up your MyFBRPOS account from scratch.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Account creation & password setup</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>First-time login & web dashboard tour</span>
+</div>
+</div>
+</a>
+<!-- 2. Business Setup -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-business-setup">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">storefront</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">12 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Business Setup</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Configure company profiles, multi-branch operations, and business settings.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Branch management & multi-store sync</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Provincial Sales Tax (PRA, SRB, KPRA, BRA)</span>
+</div>
+</div>
+</a>
+<!-- 3. Point of Sale -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-pos" id="category-pos">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">point_of_sale</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">15 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Point of Sale</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Master the POS counter, handle offline cash drawers, barcodes, and shifts.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Cashier shift handover & opening float</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Barcode scanning & touch grid shortcuts</span>
+</div>
+</div>
+</a>
+<!-- 4. Products & Inventory -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-inventory">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">inventory_2</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">19 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Products & Inventory</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Manage catalogs, variants, PCT/HS codes, low stock alerts, and suppliers.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Batch import Excel with auto-tax flags</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Low stock notifications & purchase orders</span>
+</div>
+</div>
+</a>
+<!-- 5. Digital Invoicing -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-digital-invoicing">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">receipt_long</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">14 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Digital Invoicing</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Generate compliant digital invoices, credit notes, and customer receipts.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Invoice templates & custom Urdu branding</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Thermal print setup (58mm vs 80mm)</span>
+</div>
+</div>
+</a>
+<!-- 6. FBR Integration (Hero Category) -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between border-2 border-primary/20" href="#category-fbr" id="category-fbr">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[22px]">verified</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-semibold">16 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">FBR Integration</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Complete guide to FBR digital invoicing, Sandbox testing, STRN, and live submission.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>IRIS Portal guide & API sandbox keys</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>HS Code vs PCT Code classifications</span>
+</div>
+</div>
+</a>
+<!-- 7. Customers & Management -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-customers">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">group</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">9 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Customers & Management</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Manage ledger khata, customer credit terms, staff roles, and permissions.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Khata & receivables tracking with SMS</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Cashier access roles & manager overrides</span>
+</div>
+</div>
+</a>
+<!-- 8. Reports & Analytics -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-reports">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">bar_chart</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">11 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Reports & Analytics</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Gain insights into daily sales, FBR tax summaries, profit margins, and inventory turns.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Daily Z-Report & cashier reconciliations</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Sales tax reconciliation & FBR summary</span>
+</div>
+</div>
+</a>
+<!-- 9. Account & Subscription -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between" href="#category-billing">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">credit_card</span>
+</div>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">7 articles</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-1">Account & Subscription</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Billing plans, user seat management, subscription renewals, and security.</p>
+</div>
+<div class="pt-space-sm border-t border-surface-container flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Package upgrades & branch additions</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Two-factor authentication (2FA) security</span>
+</div>
+</div>
+</a>
+<!-- 10. Troubleshooting & Hardware -->
+<a class="group bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between lg:col-span-3" href="#category-troubleshooting">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex-shrink-0 flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">build</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Troubleshooting & Hardware</h3>
+<span class="font-code-sm text-code-sm px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-medium">10 articles</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Troubleshoot thermal printers, barcode scanners, and network sync issues across Windows, Android, and macOS.</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-space-md">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>ESC/POS printer USB driver setup</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Offline sync recovery cache</span>
+</div>
+</div>
+</div>
+</a>
+</div>
+</section>
+<!-- Popular & Frequently Accessed Articles (Bilingual Urdu / English context) -->
+<section class="w-full mb-space-xl">
+<div class="flex items-center justify-between mb-space-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Popular & Frequently Accessed Articles</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Step-by-step documentation crafted for Pakistani retailers, chartered accountants, and engineers.</p>
+</div>
+<a class="hidden sm:inline-flex items-center gap-1 font-label-md text-label-md text-primary font-medium hover:underline" href="#all-articles">
+<span>View all 100+ guides</span>
+<span class="material-symbols-outlined text-[16px]">arrow_right_alt</span>
+</a>
+</div>
+<!-- 2-Column Priority Article List -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Article 1 -->
+<article class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group" id="article-fbr-code">
+<div>
+<div class="flex items-center justify-between gap-space-sm mb-space-xs">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-code-sm text-code-sm bg-primary-fixed text-on-primary-fixed font-medium">
+              FBR Integration
+            </span>
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 6 min read
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-semibold mt-1">
+            FBR HS Code aur PCT Code Mein Farq — Apne Products Ke Liye Sahi Code Kaise Choose Karein
+          </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            HS Code aur PCT Code mein farq samjhein, aur apne products ke liye sahi code kaise dhoondhein — FBR invoicing ke liye complete guide.
+          </p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-primary group-hover:underline font-medium">Read Urdu & English Guide →</span>
+<span class="font-code-sm text-code-sm text-outline">Updated Jan 2026</span>
+</div>
+</article>
+<!-- Article 2 -->
+<article class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group" id="article-iris">
+<div>
+<div class="flex items-center justify-between gap-space-sm mb-space-xs">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-code-sm text-code-sm bg-primary-fixed text-on-primary-fixed font-medium">
+              FBR Integration
+            </span>
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 9 min read
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-semibold mt-1">
+            FBR Mein Register Kaise Karein? NTN, STRN aur IRIS Portal Complete Guide
+          </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            FBR registration ka complete process samjhein — NTN, STRN aur IRIS portal ke zariye step-by-step documentation aur guidelines.
+          </p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-primary group-hover:underline font-medium">Read Urdu & English Guide →</span>
+<span class="font-code-sm text-code-sm text-outline">Updated Feb 2026</span>
+</div>
+</article>
+<!-- Article 3 -->
+<article class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between gap-space-sm mb-space-xs">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-code-sm text-code-sm bg-secondary-container text-on-secondary-container font-medium">
+              Digital Invoicing
+            </span>
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 7 min read
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-semibold mt-1">
+            FBR Digital Invoicing Kya Hai? Complete Guide for Pakistani Businesses (2026)
+          </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            Samjhein FBR digital invoicing kya hai, kis ke liye zaroori hai, aur ye kaise kaam karta hai. Pakistani retail and wholesale businesses guide.
+          </p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-primary group-hover:underline font-medium">Read Urdu & English Guide →</span>
+<span class="font-code-sm text-code-sm text-outline">Updated Jan 2026</span>
+</div>
+</article>
+<!-- Article 4 -->
+<article class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between gap-space-sm mb-space-xs">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-code-sm text-code-sm bg-surface-container-high text-on-surface font-medium">
+              Compliance & Strategy
+            </span>
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 5 min read
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-semibold mt-1">
+            FBR Digital Invoicing vs FBR Retail POS — Which One Does Your Business Need?
+          </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            FBR digital invoicing aur FBR retail POS mein farq samjhein. Apne business type ke hisab se sahi FBR compliance system choose karein.
+          </p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-primary group-hover:underline font-medium">Read Urdu & English Guide →</span>
+<span class="font-code-sm text-code-sm text-outline">Updated Jan 2026</span>
+</div>
+</article>
+<!-- Article 5 -->
+<article class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between gap-space-sm mb-space-xs">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-code-sm text-code-sm bg-surface-container-high text-on-surface font-medium">
+              Troubleshooting
+            </span>
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 4 min read
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-semibold mt-1">
+            Thermal Printer aur Barcode Scanner Setup Guide for Pakistani Retailers
+          </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            Common 80mm & 58mm POS thermal printers aur USB/Bluetooth scanners ko MyFBRPOS se connect karne ka tariqa.
+          </p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-primary group-hover:underline font-medium">Read Hardware Guide →</span>
+<span class="font-code-sm text-code-sm text-outline">Updated Dec 2025</span>
+</div>
+</article>
+<!-- Article 6 -->
+<article class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between gap-space-sm mb-space-xs">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-code-sm text-code-sm bg-primary-fixed text-on-primary-fixed font-medium">
+              Products & Inventory
+            </span>
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 5 min read
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-semibold mt-1">
+            Multi-Branch Inventory Sync aur Stock Transfer Guide
+          </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            Ek branch se doosri branch mein stock transfer karna aur centralized inventory ledger maintain karna.
+          </p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-primary group-hover:underline font-medium">Read Inventory Guide →</span>
+<span class="font-code-sm text-code-sm text-outline">Updated Jan 2026</span>
+</div>
+</article>
+</div>
+</section>
+<!-- Technical API Snippet Sandbox Section -->
+<section class="w-full mb-space-xl bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-md mb-space-md">
+<div>
+<div class="flex items-center gap-space-xs text-primary mb-1">
+<span class="font-code-sm text-code-sm font-semibold uppercase">DEVELOPER SANDBOX</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">FBR POS Invoice Submission Schema</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Live JSON payload telemetry dispatch to FBR Sandbox REST endpoints.</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded font-code-sm text-code-sm bg-primary-fixed text-on-primary-fixed">POST /api/v2/invoice/submit</span>
+<button class="inline-flex items-center gap-1 px-3 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" id="copy-btn" onclick="copySnippet()">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span id="copy-text">Copy JSON</span>
+</button>
+</div>
+</div>
+<!-- Code Block with Syntax Emulation -->
+<div class="bg-inverse-surface text-inverse-on-surface p-space-md rounded-lg font-code-sm text-code-sm overflow-x-auto shadow-inner leading-relaxed">
+<pre class="font-code-sm"><span class="text-tertiary-fixed">{</span>
+  <span class="text-primary-fixed-dim">"pos_registration_no"</span>: <span class="text-secondary-fixed">"POS-KHI-04981"</span>,
+  <span class="text-primary-fixed-dim">"invoice_number"</span>: <span class="text-secondary-fixed">"INV-2026-004291"</span>,
+  <span class="text-primary-fixed-dim">"invoice_date_time"</span>: <span class="text-secondary-fixed">"2026-03-30T14:28:10+05:00"</span>,
+  <span class="text-primary-fixed-dim">"buyer_ntn_cnic"</span>: <span class="text-secondary-fixed">"42101-9876543-1"</span>,
+  <span class="text-primary-fixed-dim">"total_sales_value"</span>: <span class="text-primary-fixed">14500.00</span>,
+  <span class="text-primary-fixed-dim">"total_sales_tax"</span>: <span class="text-primary-fixed">2610.00</span>,
+  <span class="text-primary-fixed-dim">"items"</span>: [
+    {
+      <span class="text-primary-fixed-dim">"item_code"</span>: <span class="text-secondary-fixed">"PCT-8471.60"</span>,
+      <span class="text-primary-fixed-dim">"item_description"</span>: <span class="text-secondary-fixed">"Thermal POS Receipt Printer 80mm"</span>,
+      <span class="text-primary-fixed-dim">"hs_code"</span>: <span class="text-secondary-fixed">"8471.60.00"</span>,
+      <span class="text-primary-fixed-dim">"tax_rate"</span>: <span class="text-primary-fixed">18.0</span>
+    }
+  ]
+<span class="text-tertiary-fixed">}</span></pre>
+</div>
+</section>
+<!-- Need More Help? / Support Section -->
+<section class="w-full mb-space-lg">
+<div class="relative bg-surface-container-lowest rounded-xl p-space-lg shadow-sm border-l-4 border-primary overflow-hidden">
+<!-- Ambient light effect -->
+<div class="absolute -right-20 -bottom-20 w-64 h-64 bg-primary-fixed/20 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-space-md mb-space-lg">
+<div class="max-w-xl">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-fixed/40 text-primary font-code-sm text-code-sm mb-2">
+<span class="material-symbols-outlined text-[14px]">support_agent</span>
+<span>Pakistan Support Desk</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-semibold">Couldn't find what you're looking for?</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">
+            Our dedicated technical and compliance support team in Pakistan is available Monday to Saturday to help with configuration, FBR registration, hardware calibration, and cashier training.
+          </p>
+</div>
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-outline">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Avg response: < 15 mins</span>
+</div>
+</div>
+<!-- 4 Action Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Action 1: WhatsApp -->
+<a class="bg-surface-container-low hover:bg-surface-container p-space-md rounded-lg flex flex-col justify-between transition-all group shadow-sm" href="https://wa.me/923000000000" target="_blank">
+<div>
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">WhatsApp Support</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Instant WhatsApp resolutions for cashier blockages & urgent store errors.</p>
+</div>
+<div class="mt-space-md flex items-center text-primary font-label-md text-label-md font-semibold gap-1">
+<span>Chat on WhatsApp</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+<!-- Action 2: Urdu Video Tutorials -->
+<a class="bg-surface-container-low hover:bg-surface-container p-space-md rounded-lg flex flex-col justify-between transition-all group shadow-sm" href="#video-tutorials">
+<div>
+<div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">play_circle</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Urdu Video Guides</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Watch step-by-step Urdu YouTube tutorials covering every MyFBRPOS feature.</p>
+</div>
+<div class="mt-space-md flex items-center text-primary font-label-md text-label-md font-semibold gap-1">
+<span>Watch Tutorials</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+<!-- Action 3: Email Ticket -->
+<a class="bg-surface-container-low hover:bg-surface-container p-space-md rounded-lg flex flex-col justify-between transition-all group shadow-sm" href="#submit-ticket">
+<div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Email Helpdesk</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Submit detailed tickets for custom database migrations & FBR sandbox audits.</p>
+</div>
+<div class="mt-space-md flex items-center text-primary font-label-md text-label-md font-semibold gap-1">
+<span>Submit a Ticket</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+<!-- Action 4: Onboarding Demo -->
+<a class="bg-surface-container-low hover:bg-surface-container p-space-md rounded-lg flex flex-col justify-between transition-all group shadow-sm" href="#book-demo">
+<div>
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-space-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">1-on-1 Onboarding</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Schedule a live guided screen-share with a POS onboarding specialist.</p>
+</div>
+<div class="mt-space-md flex items-center text-primary font-label-md text-label-md font-semibold gap-1">
+<span>Book Live Demo</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</a>
+</div>
+</div>
+</section>
+<!-- Keyframe & Micro-interaction Controller -->
+<script>
+    // Search input fill action
+    function fillSearch(term) {
+      const input = document.getElementById('hero-search-field');
+      if (input) {
+        input.value = term;
+        input.focus();
+      }
+    }
+
+    // Modal search handler
+    function toggleSearchModal(show) {
+      const modal = document.getElementById('search-modal');
+      const input = document.getElementById('modal-search-input');
+      if (modal) {
+        if (show) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          if (input) setTimeout(() => input.focus(), 50);
+        } else {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+      }
+    }
+
+    // Global Keydown for Command+K
+    document.addEventListener('keydown', function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        toggleSearchModal(true);
+      }
+      if (e.key === 'Escape') {
+        toggleSearchModal(false);
+      }
+    });
+
+    // Code block copy simulator
+    function copySnippet() {
+      const btn = document.getElementById('copy-text');
+      if (btn) {
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+          btn.textContent = 'Copy JSON';
+        }, 2000);
+      }
+    }
+
+    // Execute search feedback
+    function executeSearch() {
+      const query = document.getElementById('hero-search-field').value;
+      if (query.trim()) {
+        const modal = document.getElementById('search-modal');
+        const modalInput = document.getElementById('modal-search-input');
+        if (modalInput) modalInput.value = query;
+        toggleSearchModal(true);
+      }
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-low shadow-[0_-1px_6px_rgba(0,0,0,0.02)] mt-space-xl"><div class="max-w-7xl mx-auto px-6 py-space-xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl mb-space-xl"><div class="lg:col-span-2 flex flex-col gap-space-sm"><div class="flex items-center gap-space-sm"><img alt="MyFBRPOS Brand Logo" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/a/ACg8ocIS192NlQ-hZgT42Y2P39fGj1aB8h4_9lVlK_b9G6gC=s96-c"/><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">MyFBRPOS Docs</span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">High-performance technical documentation, integration guides, and live sandbox toolkits for FBR tier-1 digital invoicing and point-of-sale telemetry.</p><div class="flex items-center gap-space-sm mt-space-xs"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>FBR API Production Online</span></div></div><div><h4 class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-space-md font-semibold">Documentation</h4><ul class="flex flex-col gap-space-sm"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Quickstart</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Integration Guides</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">FBR Compliance Standards</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">API Specifications</a></li></ul></div><div><h4 class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-space-md font-semibold">Resources</h4><ul class="flex flex-col gap-space-sm"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Release Notes</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Video Tutorials</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Developer Community</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">System Status</a></li></ul></div><div><h4 class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-space-md font-semibold">Support</h4><ul class="flex flex-col gap-space-sm"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">WhatsApp Support</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Email Helpdesk</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Book a Demo</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Urdu Video Guides</a></li></ul></div></div><div class="pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md"><p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">Independent POS & digital invoicing platform compliant with FBR standards. All rights reserved.</p><div class="flex items-center gap-space-md font-body-sm text-body-sm text-on-surface-variant"><a class="hover:text-primary transition-colors" href="#">Privacy Policy</a><a class="hover:text-primary transition-colors" href="#">Terms of Service</a><a class="hover:text-primary transition-colors" href="#">Security</a></div></div></div></footer></body></html>

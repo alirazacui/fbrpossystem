@@ -149,10 +149,22 @@ def doc_index(request):
     categories = list(HelpCategory.objects.filter(is_active=True))
     active_ids = {c.id for c in categories}
     by_cat, uncategorized = {}, []
+    published_articles = list(
+        HelpArticle.objects.filter(is_published=True)
+        .select_related("category")
+        .only(
+            "title",
+            "slug",
+            "seo_description",
+            "reading_time",
+            "category_id",
+            "featured",
+            "updated_at",
+            "published_at",
+        )
+    )
 
-    for article in HelpArticle.objects.filter(is_published=True).only(
-        "title", "slug", "seo_description", "reading_time", "category_id"
-    ):
+    for article in published_articles:
         if article.category_id in active_ids:
             by_cat.setdefault(article.category_id, []).append(article)
         else:
@@ -162,8 +174,38 @@ def doc_index(request):
     if uncategorized:
         sections.append((None, uncategorized))
 
+    featured_articles = [a for a in published_articles if a.featured][:8]
+    if not featured_articles:
+        featured_articles = published_articles[:8]
+
+    category_cards = []
+    for category, articles in sections:
+        if category is None:
+            category_cards.append(
+                {
+                    "name": "More guides",
+                    "slug": "more-guides",
+                    "count": len(articles),
+                    "teaser": articles[:2],
+                }
+            )
+            continue
+
+        category_cards.append(
+            {
+                "name": category.name,
+                "slug": category.source_slug,
+                "count": len(articles),
+                "teaser": articles[:2],
+            }
+        )
+
     ctx = {
         "sections": sections,
+        "category_cards": category_cards,
+        "featured_articles": featured_articles,
+        "total_categories": len([s for s in sections if s[0] is not None]),
+        "total_articles": len(published_articles),
         "canonical": f"{_site()}/docs",
         "meta_title": getattr(
             settings, "DOCS_INDEX_TITLE", f"FBR Guides and Help Center | {_brand()}"
